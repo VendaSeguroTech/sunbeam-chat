@@ -49,9 +49,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
 
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/304eb6de-4263-4bec-bb31-3a0aaf49492d";
+  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/13852b9f-9fdb-4bc1-bbe8-973e2d7b7673";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const MESSAGE_LIMIT = 50;
+  const MESSAGE_WARNING_THRESHOLD = 45;
 
   // Função para gerar novo sessionId
   const generateSessionId = (): string => {
@@ -245,6 +248,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       } else if (e.key === 'Escape') {
         setShowSuggestions(false);
       }
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
     }
   };
 
@@ -256,13 +262,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const newMessage = words.join(' ');
     setMessage(newMessage);
     setShowSuggestions(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
   };
 
   const extractResponseText = (data: WebhookResponse): string => {
@@ -316,6 +315,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
     if (event) {
       event.preventDefault(); // Prevenir comportamento padrão (ex: quebra de linha no Enter)
+    }
+
+    if (messages.length >= MESSAGE_LIMIT) {
+      toast({
+        title: "Limite de mensagens atingido",
+        description: "Por favor, inicie um novo chat para continuar.",
+        variant: "destructive",
+      });
+      return;
     }
 
     if (!message.trim() || isLoading || !sessionId || !currentUserId) {
@@ -450,7 +458,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div key={msg.id} className={`flex gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.type === 'assistant' && (
                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <img src={sunbeamLogo} alt="AI" className="w-5 h-5" />
+                    <img src={sunbeamLogo} alt="AI" className="w-8 h-8" />
                   </div>
                 )}
                 
@@ -533,8 +541,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   value={message}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Conversar com V.IA"
+                  placeholder={
+                    messages.length >= MESSAGE_LIMIT
+                      ? "Limite de mensagens atingido."
+                      : "Conversar com V.IA"
+                  }
                   className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+                  disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                 />
 
                 {/* Lista de sugestões */}
@@ -561,13 +574,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 hover:bg-muted"
+                  disabled={messages.length >= MESSAGE_LIMIT}
                 >
                   <Paperclip className="w-4 h-4 text-muted-foreground" />
                 </Button>
 
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!message.trim() || isLoading || !sessionId}
+                  disabled={!message.trim() || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
                   size="sm"
                   className="h-8 w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -579,6 +593,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </Button>
               </div>
             </div>
+
+            {messages.length >= MESSAGE_WARNING_THRESHOLD && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                {messages.length >= MESSAGE_LIMIT
+                  ? "Você atingiu o limite de mensagens. Por favor, inicie um novo chat."
+                  : `${MESSAGE_LIMIT - messages.length} mensagens restantes neste chat.`
+                }
+              </p>
+            )}
 
             <div className="flex justify-center gap-2 mt-4 cursor-not-allowed">
               <Button
