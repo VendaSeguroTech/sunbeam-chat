@@ -1,0 +1,2 @@
+/insert #comando para fazer a ia aprender determinado conteúdo
+/suporte #lista o contato do suporte
