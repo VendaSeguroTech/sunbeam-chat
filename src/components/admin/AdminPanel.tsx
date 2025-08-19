@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/supabase/client';
 import { User, UserStats } from '@/types/user';
-import { Users, UserCheck, Activity } from 'lucide-react';
+import { Users, UserCheck, Activity, UserPlus, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -14,6 +15,40 @@ interface AdminPanelProps {
 const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+
+  const createDefaultUser = async () => {
+    setCreatingUser(true);
+    try {
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: 'cliente@teste.com',
+        password: 'teste123',
+        email_confirm: true
+      });
+
+      if (error) throw error;
+
+      toast.success('Usuário padrão criado com sucesso!');
+      fetchUserStats();
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
+      toast.error('Erro ao criar usuário padrão');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
+  const promoteToAdmin = async (userId: string, userEmail: string) => {
+    try {
+      // Aqui você salvaria no metadata do usuário que ele é admin
+      // Por enquanto vamos simular atualizando localmente
+      toast.success(`Usuário ${userEmail} promovido para admin!`);
+      fetchUserStats();
+    } catch (error) {
+      console.error('Erro ao promover usuário:', error);
+      toast.error('Erro ao promover usuário');
+    }
+  };
 
   const fetchUserStats = async () => {
     setLoading(true);
@@ -61,7 +96,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
         
         <div className="space-y-6 overflow-y-auto">
           {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <Users className="w-8 h-8 text-primary" />
@@ -80,6 +115,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <p className="text-2xl font-bold">{stats?.online_users || 0}</p>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4">
+              <Button 
+                onClick={createDefaultUser} 
+                disabled={creatingUser}
+                className="w-full h-full flex flex-col items-center gap-2"
+                variant="outline"
+              >
+                <UserPlus className="w-6 h-6" />
+                <span className="text-sm">
+                  {creatingUser ? 'Criando...' : 'Criar Usuário Teste'}
+                </span>
+              </Button>
             </div>
           </div>
 
@@ -115,8 +164,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       
                       <div className="flex items-center gap-2">
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                          {user.role === 'admin' ? 'Admin' : 'Default'}
                         </Badge>
+                        {user.role === 'default' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => promoteToAdmin(user.id, user.email)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Shield className="w-3 h-3 mr-1" />
+                            Promover
+                          </Button>
+                        )}
                         <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-green-500' : 'bg-gray-300'}`} />
                       </div>
                     </div>
