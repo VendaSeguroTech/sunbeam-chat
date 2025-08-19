@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import sunbeamLogo from "@/assets/logo2.png";
 
 interface ChatSidebarProps {
@@ -165,7 +166,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       </div>
 
       {/* Chat History */}
-      <div className="flex-1 px-4 overflow-y-auto">
+      <div className="flex-1 px-4 overflow-y-auto custom-scrollbar">
         {isOpen ? (
           <>
             <div className="text-sm text-muted-foreground mb-4 animate-fade-in">
@@ -303,20 +304,24 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       <div className="border-t border-border p-4">
         {isOpen ? (
           <div className="space-y-3">
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs"
-            >
-              <LogOut className="w-3 h-3" />
-              Sair
-            </Button>
+            <div className="flex items-center justify-between">
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                className="justify-start gap-2 text-muted-foreground hover:text-foreground text-xs p-2 h-auto"
+              >
+                <LogOut className="w-3 h-3" />
+                Sair
+              </Button>
+              <ThemeToggle />
+            </div>
             <div className="text-xs text-muted-foreground text-center animate-fade-in">
               VIA v1.0
             </div>
           </div>
         ) : (
           <div className="space-y-2">
+            <ThemeToggle />
             <Button
               onClick={handleLogout}
               variant="ghost"
@@ -324,11 +329,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             >
               <LogOut className="w-3 h-3 text-muted-foreground" />
             </Button>
-            <div className="flex justify-center">
-              <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center">
-                <div className="w-2 h-2 bg-primary rounded-full"></div>
-              </div>
-            </div>
           </div>
         )}
       </div>

@@ -49,7 +49,7 @@ const Login: React.FC = () => {
     <div className="flex items-center justify-center h-screen bg-chat-background">
       <div className="max-w-md w-full mx-auto p-8 bg-chat-input border border-border rounded-2xl shadow-md">
         {/* Logo */}
-        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow p-2">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
           <img src={sunbeamLogo} alt="VIA" className="w-full h-full object-contain" />
         </div>
 

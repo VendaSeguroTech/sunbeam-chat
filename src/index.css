@@ -104,6 +104,36 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Chat specific colors */
+    --chat-background: 224 71% 4%; /* Um azul bem escuro */
+    --chat-sidebar: 224 71% 6%; /* Um pouco mais claro que o fundo */
+    --chat-sidebar-hover: 224 71% 8%;
+    --chat-input: 224 71% 6%;
+    --chat-bubble-user: 210 40% 98%; /* Mesma cor do primary do dark mode */
+    --chat-bubble-assistant: 217.2 32.6% 17.5%; /* Mesma cor do secondary/muted */
+  }
+}
+
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
   }
 }
 

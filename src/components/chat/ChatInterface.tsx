@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Sparkles, Search, User, Bot } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, Bot, File as FileIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationHistory, ConversationHistory } from "@/hooks/useConversationHistory";
 import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
 import { supabase } from "@/supabase/client";
-import { N8nChatMessage, Message, MessageContent } from "@/types/chat"; // Importar do arquivo de tipos
+import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
 import sunbeamLogo from "@/assets/logo2.png";
 
 interface ChatInterfaceProps {
@@ -38,6 +38,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isNewChat, setIsNewChat] = useState<boolean>(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
   // Estado para comandos e sugestão
   const [commands, setCommands] = useState<string[]>([]);
@@ -52,6 +53,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/13852b9f-9fdb-4bc1-bbe8-973e2d7b7673";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const MESSAGE_LIMIT = 50;
   const MESSAGE_WARNING_THRESHOLD = 45;
@@ -84,17 +86,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Função para carregar comandos do arquivo comandos.txt
   useEffect(() => {
-    // Como não podemos ler arquivos diretamente no frontend, vou simular a leitura
-    // com os comandos que vimos no arquivo comandos.txt
     const loadedCommands = [
       '/insert',
       '/suporte'
     ];
     setCommands(loadedCommands);
   }, []);
-
-  // Converter mensagens do n8n para o formato local (com tratamento de created_at opcional)
-  // No ChatInterface.tsx, substitua a função convertN8nMessagesToLocal por esta versão completa:
 
   const convertN8nMessagesToLocal = (n8nMessages: N8nChatMessage[]): Message[] => {
     console.log('🔄 Convertendo mensagens do n8n:', n8nMessages);
@@ -105,16 +102,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       let content = 'Mensagem sem conteúdo';
       let type: 'user' | 'assistant' = 'user';
       
-      // 🎯 Processar diferentes tipos de mensagem
       if (typeof message === 'string') {
         content = message;
-        // Alternar entre user e assistant baseado no índice
-        // Índices pares (0, 2, 4...) = user, ímpares (1, 3, 5...) = assistant
         type = index % 2 === 0 ? 'user' : 'assistant';
       } else if (message && typeof message === 'object') {
         const messageObj = message as MessageContent;
         
-        // Tentar extrair conteúdo de diferentes propriedades
         if (messageObj.content && typeof messageObj.content === 'string') {
           content = messageObj.content;
         } else if (messageObj.message && typeof messageObj.message === 'string') {
@@ -122,35 +115,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         } else if (messageObj.text && typeof messageObj.text === 'string') {
           content = messageObj.text;
         } else {
-          // Se não encontrar conteúdo, tentar converter o objeto para string
           content = JSON.stringify(messageObj, null, 2);
         }
         
-        // Usar o tipo especificado na mensagem ou alternar baseado no índice
         type = messageObj.type || (index % 2 === 0 ? 'user' : 'assistant');
       } else if (message === null || message === undefined) {
         content = 'Mensagem vazia';
         type = index % 2 === 0 ? 'user' : 'assistant';
       }
       
-      // Log para debug
       console.log(`💬 Mensagem ${index + 1}: ${type} - "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`);
       
       return {
         id: record.id?.toString() || `msg_${index}`,
-        content: content.trim(), // Remover espaços extras
+        content: content.trim(),
         type,
         timestamp: new Date(record.created_at || new Date().toISOString())
       };
     });
   };
-  // Carregar conversa selecionada - com controle melhor das dependências
+
   useEffect(() => {
-    if (!isInitialized) return; // Aguardar inicialização
+    if (!isInitialized) return;
 
     const loadConversation = async () => {
       if (selectedSessionId) {
-        // Carregar sessão do n8n
         setIsLoading(true);
         try {
           const n8nMessages = await fetchSessionMessages(selectedSessionId);
@@ -170,15 +159,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           setIsLoading(false);
         }
       } else if (selectedConversation) {
-        // Carregar conversa do sistema antigo
         setMessages(selectedConversation.messages.map(msg => ({
           ...msg,
           timestamp: new Date(msg.timestamp)
         })));
         setIsNewChat(false);
-        // Manter o sessionId atual para conversas antigas
       } else {
-        // Nova conversa - limpar mensagens mas manter sessionId
         setMessages([]);
         setIsNewChat(true);
         console.log('Nova conversa iniciada com sessionId existente:', sessionId);
@@ -188,14 +174,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     loadConversation();
   }, [selectedConversation, selectedSessionId, isInitialized]);
 
-  // Auto-scroll para a mensagem mais recente
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
 
-  // Salvar/atualizar conversa quando mensagens mudam (apenas para sistema antigo)
   useEffect(() => {
     if (messages.length > 0 && !selectedSessionId && isInitialized) {
       const saveOrUpdateConversation = async () => {
@@ -212,12 +196,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [messages, currentConversation, saveConversation, updateConversation, isNewChat, onNewChatStarted, selectedSessionId, isInitialized]);
 
-  // Função para lidar com mudanças no input
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setMessage(value);
 
-    // Verifica se o usuário digitou '/' para ativar sugestão
     const lastWord = value.split(' ').pop() || '';
     if (lastWord.startsWith('/')) {
       const query = lastWord.toLowerCase();
@@ -230,7 +212,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Função para lidar com teclas no input para navegação e seleção
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (showSuggestions) {
       if (e.key === 'ArrowDown') {
@@ -243,7 +224,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         e.preventDefault();
         if (filteredCommands.length > 0) {
           selectSuggestion(filteredCommands[selectedSuggestionIndex]);
-          return; // Prevent sending message when selecting suggestion with Enter
+          return;
         }
       } else if (e.key === 'Escape') {
         setShowSuggestions(false);
@@ -254,9 +235,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Função para selecionar sugestão
   const selectSuggestion = (command: string) => {
-    // Substitui a última palavra (começando com '/') pelo comando selecionado
     const words = message.split(' ');
     words[words.length - 1] = command;
     const newMessage = words.join(' ');
@@ -264,57 +243,79 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setShowSuggestions(false);
   };
 
+  const handlePaperclipClick = () => {
+    if (messages.length >= MESSAGE_LIMIT) {
+      toast({
+        title: "Limite de mensagens atingido",
+        description: "Você não pode enviar arquivos quando o limite de mensagens é atingido.",
+        variant: "destructive",
+      });
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "Erro", description: "O arquivo é muito grande (máx 10MB).", variant: "destructive" });
+      return;
+    }
+
+    setAttachedFile(file);
+  };
+
   const extractResponseText = (data: WebhookResponse): string => {
     if (data.response && typeof data.response === 'string') {
       return data.response;
     }
-    
     if (data.message && typeof data.message === 'string') {
       return data.message;
     }
-    
     if (data.content && typeof data.content === 'string') {
       return data.content;
     }
-    
     if (data.text && typeof data.text === 'string') {
       return data.text;
     }
-    
     if (data.result && typeof data.result === 'string') {
       return data.result;
     }
-    
     if (data.output && typeof data.output === 'string') {
       return data.output;
     }
-    
     if (data.data && typeof data.data === 'string') {
       return data.data;
     }
-    
     if (data.data && typeof data.data === 'object' && data.data !== null) {
       const dataObj = data.data as Record<string, unknown>;
-      
       if (dataObj.response && typeof dataObj.response === 'string') {
         return dataObj.response;
       }
-      
       if (dataObj.message && typeof dataObj.message === 'string') {
         return dataObj.message;
       }
-      
       if (dataObj.text && typeof dataObj.text === 'string') {
         return dataObj.text;
       }
     }
-    
     return JSON.stringify(data, null, 2);
   };
 
   const handleSendMessage = async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
     if (event) {
-      event.preventDefault(); // Prevenir comportamento padrão (ex: quebra de linha no Enter)
+      event.preventDefault();
+    }
+
+    if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) {
+      return;
     }
 
     if (messages.length >= MESSAGE_LIMIT) {
@@ -326,65 +327,69 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
-    if (!message.trim() || isLoading || !sessionId || !currentUserId) {
-      console.log('🚫 === DEBUG BLOQUEIO ===');
-      console.log('💬 Message:', message.trim());
-      console.log('⏳ IsLoading:', isLoading);
-      console.log('🆔 SessionId:', sessionId);
-      console.log('👤 CurrentUserId:', currentUserId);
-      return;
-    }
+    const userMessageContent = message.trim();
+    const fileToSend = attachedFile;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: message.trim(),
+      content: userMessageContent,
       type: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      file: fileToSend ? {
+        url: URL.createObjectURL(fileToSend),
+        type: fileToSend.type,
+        name: fileToSend.name
+      } : undefined
     };
 
     setMessages(prev => [...prev, userMessage]);
     setMessage("");
+    setAttachedFile(null);
     setIsLoading(true);
 
     try {
-      console.log('🚀 === DEBUG ENVIO ===');
-      console.log('📝 SessionId:', sessionId);
-      console.log('👤 UserId:', currentUserId);
-      console.log('💬 Mensagem:', userMessage.content);
-      console.log('🌐 Webhook URL:', WEBHOOK_URL);
+      let response: Response;
 
-      const payload = {
-        message: userMessage.content,
-        timestamp: userMessage.timestamp.toISOString(),
-        messageId: userMessage.id,
-        sessionId: sessionId,
-        userId: currentUserId
-      };
+      if (fileToSend) {
+        const formData = new FormData();
+        formData.append('file', fileToSend);
+        formData.append('sessionId', sessionId);
+        formData.append('userId', currentUserId);
+        formData.append('type', fileToSend.type);
+        formData.append('message', userMessageContent || `Arquivo enviado: ${fileToSend.name}`);
 
-      console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
+        response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        const payload = {
+          message: userMessageContent,
+          timestamp: userMessage.timestamp.toISOString(),
+          messageId: userMessage.id,
+          sessionId: sessionId,
+          userId: currentUserId,
+          type: 'text'
+        };
 
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-
-      console.log('📡 Status da resposta:', response.status);
+        response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
 
       const data: WebhookResponse = await response.json();
-
-      console.log('✅ Resposta do n8n:', data);
-
       let aiResponseContent = extractResponseText(data);
 
       if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
-        aiResponseContent = "Recebi sua mensagem, mas não consegui gerar uma resposta adequada.";
+        aiResponseContent = fileToSend
+          ? "Recebi o arquivo, mas não consegui processá-lo."
+          : "Recebi sua mensagem, mas não consegui gerar uma resposta adequada.";
       }
 
       const assistantMessage: Message = {
@@ -402,10 +407,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
 
     } catch (error) {
-      console.error('❌ Erro ao enviar mensagem:', error);
-
-      let errorMessage = "Não foi possível enviar a mensagem. Tente novamente.";
-
+      console.error('❌ Erro ao enviar mensagem/arquivo:', error);
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      
+      let errorMessage = "Não foi possível enviar a mensagem ou o arquivo. Tente novamente.";
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
           errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
@@ -413,24 +418,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           errorMessage = `Erro do servidor: ${error.message}`;
         }
       }
-
       toast({
         title: "Erro",
         description: errorMessage,
         variant: "destructive",
       });
-
-      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
-
-      const errorAssistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
-        type: 'assistant',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorAssistantMessage]);
-
     } finally {
       setIsLoading(false);
     }
@@ -438,11 +430,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-chat-background relative">
-      {/* Messages Area */}
       {messages.length > 0 ? (
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Indicador de nova conversa ou sessão carregada */}
             {(isNewChat && messages.length > 0) || selectedSessionId ? (
               <div className="text-center py-2">
                 <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
@@ -462,16 +452,50 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
                 )}
                 
-                <div className={`max-w-2xl rounded-2xl p-4 shadow-md ${
+                <div className={`max-w-2xl rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.1),_0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-200 active:scale-[0.97] active:shadow-sm ${
                   msg.type === 'user' 
-                    ? 'bg-primary text-primary-foreground ml-12' 
+                    ? 'bg-primary text-primary-foreground ml-12 border border-black/10' 
                     : 'bg-chat-bubble-assistant border border-border mr-12'
                 }`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  {msg.file ? (
+                    <div className="flex flex-col gap-2">
+                      {msg.file.type.startsWith('image/') ? (
+                        <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
+                      ) : (
+                        <a 
+                          href={msg.file.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className={`flex items-center gap-3 p-3 rounded-lg ${
+                            msg.type === 'user' 
+                            ? 'bg-black/10 hover:bg-black/20'
+                            : 'bg-primary/10 hover:bg-primary/20'
+                          }`}
+                        >
+                          <FileIcon className={`w-6 h-6 flex-shrink-0 ${
+                            msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
+                          }`} />
+                          <div className="flex flex-col overflow-hidden">
+                            <span className={`text-xs font-bold ${
+                              msg.type === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                            }`}>Anexo</span>
+                            <span className={`text-sm font-medium truncate ${
+                              msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
+                            }`}>
+                              {msg.file.name}
+                            </span>
+                          </div>
+                        </a>
+                      )}
+                      {msg.content && <p className="text-sm leading-relaxed whitespace-pre-wrap pt-2">{msg.content}</p>}
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  )}
                   <p className={`text-xs mt-2 opacity-70 ${
                     msg.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
                   }`}>
-                    {msg.timestamp.toLocaleTimeString()}
+                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
 
@@ -483,7 +507,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             ))}
             
-            {/* Loading indicator */}
             {isLoading && (
               <div className="flex gap-4 justify-start">
                 <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
@@ -503,10 +526,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
         </div>
       ) : (
-        /* Welcome Section */
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-2xl mx-auto px-6">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow p-2">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
               <img 
                 src={sunbeamLogo} 
                 alt="VIA" 
@@ -521,7 +543,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               Como posso ajudá-lo hoje?
             </p>
             
-            {/* Mostrar sessionId na tela de boas-vindas */}
             {sessionId && (
               <p className="text-xs text-muted-foreground mt-4 opacity-50">
                 SessionID: {sessionId.slice(-8)}
@@ -531,11 +552,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
       )}
 
-      {/* Input Section */}
       <div className="border-t border-border bg-chat-background p-6">
         <div className="max-w-4xl mx-auto">
           <div className="relative">
-            <div className="flex items-center gap-2 bg-chat-input border border-border rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
+            {attachedFile && (
+              <div className="bg-chat-input border border-border border-b-0 rounded-t-2xl p-3 -mb-2">
+                <div className="flex items-center justify-between bg-muted p-2 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm overflow-hidden">
+                    <FileIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <span className="font-medium truncate">{attachedFile.name}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      ({(attachedFile.size / 1024).toFixed(2)} KB)
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-full flex-shrink-0"
+                    onClick={() => setAttachedFile(null)}
+                    disabled={isLoading}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div className={`flex items-center gap-2 bg-chat-input border border-border p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
               <div className="relative w-full">
                 <Input
                   value={message}
@@ -549,8 +591,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
                   disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                 />
-
-                {/* Lista de sugestões */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/gif, application/pdf"
+                />
                 {showSuggestions && (
                   <ul className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-auto bg-white border border-gray-300 rounded shadow z-10">
                     {filteredCommands.map((cmd, index) => (
@@ -558,7 +605,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         key={cmd}
                         className={`px-3 py-1 cursor-pointer hover:bg-gray-200 ${index === selectedSuggestionIndex ? 'bg-gray-300' : ''}`}
                         onMouseDown={(e) => {
-                          e.preventDefault(); // Para evitar que o input perca o foco
+                          e.preventDefault();
                           selectSuggestion(cmd);
                         }}
                       >
@@ -574,14 +621,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 hover:bg-muted"
-                  disabled={messages.length >= MESSAGE_LIMIT}
+                  onClick={handlePaperclipClick}
+                  disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                 >
                   <Paperclip className="w-4 h-4 text-muted-foreground" />
                 </Button>
 
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!message.trim() || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
+                  disabled={(!message.trim() && !attachedFile) || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
                   size="sm"
                   className="h-8 w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >

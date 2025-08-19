@@ -28,4 +28,9 @@ export interface Message {
   content: string;
   type: 'user' | 'assistant';
   timestamp: Date;
+  file?: {
+    url: string;
+    type: string;
+    name: string;
+  };
 }
