@@ -3,6 +3,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
 import ChatInterface from "./ChatInterface";
+import AdminControls from "../admin/AdminControls";
 import { ConversationHistory } from "@/hooks/useConversationHistory";
 
 const ChatLayout: React.FC = () => {
@@ -53,6 +54,9 @@ const ChatLayout: React.FC = () => {
           <Menu className="h-5 w-5" />
         </Button>
       </div>
+
+      {/* Controles de Admin */}
+      <AdminControls />
       
       {/* Sidebar */}
       <ChatSidebar 

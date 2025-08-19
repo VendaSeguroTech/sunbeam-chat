@@ -87,7 +87,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Função para carregar comandos do arquivo comandos.txt
   useEffect(() => {
     const loadedCommands = [
-      '/insert',
       '/suporte'
     ];
     setCommands(loadedCommands);
