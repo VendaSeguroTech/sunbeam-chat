@@ -1,10 +1,19 @@
-import React from "react";
-import { Plus, MessageSquare, Trash2, MoreHorizontal, LogOut } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, MessageSquare, Trash2, MoreHorizontal, LogOut, Shield, Gear, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { supabase } from "@/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationHistory, ConversationHistory } from "@/hooks/useConversationHistory";
 import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import sunbeamLogo from "@/assets/logo2.png";
+import UserSettingsForm from "@/components/user/UserSettingsForm";
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -20,13 +30,14 @@ interface ChatSidebarProps {
   onSessionSelect?: (sessionId: string | null) => void; // Nova prop adicionada
 }
 
-const ChatSidebar: React.FC<ChatSidebarProps> = ({ 
-  isOpen, 
+const ChatSidebar: React.FC<ChatSidebarProps> = ({
+  isOpen,
   onConversationSelect,
-  onSessionSelect 
+  onSessionSelect
 }) => {
   const { toast } = useToast();
-  
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   // Hook para conversas antigas (sistema antigo)
   const {
     conversations,
@@ -45,11 +56,14 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     refetch: refetchSessions
   } = useN8nChatHistory();
 
+  const { isAdmin } = useUserRole();
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -106,9 +120,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
     if (diffDays <= 7) return `${diffDays} dias atrás`;
-    
-    return date.toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
+
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
       month: '2-digit',
       year: '2-digit'
     });
@@ -117,32 +131,56 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const isLoading = isLoadingConversations || isLoadingSessions;
   const hasAnyHistory = conversations.length > 0 || sessions.length > 0;
 
+  console.log('ChatSidebar - isAdmin:', isAdmin); // DEBUG LOG
+
   return (
-    <div 
+    <>
+    <div
       className={`
-        ${isOpen ? 'w-72' : 'w-16'} 
+        ${isOpen ? 'w-72' : 'w-16'}
         transition-all duration-300 ease-in-out
         flex flex-col h-screen bg-chat-sidebar border-r border-border
       `}
     >
       {/* Header */}
       <div className="border-b border-border p-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
           {isOpen ? (
             <>
-              <span className="font-semibold text-lg text-foreground animate-fade-in ml-10">
-                V.IA
-              </span>
-              <img 
-                src={sunbeamLogo} 
-                alt="VIA Logo" 
-                className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
-              />
+              <div className="flex items-center gap-2"> {/* Group V.IA and logo */}
+                <span className="font-semibold text-lg text-foreground animate-fade-in ml-10">
+                  V.IA
+                </span>
+                <img
+                  src={sunbeamLogo}
+                  alt="VIA Logo"
+                  className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
+                />
+              </div>
+              {isAdmin && (
+                  <Button
+                      onClick={() => navigate('/admin')}
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  >
+                      <Shield className="h-4 w-4" />
+                  </Button>
+              )}
+              {/* Settings Button */}
+              <Button
+                  onClick={() => setIsSettingsOpen(true)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
+              >
+                  <Settings className="h-4 w-4" />
+              </Button>
             </>
           ) : (
-            <img 
-              src={sunbeamLogo} 
-              alt="VIA Logo" 
+            <img
+              src={sunbeamLogo}
+              alt="VIA Logo"
               className="w-8 h-8 rounded-lg object-contain flex-shrink-0 mt-10"
             />
           )}
@@ -151,9 +189,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
       {/* New Chat Button */}
       <div className="p-4">
-        <Button 
+        <Button
           onClick={handleNewConversation}
-          variant="default" 
+          variant="default"
           className={`${
             isOpen ? 'w-full justify-start gap-2' : 'w-10 h-10 p-0 mx-auto'
           } bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200`}
@@ -172,7 +210,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             <div className="text-sm text-muted-foreground mb-4 animate-fade-in">
               Histórico de conversas
             </div>
-            
+
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -246,8 +284,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         key={conversation.id}
                         onClick={() => handleConversationClick(conversation)}
                         className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
-                          currentConversation?.id === conversation.id 
-                            ? 'bg-primary/10 border border-primary/20' 
+                          currentConversation?.id === conversation.id
+                            ? 'bg-primary/10 border border-primary/20'
                             : ''
                         }`}
                       >
@@ -313,6 +351,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 <LogOut className="w-3 h-3" />
                 Sair
               </Button>
+
               <ThemeToggle />
             </div>
             <div className="text-xs text-muted-foreground text-center animate-fade-in">
@@ -333,6 +372,19 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         )}
       </div>
     </div>
+    {/* Settings Dialog */}
+    <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Configurações da Conta</DialogTitle>
+          <DialogDescription>
+            Gerencie suas informações de perfil.
+          </DialogDescription>
+        </DialogHeader>
+        <UserSettingsForm onSave={() => setIsSettingsOpen(false)} />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
