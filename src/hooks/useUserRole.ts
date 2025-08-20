@@ -12,14 +12,33 @@ export const useUserRole = () => {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
+          console.log('Supabase User:', user); // DEBUG LOG
           setUserEmail(user.email || '');
           
-          // Verificar se é admin pelo email
-          if (user.email === 'tech@vendaseguro.com.br') {
-            setUserRole('admin');
+          // Fetch user role from the 'profiles' table
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            setUserRole('default'); // Default to non-admin on error
+          } else if (profileData && profileData.role) {
+            const roleFromProfile = profileData.role;
+            console.log('User role from profiles table:', roleFromProfile); // DEBUG LOG
+            if (roleFromProfile === 'admin') {
+              setUserRole('admin');
+            } else {
+              setUserRole('default');
+            }
           } else {
-            setUserRole('default');
+            console.log('No role found in profiles table for user:', user.id); // DEBUG LOG
+            setUserRole('default'); // Default to non-admin if no role found
           }
+          console.log('Final userRole:', userRole); // DEBUG LOG
+          console.log('Final isAdmin:', userRole === 'admin'); // DEBUG LOG
         }
       } catch (error) {
         console.error('Erro ao verificar role do usuário:', error);

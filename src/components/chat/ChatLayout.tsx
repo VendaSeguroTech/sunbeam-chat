@@ -3,7 +3,6 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
 import ChatInterface from "./ChatInterface";
-import AdminControls from "../admin/AdminControls";
 import { ConversationHistory } from "@/hooks/useConversationHistory";
 
 const ChatLayout: React.FC = () => {
@@ -43,8 +42,8 @@ const ChatLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-chat-background">
-      {/* Header com botão hambúrguer */}
-      <div className="fixed top-0 left-0 z-50 p-3">
+      {/* Header com botões */}
+      <div className="fixed top-0 left-0 z-50 p-3 flex items-center gap-2">
         <Button
           onClick={toggleSidebar}
           variant="ghost"
@@ -54,9 +53,6 @@ const ChatLayout: React.FC = () => {
           <Menu className="h-5 w-5" />
         </Button>
       </div>
-
-      {/* Controles de Admin */}
-      <AdminControls />
       
       {/* Sidebar */}
       <ChatSidebar 

@@ -37,6 +37,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [sessionId, setSessionId] = useState<string>("");
   const [isNewChat, setIsNewChat] = useState<boolean>(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [userName, setUserName] = useState<string>(""); // New state for user name
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
@@ -69,6 +70,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+        // Fetch user name from profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+        } else if (profileData) {
+          setUserName(profileData.name || '');
+        }
       }
     };
     getCurrentUser();
@@ -536,7 +549,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
             
             <h1 className="text-3xl font-bold text-foreground mb-3">
-              Olá, sou VIA.
+              {userName ? `Olá ${userName},` : "Olá, sou VIA."}
             </h1>
             <p className="text-lg text-muted-foreground">
               Como posso ajudá-lo hoje?

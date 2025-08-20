@@ -1,208 +1,288 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/supabase/client';
-import { User, UserStats } from '@/types/user';
-import { Users, UserCheck, Activity, UserPlus, Shield } from 'lucide-react';
-import { toast } from 'sonner';
+import { supabase } from '../../supabase/client'; 
+import { Button } from '@/components/ui/button'; 
+import OnlineUsersCard from './OnlineUsersCard'; 
+import { usePresenceContext } from '@/contexts/PresenceContext'; // Import the context hook
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; // Import Popover components
 
-interface AdminPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'default'; // Assuming these are the only two roles
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [creatingUser, setCreatingUser] = useState(false);
+const AdminPanel: React.FC = () => { 
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const { onlineUsers } = usePresenceContext(); // Use the context for online count
+  const [message, setMessage] = useState<string | null>(null);
+  const [showCreateUserForm, setShowCreateUserForm] = useState(false);
+  const [users, setUsers] = useState<User[]>([]); // New state for users list
+  const [showUserList, setShowUserList] = useState(false); // New state for showing user list
+  const [selectedUser, setSelectedUser] = useState<User | null>(null); // State to hold the user selected for role manipulation 
 
-  const createDefaultUser = async () => {
-    setCreatingUser(true);
+  // Function to create a new user
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
     try {
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: 'cliente@teste.com',
-        password: 'teste123',
-        email_confirm: true
+      const { data, error } = await supabase.auth.signUp({
+        email: newUserEmail,
+        password: newUserPassword,
       });
 
       if (error) throw error;
 
-      toast.success('Usuário padrão criado com sucesso!');
-      fetchUserStats();
-    } catch (error) {
-      console.error('Erro ao criar usuário:', error);
-      toast.error('Erro ao criar usuário padrão');
-    } finally {
-      setCreatingUser(false);
+      // After successful signup, insert into profiles table with default role
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              email: data.user.email,
+              role: 'default', // Assign default role
+            },
+          ]);
+
+        if (profileError) throw profileError;
+      }
+
+      setMessage('Usuário criado com sucesso! Verifique o e-mail para confirmação.');
+      setNewUserEmail('');
+      setNewUserPassword('');
+      fetchTotalUserCount(); // Refresh counts
+      setShowCreateUserForm(false); // Hide form after successful creation
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setMessage(`Erro ao criar usuário: ${error.message}`);
+      } else {
+        setMessage('Erro desconhecido ao criar usuário');
+      }
+    }
+
+  };
+
+  // Function to fetch only the total user count
+  const fetchTotalUserCount = async () => {
+    try {
+      // TOTAL cadastrados
+      const { count: totalCount, error: totalError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (totalError) throw totalError;
+      setTotalUsers(totalCount ?? 0);
+
+    } catch (error: unknown) {
+       if (error instanceof Error) {
+        console.error('[Admin] Error fetching total user count:', error.message);
+      } else {
+        console.error('[Admin] Error fetching total user count (unknown)');
+      }
+      setTotalUsers(0);
     }
   };
 
-  const promoteToAdmin = async (userId: string, userEmail: string) => {
-    try {
-      // Aqui você salvaria no metadata do usuário que ele é admin
-      // Por enquanto vamos simular atualizando localmente
-      toast.success(`Usuário ${userEmail} promovido para admin!`);
-      fetchUserStats();
-    } catch (error) {
-      console.error('Erro ao promover usuário:', error);
-      toast.error('Erro ao promover usuário');
+
+  // Function to fetch all users
+  const handleListUsers = async () => {
+    setShowUserList(!showUserList); // Toggle visibility
+    if (!showUserList) { // Only fetch if we are about to show the list
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*'); // Select all columns from the profiles table
+
+        if (error) throw error;
+        setUsers(data);
+        setMessage(null); // Clear any previous messages
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setMessage(`Erro ao listar usuários: ${error.message}`);
+        } else {
+          setMessage('Erro desconhecido ao listar usuários');
+        }
+        setUsers([]); // Clear users on error
+      }
     }
   };
 
-  const fetchUserStats = async () => {
-    setLoading(true);
+  const handleSetAdminRole = async (userId: string) => {
     try {
-      // Buscar todos os usuários
-      const { data: users, error } = await supabase.auth.admin.listUsers();
-      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'admin' })
+        .eq('id', userId);
+
       if (error) throw error;
+      setMessage('Função de administrador adicionada com sucesso!');
+      // Refresh the user list to reflect the change
+      const { data, error: fetchError } = await supabase.from('profiles').select('*');
+      if (fetchError) throw fetchError;
+      setUsers(data);
+      setSelectedUser(null); // Close popover
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setMessage(`Erro ao adicionar função de administrador: ${error.message}`);
+      } else {
+        setMessage('Erro desconhecido ao adicionar função de administrador');
+      }
+    }
+  };
 
-      const usersList: User[] = users.users.map(user => ({
-        id: user.id,
-        email: user.email || '',
-        role: (user.email === 'tech@vendaseguro.com.br' ? 'admin' : 'default') as 'admin' | 'default',
-        created_at: user.created_at,
-        is_online: false // Por simplicidade, não vamos trackear status online ainda
-      }));
+  const handleRemoveAdminRole = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'default' }) // Assuming 'default' is the non-admin role
+        .eq('id', userId);
 
-      setStats({
-        total_users: usersList.length,
-        online_users: 0, // Implementar tracking real depois
-        users_list: usersList
-      });
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
-    } finally {
-      setLoading(false);
+      if (error) throw error;
+      setMessage('Função de administrador removida com sucesso!');
+      // Refresh the user list to reflect the change
+      const { data, error: fetchError } = await supabase.from('profiles').select('*');
+      if (fetchError) throw fetchError;
+      setUsers(data);
+      setSelectedUser(null); // Close popover
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setMessage(`Erro ao remover função de administrador: ${error.message}`);
+      } else {
+        setMessage('Erro desconhecido ao remover função de administrador');
+      }
     }
   };
 
   useEffect(() => {
-    if (isOpen) {
-      fetchUserStats();
-    }
-  }, [isOpen]);
+    fetchTotalUserCount();
+    // No interval needed for online users anymore, it's realtime!
+  }, []); 
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Painel Administrativo
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6 overflow-y-auto">
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-muted/50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-8 h-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total de Usuários</p>
-                  <p className="text-2xl font-bold">{stats?.total_users || 0}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-muted/50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <UserCheck className="w-8 h-8 text-green-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Usuários Online</p>
-                  <p className="text-2xl font-bold">{stats?.online_users || 0}</p>
-                </div>
-              </div>
-            </div>
+    <div className="p-4"> 
+      <h1 className="text-2xl font-bold mb-4">Painel Administrativo</h1>
 
-            <div className="bg-muted/50 rounded-lg p-4">
-              <Button 
-                onClick={createDefaultUser} 
-                disabled={creatingUser}
-                className="w-full h-full flex flex-col items-center gap-2"
-                variant="outline"
+      {message && (
+        <div className={`p-2 mb-4 rounded ${message.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
+        </div>
+      )}
+
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Estatísticas do usuário</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-100 p-4 rounded shadow">
+            <h3 className="text-lg font-medium">Usuários Registrados</h3>
+            <p className="text-3xl font-bold">{totalUsers !== null ? totalUsers : 'Loading...'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded shadow">
+            <h3 className="text-lg font-medium">Usuários Online (Realtime)</h3>
+            <p className="text-3xl font-bold">{onlineUsers.length}</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Gerenciamento de usuário</h2>
+        <div className="flex gap-2 mb-4"> {/* Flex container for buttons */}
+          <Button onClick={() => setShowCreateUserForm(!showCreateUserForm)}>
+            {showCreateUserForm ? 'Fechar criação de usuário' : 'Criar um novo usuário'}
+          </Button>
+          <Button onClick={handleListUsers}>
+            {showUserList ? 'Fechar lista de usuários' : 'Listar todos os usuários'}
+          </Button>
+        </div>
+
+        {showCreateUserForm && (
+          <form onSubmit={handleCreateUser} className="bg-white p-6 rounded shadow-md">
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+                Email:
+              </label>
+              <input
+                type="email"
+                id="email"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="mb-6">
+              <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+                Senha:
+              </label>
+              <input
+                type="password"
+                id="password"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               >
-                <UserPlus className="w-6 h-6" />
-                <span className="text-sm">
-                  {creatingUser ? 'Criando...' : 'Criar Usuário Teste'}
-                </span>
-              </Button>
+                Criar um usuário
+              </button>
             </div>
-          </div>
+          </form>
+        )}
 
-          {/* Lista de usuários */}
-          <div className="border rounded-lg">
-            <div className="p-4 border-b bg-muted/30">
-              <h3 className="font-semibold">Lista de Usuários</h3>
-            </div>
-            
-            <div className="max-h-96 overflow-y-auto">
-              {loading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-                  <p className="mt-2 text-sm text-muted-foreground">Carregando usuários...</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {stats?.users_list.map((user) => (
-                    <div key={user.id} className="p-4 flex items-center justify-between hover:bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-primary">
-                            {user.email.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-medium">{user.email}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Criado em: {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role === 'admin' ? 'Admin' : 'Default'}
-                        </Badge>
-                        {user.role === 'default' && (
+        {showUserList && (
+          <div className="bg-white p-6 rounded shadow-md mt-4">
+            <h3 className="text-lg font-semibold mb-4">Usuários do Sistema</h3>
+            {users.length === 0 ? (
+              <p>Nenhum usuário encontrado.</p>
+            ) : (
+              <ul className="space-y-2">
+                {users.map((user) => (
+                  <Popover key={user.id} onOpenChange={(open) => !open && setSelectedUser(null)}>
+                    <PopoverTrigger asChild>
+                      <li
+                        className="p-2 border rounded flex justify-between items-center cursor-pointer hover:bg-gray-50"
+                        onClick={() => setSelectedUser(user)}
+                      >
+                        <span>{user.email}</span>
+                        <span className="text-sm text-gray-500">({user.role})</span>
+                      </li>
+                    </PopoverTrigger>
+                    {selectedUser && selectedUser.id === user.id && (
+                      <PopoverContent className="w-48 p-2">
+                        <div className="flex flex-col gap-2">
                           <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => promoteToAdmin(user.id, user.email)}
-                            className="h-6 px-2 text-xs"
+                            variant="ghost"
+                            onClick={() => handleSetAdminRole(user.id)}
+                            disabled={user.role === 'admin'}
                           >
-                            <Shield className="w-3 h-3 mr-1" />
-                            Promover
+                            Tornar Admin
                           </Button>
-                        )}
-                        <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-green-500' : 'bg-gray-300'}`} />
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {stats?.users_list.length === 0 && (
-                    <div className="p-8 text-center text-muted-foreground">
-                      Nenhum usuário encontrado
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleRemoveAdminRole(user.id)}
+                            disabled={user.role !== 'admin'}
+                          >
+                            Remover Admin
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    )}
+                  </Popover>
+                ))}
+              </ul>
+            )}
           </div>
-        </div>
-        
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Fechar
-          </Button>
-          <Button onClick={fetchUserStats} disabled={loading}>
-            Atualizar
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        )}
+      </section>
+
+      <OnlineUsersCard />
+
+    </div>
   );
 };
 
