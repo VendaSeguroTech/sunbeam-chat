@@ -51,7 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
 
-  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/13852b9f-9fdb-4bc1-bbe8-973e2d7b7673";
+  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/13852b9f-9fdb-4bc1-bbe8-973e2d7b7673";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +108,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const convertN8nMessagesToLocal = (n8nMessages: N8nChatMessage[]): Message[] => {
     console.log('🔄 Convertendo mensagens do n8n:', n8nMessages);
     
-    return n8nMessages.map((record, index) => {
+    const localMessages: Message[] = [];
+
+    n8nMessages.forEach((record, index) => {
       const message = record.message;
       
       let content = 'Mensagem sem conteúdo';
@@ -138,13 +140,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       
       console.log(`💬 Mensagem ${index + 1}: ${type} - "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`);
       
-      return {
-        id: record.id?.toString() || `msg_${index}`,
-        content: content.trim(),
-        type,
-        timestamp: new Date(record.created_at || new Date().toISOString())
-      };
+      // New logic for splitting assistant messages
+      if (type === 'assistant' && content.includes('\n\n')) {
+        const chunks = content.split('\n\n').filter(c => c.trim() !== '');
+        chunks.forEach((chunk, chunkIndex) => {
+          localMessages.push({
+            id: `${record.id?.toString() || `msg_${index}`}_${chunkIndex}`, // Unique ID for each chunk
+            content: chunk.trim(),
+            type,
+            timestamp: new Date(record.created_at || new Date().toISOString())
+          });
+        });
+      } else {
+        localMessages.push({
+          id: record.id?.toString() || `msg_${index}`,
+          content: content.trim(),
+          type,
+          timestamp: new Date(record.created_at || new Date().toISOString())
+        });
+      }
     });
+
+    return localMessages;
   };
 
   useEffect(() => {
@@ -193,7 +210,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, [messages, isLoading]);
 
   useEffect(() => {
-    if (messages.length > 0 && !selectedSessionId && isInitialized) {
+    // Only save conversation when the assistant is not actively responding
+    if (!isLoading && messages.length > 0 && !selectedSessionId && isInitialized) {
       const saveOrUpdateConversation = async () => {
         if (currentConversation && !isNewChat) {
           await updateConversation(currentConversation.id, messages);
@@ -206,7 +224,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       saveOrUpdateConversation();
     }
-  }, [messages, currentConversation, saveConversation, updateConversation, isNewChat, onNewChatStarted, selectedSessionId, isInitialized]);
+  }, [messages, isLoading, currentConversation, saveConversation, updateConversation, isNewChat, onNewChatStarted, selectedSessionId, isInitialized]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -285,6 +303,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const extractResponseText = (data: WebhookResponse): string => {
+    // Prioritize the 'output' field as requested for the new logic
+    if (data.output && typeof data.output === 'string') {
+      return data.output;
+    }
     if (data.response && typeof data.response === 'string') {
       return data.response;
     }
@@ -299,9 +321,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
     if (data.result && typeof data.result === 'string') {
       return data.result;
-    }
-    if (data.output && typeof data.output === 'string') {
-      return data.output;
     }
     if (data.data && typeof data.data === 'string') {
       return data.data;
@@ -319,6 +338,50 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     }
     return JSON.stringify(data, null, 2);
+  };
+
+  
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const streamResponseAsSeparateMessages = async (fullText: string) => {
+    const chunks = fullText.split('\n\n').filter(c => c.trim() !== '');
+  
+    for (const chunk of chunks) {
+      const messageId = (Date.now() + Math.random()).toString();
+      const assistantMessage: Message = {
+        id: messageId,
+        content: "",
+        type: 'assistant',
+        timestamp: new Date()
+      };
+      
+      // Add the new empty message bubble
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      // Typing effect for the current chunk
+      const characterDelay = 20;
+      const chunkTypingTime = chunk.length * characterDelay;
+      const maxDelay = 3000;
+      const effectiveTypingTime = Math.min(chunkTypingTime, maxDelay);
+      const delayPerCharacter = effectiveTypingTime > 0 && chunk.length > 0 ? effectiveTypingTime / chunk.length : 0;
+  
+      let currentContent = "";
+      for (let i = 0; i < chunk.length; i++) {
+        currentContent += chunk[i];
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === messageId ? { ...msg, content: currentContent } : msg
+          )
+        );
+        if (delayPerCharacter > 0) {
+          await sleep(delayPerCharacter);
+        }
+      }
+      
+      // Wait before showing the next message bubble
+      await sleep(1000); 
+    }
   };
 
   const handleSendMessage = async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
@@ -374,7 +437,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           method: 'POST',
           body: formData,
         });
+
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        const data: WebhookResponse = await response.json();
+        let aiResponseContent = extractResponseText(data);
+
+        if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
+          aiResponseContent = "Recebi o arquivo, mas não consegui processá-lo.";
+        }
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: aiResponseContent,
+          type: 'assistant',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+
       } else {
+        // New logic for text messages with separate message bubbles
         const payload = {
           message: userMessageContent,
           timestamp: userMessage.timestamp.toISOString(),
@@ -389,29 +473,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        const data: WebhookResponse = await response.json();
+        const aiResponseContent = extractResponseText(data);
+
+        if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
+            const assistantMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                content: "Não recebi uma resposta válida do assistente.",
+                type: 'assistant',
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+        } else {
+            await streamResponseAsSeparateMessages(aiResponseContent);
+        }
       }
-
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
-      }
-
-      const data: WebhookResponse = await response.json();
-      let aiResponseContent = extractResponseText(data);
-
-      if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
-        aiResponseContent = fileToSend
-          ? "Recebi o arquivo, mas não consegui processá-lo."
-          : "Recebi sua mensagem, mas não consegui gerar uma resposta adequada.";
-      }
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponseContent,
-        type: 'assistant',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
 
       if (isNewChat) {
         setIsNewChat(false);
@@ -419,10 +500,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
 
     } catch (error) {
-      console.error('❌ Erro ao enviar mensagem/arquivo:', error);
+      console.error('❌ Erro ao enviar mensagem ou processar resposta:', error);
+      // Only remove the user's message that initiated the failed response
       setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
       
-      let errorMessage = "Não foi possível enviar a mensagem ou o arquivo. Tente novamente.";
+      let errorMessage = "Não foi possível obter a resposta do assistente. Tente novamente.";
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
           errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
@@ -438,6 +520,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const renderWithEmphasis = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={index}>{part.slice(1, -1)}</em>;
+      }
+      return part;
+    });
   };
 
   return (
@@ -456,72 +552,80 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             ) : null}
             
-            {messages.map((msg) => (
-              <div key={msg.id} className={`flex gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.type === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <img src={sunbeamLogo} alt="AI" className="w-8 h-8" />
-                  </div>
-                )}
-                
-                <div className={`max-w-2xl rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.1),_0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-200 active:scale-[0.97] active:shadow-sm ${
-                  msg.type === 'user' 
-                    ? 'bg-primary text-primary-foreground ml-12 border border-black/10' 
-                    : 'bg-chat-bubble-assistant border border-border mr-12'
-                }`}>
-                  {msg.file ? (
-                    <div className="flex flex-col gap-2">
-                      {msg.file.type.startsWith('image/') ? (
-                        <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
-                      ) : (
-                        <a 
-                          href={msg.file.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className={`flex items-center gap-3 p-3 rounded-lg ${
-                            msg.type === 'user' 
-                            ? 'bg-black/10 hover:bg-black/20'
-                            : 'bg-primary/10 hover:bg-primary/20'
-                          }`}
-                        >
-                          <FileIcon className={`w-6 h-6 flex-shrink-0 ${
-                            msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
-                          }`} />
-                          <div className="flex flex-col overflow-hidden">
-                            <span className={`text-xs font-bold ${
-                              msg.type === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
-                            }`}>Anexo</span>
-                            <span className={`text-sm font-medium truncate ${
-                              msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
-                            }`}>
-                              {msg.file.name}
-                            </span>
-                          </div>
-                        </a>
-                      )}
-                      {msg.content && <p className="text-sm leading-relaxed whitespace-pre-wrap pt-2">{msg.content}</p>}
-                    </div>
-                  ) : (
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                  )}
-                  <p className={`text-xs mt-2 opacity-70 ${
-                    msg.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                  }`}>
-                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
+            {messages.map((msg, index) => {
+              const showAvatar = msg.type === 'assistant' && (index === 0 || messages[index - 1]?.type !== 'assistant');
 
-                {msg.type === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-secondary-foreground" />
+              return (
+                <div key={msg.id} className={`flex gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {msg.type === 'assistant' && (
+                    showAvatar ? (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <img src={sunbeamLogo} alt="AI" className="w-8 h-8" />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 flex-shrink-0" /> // Placeholder for alignment
+                    )
+                  )}
+                  
+                  <div className={`max-w-2xl rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.1),_0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-200 active:scale-[0.97] active:shadow-sm ${
+                    msg.type === 'user' 
+                      ? 'bg-primary text-primary-foreground ml-12 border border-black/10' 
+                      : 'bg-chat-bubble-assistant border border-border mr-12'
+                  }`}>
+                    {msg.file ? (
+                      <div className="flex flex-col gap-2">
+                        {msg.file.type.startsWith('image/') ? (
+                          <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
+                        ) : (
+                          <a 
+                            href={msg.file.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className={`flex items-center gap-3 p-3 rounded-lg ${
+                              msg.type === 'user' 
+                              ? 'bg-black/10 hover:bg-black/20'
+                              : 'bg-primary/10 hover:bg-primary/20'
+                            }`}
+                          >
+                            <FileIcon className={`w-6 h-6 flex-shrink-0 ${
+                              msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
+                            }`} />
+                            <div className="flex flex-col overflow-hidden">
+                              <span className={`text-xs font-bold ${
+                                msg.type === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                              }`}>Anexo</span>
+                              <span className={`text-sm font-medium truncate ${
+                                msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
+                              }`}>
+                                {msg.file.name}
+                              </span>
+                            </div>
+                          </a>
+                        )}
+                        {msg.content && <p className="text-sm leading-relaxed whitespace-pre-wrap pt-2">{renderWithEmphasis(msg.content)}</p>}
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
+                    )}
+                    <p className={`text-xs mt-2 opacity-70 ${
+                      msg.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    }`}>
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {msg.type === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-secondary-foreground" />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
             
             {isLoading && (
               <div className="flex gap-4 justify-start">
-                <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                   <img src={sunbeamLogo} alt="AI" className="w-5 h-5" />
                 </div>
                 <div className="bg-chat-bubble-assistant border border-border rounded-2xl p-4 mr-12">

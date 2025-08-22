@@ -42,23 +42,12 @@ const ChatLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-chat-background">
-      {/* Header com botões */}
-      <div className="fixed top-0 left-0 z-50 p-3 flex items-center gap-2">
-        <Button
-          onClick={toggleSidebar}
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 hover:bg-primary/10 hover:text-primary transition-colors"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-      
       {/* Sidebar */}
       <ChatSidebar 
         isOpen={sidebarOpen} 
         onConversationSelect={handleConversationSelect}
         onSessionSelect={handleSessionSelect}
+        toggleSidebar={toggleSidebar}
       />
       
       {/* Chat principal */}
