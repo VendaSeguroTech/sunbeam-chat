@@ -94,10 +94,11 @@ export default {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-orange-glow': 'var(--gradient-orange-glow)'
 			},
-			boxShadow: {
+						boxShadow: {
 				'sm': 'var(--shadow-sm)',
 				'md': 'var(--shadow-md)',
-				'glow': 'var(--shadow-glow)'
+				'glow': 'var(--shadow-glow)',
+				'apple': 'var(--shadow-apple)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

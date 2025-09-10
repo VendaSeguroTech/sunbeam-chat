@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Sparkles, Search, User, Bot, File as FileIcon, X } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, Bot, File as FileIcon, X, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -51,7 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
 
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/13852b9f-9fdb-4bc1-bbe8-973e2d7b7673";
+  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/db0eba25-1605-4358-b5ab-c8e75111e4cc";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -384,6 +384,50 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const handleFeedback = async (messageId: string, rating: 'positive' | 'negative') => {
+    const message = messages.find(m => m.id === messageId);
+    if (!message || message.feedback) return;
+
+    const payload = {
+      message: message.content,
+      rating: rating,
+      sessionId: sessionId,
+      userId: currentUserId,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      const response = await fetch('https://webhook.vendaseguro.tech/webhook/cbc7d3b3-66ff-42b4-a1d4-303a03e60d5a', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook failed with status ${response.status}`);
+      }
+
+      setMessages(prevMessages => prevMessages.map(m => 
+        m.id === messageId ? { ...m, feedback: rating } : m
+      ));
+
+      toast({
+        title: "Feedback enviado",
+        description: "Obrigado pela sua avaliação!",
+      });
+
+    } catch (error) {
+      console.error("Failed to send feedback:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar seu feedback. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSendMessage = async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
     if (event) {
       event.preventDefault();
@@ -556,7 +600,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               const showAvatar = msg.type === 'assistant' && (index === 0 || messages[index - 1]?.type !== 'assistant');
 
               return (
-                <div key={msg.id} className={`flex gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div key={msg.id} className={`group flex items-start gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.type === 'assistant' && (
                     showAvatar ? (
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -567,51 +611,75 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     )
                   )}
                   
-                  <div className={`max-w-2xl rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.1),_0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-200 active:scale-[0.97] active:shadow-sm ${
-                    msg.type === 'user' 
-                      ? 'bg-primary text-primary-foreground ml-12 border border-black/10' 
-                      : 'bg-chat-bubble-assistant border border-border mr-12'
-                  }`}>
-                    {msg.file ? (
-                      <div className="flex flex-col gap-2">
-                        {msg.file.type.startsWith('image/') ? (
-                          <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
-                        ) : (
-                          <a 
-                            href={msg.file.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className={`flex items-center gap-3 p-3 rounded-lg ${
-                              msg.type === 'user' 
-                              ? 'bg-black/10 hover:bg-black/20'
-                              : 'bg-primary/10 hover:bg-primary/20'
-                            }`}
-                          >
-                            <FileIcon className={`w-6 h-6 flex-shrink-0 ${
-                              msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
-                            }`} />
-                            <div className="flex flex-col overflow-hidden">
-                              <span className={`text-xs font-bold ${
-                                msg.type === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
-                              }`}>Anexo</span>
-                              <span className={`text-sm font-medium truncate ${
-                                msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
-                              }`}>
-                                {msg.file.name}
-                              </span>
-                            </div>
-                          </a>
-                        )}
-                        {msg.content && <p className="text-sm leading-relaxed whitespace-pre-wrap pt-2">{renderWithEmphasis(msg.content)}</p>}
-                      </div>
-                    ) : (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
-                    )}
-                    <p className={`text-xs mt-2 opacity-70 ${
-                      msg.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                  <div className={`flex-1 flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className={`max-w-2xl transition-transform duration-200 active:scale-[0.97] ${
+                      msg.type === 'user' 
+                        ? 'bg-primary text-primary-foreground ml-12 rounded-2xl p-4 shadow-apple active:shadow-sm' 
+                        : 'bg-transparent border-none shadow-none p-0'
                     }`}>
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                      {msg.file ? (
+                        <div className="flex flex-col gap-2">
+                          {msg.file.type.startsWith('image/') ? (
+                            <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
+                          ) : (
+                            <a 
+                              href={msg.file.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className={`flex items-center gap-3 p-3 rounded-lg ${
+                                msg.type === 'user' 
+                                ? 'bg-black/10 hover:bg-black/20'
+                                : 'bg-primary/10 hover:bg-primary/20'
+                              }`}
+                            >
+                              <FileIcon className={`w-6 h-6 flex-shrink-0 ${
+                                msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
+                              }`} />
+                              <div className="flex flex-col overflow-hidden">
+                                <span className={`text-xs font-bold ${
+                                  msg.type === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                                }`}>Anexo</span>
+                                <span className={`text-sm font-medium truncate ${
+                                  msg.type === 'user' ? 'text-primary-foreground' : 'text-primary'
+                                }`}>
+                                  {msg.file.name}
+                                </span>
+                              </div>
+                            </a>
+                          )}
+                          {msg.content && <p className="text-sm leading-relaxed whitespace-pre-wrap pt-2">{renderWithEmphasis(msg.content)}</p>}
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
+                      )}
+                      {msg.type === 'user' && (
+                        <p className={`text-xs mt-2 opacity-70 text-primary-foreground/70`}>
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
+                    </div>
+                    {msg.type === 'assistant' && msg.content && (
+                      <div className="flex items-center gap-1 mt-2 pl-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-7 w-7 rounded-full ${msg.feedback === 'positive' ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground hover:bg-muted'}`}
+                          onClick={() => handleFeedback(msg.id, 'positive')}
+                          disabled={!!msg.feedback}
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-7 w-7 rounded-full ${msg.feedback === 'negative' ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground hover:bg-muted'}`}
+                          onClick={() => handleFeedback(msg.id, 'negative')}
+                          disabled={!!msg.feedback}
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {msg.type === 'user' && (
@@ -653,7 +721,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
             
             <h1 className="text-3xl font-bold text-foreground mb-3">
-              {userName ? `Olá ${userName},` : "Olá, sou VIA."}
+              {userName ? `Olá ${userName} ` : "Olá, sou VIA."}
             </h1>
             <p className="text-lg text-muted-foreground">
               Como posso ajudá-lo hoje?

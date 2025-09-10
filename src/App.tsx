@@ -6,6 +6,8 @@ import AdminPage from '@/pages/Admin';
 import AdminRoute from '@/components/auth/AdminRoute';
 import { PresenceProvider } from '@/contexts/PresenceContext';
 import { supabase } from "./supabase/client";
+import MaintenancePage from "@/pages/maintenance";
+import RouteGuard from "@/components/auth/RouteGuard";
 
 // A simple component to handle route protection
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -41,17 +43,21 @@ const App: React.FC = () => {
     <PresenceProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/chat"
-            element={<ProtectedRoute><ChatLayout /></ProtectedRoute>}
-          />
-          {/* Rota de Admin Protegida */}
-          <Route element={<ProtectedRoute><AdminRoute /></ProtectedRoute>}>
-              <Route path="/admin" element={<AdminPage />} />
-          </Route>
+          {/* The maintenance page is a standalone route, accessible to all */}
+          <Route path="/maintenance" element={<MaintenancePage />} />
 
-          <Route path="/" element={<Navigate to="/chat" />} /> {/* Redireciona raiz para chat */}
+          {/* All other routes are children of the RouteGuard */}
+          <Route element={<RouteGuard />}>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/chat"
+              element={<ProtectedRoute><ChatLayout /></ProtectedRoute>}
+            />
+            <Route element={<ProtectedRoute><AdminRoute /></ProtectedRoute>}>
+                <Route path="/admin" element={<AdminPage />} />
+            </Route>
+            <Route path="/" element={<Navigate to="/chat" />} />
+          </Route>
         </Routes>
       </Router>
     </PresenceProvider>

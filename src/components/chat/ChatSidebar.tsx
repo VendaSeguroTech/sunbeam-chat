@@ -64,7 +64,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     isLoading: isLoadingConversations,
     deleteConversation,
     startNewConversation,
-    setCurrentConversation
+    setCurrentConversation,
+    loadConversations
   } = useConversationHistory();
 
   // Hook para sessões do n8n
@@ -103,6 +104,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   };
 
   const handleNewConversation = () => {
+    loadConversations();
+    refetchSessions();
     startNewConversation();
     onConversationSelect?.(null);
     onSessionSelect?.(null);
@@ -452,7 +455,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 <ThemeToggle />
               </div>
               <div className="text-xs text-muted-foreground text-center animate-fade-in">
-                VIA v1.0
+                VIA v1.0.6 (beta)
               </div>
             </div>
           ) : (

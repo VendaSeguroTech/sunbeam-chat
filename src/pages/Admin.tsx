@@ -3,6 +3,7 @@ import AdminPanel from '@/components/admin/AdminPanel';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import MaintenanceToggle from '@/components/admin/MaintenanceToggle';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ const AdminPage: React.FC = () => {
                 Voltar para o Chat
             </Button>
         </header>
-        <main>
+        <main className="space-y-6">
+          <MaintenanceToggle />
           <AdminPanel />
         </main>
       </div>

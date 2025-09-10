@@ -33,4 +33,5 @@ export interface Message {
     type: string;
     name: string;
   };
+  feedback?: 'positive' | 'negative';
 }
