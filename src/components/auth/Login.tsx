@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/supabase/client"; // Ajuste o path se necessário
+import { supabase } from "@/supabase/client";
 import { Mail, Lock, LogIn } from "lucide-react";
 import sunbeamLogo from "@/assets/logo2.png";
-import { useNavigate } from "react-router-dom"; // Assumindo que você usa react-router-dom para rotas
+import { useNavigate } from "react-router-dom";
+import { useMaintenance } from "@/contexts/MaintenanceContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -13,6 +14,7 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isMaintenanceMode } = useMaintenance();
 
   const handleLogin = async () => {
     if (!email || !password) return;
@@ -27,11 +29,27 @@ const Login: React.FC = () => {
       if (error) throw error;
 
       if (data.user) {
+        // Check user role and maintenance status for intelligent redirect
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+
+        const isAdmin = profile?.role === "admin";
+
         toast({
           title: "Sucesso",
           description: "Login realizado com sucesso!",
         });
-        navigate("/chat"); // Redireciona para a rota do chat (ajuste se necessário)
+
+        if (isAdmin && isMaintenanceMode) {
+          navigate("/admin");
+        } else if (!isAdmin && isMaintenanceMode) {
+          navigate("/maintenance");
+        } else {
+          navigate("/chat");
+        }
       }
     } catch (error) {
       console.error("Erro no login:", error);

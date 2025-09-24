@@ -3,6 +3,7 @@ import { supabase } from '../supabase/client';
 
 interface MaintenanceContextType {
   isMaintenanceMode: boolean;
+  isLoading: boolean;
   setMaintenanceMode: (isActive: boolean) => Promise<void>;
 }
 
@@ -10,21 +11,26 @@ const MaintenanceContext = createContext<MaintenanceContextType | undefined>(und
 
 export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchMaintenanceStatus = async () => {
-      const { data, error } = await supabase
-        .from('maintenance')
-        .select('is_active')
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('maintenance')
+          .select('is_active')
+          .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116: single row not found
-        console.error('Error fetching maintenance status:', error);
-        return;
-      }
+        if (error && error.code !== 'PGRST116') { // PGRST116: single row not found
+          console.error('Error fetching maintenance status:', error);
+          return;
+        }
 
-      if (data) {
-        setIsMaintenanceMode(data.is_active);
+        if (data) {
+          setIsMaintenanceMode(data.is_active);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -61,7 +67,7 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode }}>
+    <MaintenanceContext.Provider value={{ isMaintenanceMode, isLoading, setMaintenanceMode }}>
       {children}
     </MaintenanceContext.Provider>
   );

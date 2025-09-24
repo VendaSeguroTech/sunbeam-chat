@@ -51,7 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
 
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/db0eba25-1605-4358-b5ab-c8e75111e4cc";
+  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -384,12 +384,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  const handleFeedback = async (messageId: string, rating: 'positive' | 'negative') => {
-    const message = messages.find(m => m.id === messageId);
-    if (!message || message.feedback) return;
+  const handleFeedback = async (ratedMessage: Message, userQuestion: Message | undefined, rating: 'positive' | 'negative') => {
+    if (!ratedMessage || ratedMessage.feedback) return;
 
     const payload = {
-      message: message.content,
+      question: userQuestion ? userQuestion.content : 'Contexto da pergunta não encontrado.',
+      answer: ratedMessage.content,
       rating: rating,
       sessionId: sessionId,
       userId: currentUserId,
@@ -410,7 +410,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
 
       setMessages(prevMessages => prevMessages.map(m => 
-        m.id === messageId ? { ...m, feedback: rating } : m
+        m.id === ratedMessage.id ? { ...m, feedback: rating } : m
       ));
 
       toast({
@@ -664,7 +664,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           variant="ghost"
                           size="icon"
                           className={`h-7 w-7 rounded-full ${msg.feedback === 'positive' ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground hover:bg-muted'}`}
-                          onClick={() => handleFeedback(msg.id, 'positive')}
+                          onClick={() => {
+                            const userQuestion = messages.slice(0, index).reverse().find(m => m.type === 'user');
+                            handleFeedback(msg, userQuestion, 'positive');
+                          }}
                           disabled={!!msg.feedback}
                         >
                           <ThumbsUp className="w-4 h-4" />
@@ -673,7 +676,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           variant="ghost"
                           size="icon"
                           className={`h-7 w-7 rounded-full ${msg.feedback === 'negative' ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground hover:bg-muted'}`}
-                          onClick={() => handleFeedback(msg.id, 'negative')}
+                          onClick={() => {
+                            const userQuestion = messages.slice(0, index).reverse().find(m => m.type === 'user');
+                            handleFeedback(msg, userQuestion, 'negative');
+                          }}
                           disabled={!!msg.feedback}
                         >
                           <ThumbsDown className="w-4 h-4" />
