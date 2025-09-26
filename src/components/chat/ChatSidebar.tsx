@@ -169,7 +169,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         className={`
           ${isOpen ? 'w-72' : 'w-16'}
           transition-all duration-300 ease-in-out
-          flex flex-col h-screen bg-chat-sidebar border-r border-border
+          flex flex-col h-screen bg-chat-sidebar border-r border-border shadow-md
         `}
       >
         {/* Header */}
@@ -184,7 +184,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${isRotating ? 'logo-rotate' : ''}`}
                   />
                   <span className="font-display font-semibold text-lg text-foreground animate-fade-in">
-                    V.IA
+                    Expert.IA
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -255,7 +255,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="font-display">V.IA</p>
+                      <p className="font-display">Expert.IA</p>
                     </TooltipContent>
                   </Tooltip>
                 ) : (

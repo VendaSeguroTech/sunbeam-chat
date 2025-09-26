@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Sparkles, Search, User, Bot, File as FileIcon, X, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -37,21 +37,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [sessionId, setSessionId] = useState<string>("");
   const [isNewChat, setIsNewChat] = useState<boolean>(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [userName, setUserName] = useState<string>(""); // New state for user name
+  const [userName, setUserName] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
-  // Estado para comandos e sugestão
+  // Autocomplete de comandos
   const [commands, setCommands] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredCommands, setFilteredCommands] = useState<string[]>([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
 
+  // Sugestões de perguntas do backend
+  const [questionSuggestions, setQuestionSuggestions] = useState<string[]>([]);
+
+  // 🔥 Frases dinâmicas durante o loading
+  const [loadingBlurb, setLoadingBlurb] = useState<string>("");
+  const hasShownThabataOnceRef = useRef<boolean>(false); // garante exibir “o que a Thabata responderia?” só 1x em toda a sessão
+
   const { toast } = useToast();
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
 
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,18 +66,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const MESSAGE_LIMIT = 50;
   const MESSAGE_WARNING_THRESHOLD = 45;
 
-  // Função para gerar novo sessionId
   const generateSessionId = (): string => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  // Obter user_id atual - executar apenas uma vez
+  // Usuário atual e nome
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
-        // Fetch user name from profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('name')
@@ -87,7 +92,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     getCurrentUser();
   }, []);
 
-  // Inicializar sessionId apenas uma vez quando o componente monta
+  // SessionId inicial
   useEffect(() => {
     if (!isInitialized) {
       const newSessionId = generateSessionId();
@@ -97,31 +102,63 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [isInitialized]);
 
-  // Função para carregar comandos do arquivo comandos.txt
+  // Carregar comandos
   useEffect(() => {
-    const loadedCommands = [
-      '/suporte'
-    ];
+    const loadedCommands = ['/suporte'];
     setCommands(loadedCommands);
   }, []);
 
+  // 🔁 Frases durante loading (com Thabata 1x por ciclo)
+  useEffect(() => {
+    let interval: number | undefined;
+
+    if (isLoading) {
+      // reset da flag a cada novo ciclo de loading
+      hasShownThabataOnceRef.current = false;
+
+      const basePhrases = ["pensando...", "realizando busca", "Já sei", "hmmm", "Estruturando a resposta..."];
+      let sequence = basePhrases; // a rotação normal NUNCA contém a frase da Thabata
+      let i = 0;
+
+      // Mostra a frase da Thabata imediatamente, uma única vez por ciclo
+      if (!hasShownThabataOnceRef.current) {
+        setLoadingBlurb("o que a Thabata responderia?");
+        hasShownThabataOnceRef.current = true; // marca já exibida neste ciclo
+        i = -1; // no próximo tick começará do início das frases base
+      } else {
+        setLoadingBlurb(basePhrases[0]);
+        i = 0;
+      }
+
+      interval = window.setInterval(() => {
+        i = (i + 1) % sequence.length;
+        setLoadingBlurb(sequence[i]);
+      }, 3000); // ritmo leve
+    } else {
+      setLoadingBlurb("");
+    }
+
+    return () => {
+      if (interval) window.clearInterval(interval);
+    };
+  }, [isLoading]);
+
+
+
   const convertN8nMessagesToLocal = (n8nMessages: N8nChatMessage[]): Message[] => {
     console.log('🔄 Convertendo mensagens do n8n:', n8nMessages);
-    
     const localMessages: Message[] = [];
 
     n8nMessages.forEach((record, index) => {
       const message = record.message;
-      
       let content = 'Mensagem sem conteúdo';
       let type: 'user' | 'assistant' = 'user';
-      
+
       if (typeof message === 'string') {
         content = message;
         type = index % 2 === 0 ? 'user' : 'assistant';
       } else if (message && typeof message === 'object') {
         const messageObj = message as MessageContent;
-        
         if (messageObj.content && typeof messageObj.content === 'string') {
           content = messageObj.content;
         } else if (messageObj.message && typeof messageObj.message === 'string') {
@@ -131,21 +168,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         } else {
           content = JSON.stringify(messageObj, null, 2);
         }
-        
         type = messageObj.type || (index % 2 === 0 ? 'user' : 'assistant');
       } else if (message === null || message === undefined) {
         content = 'Mensagem vazia';
         type = index % 2 === 0 ? 'user' : 'assistant';
       }
-      
+
       console.log(`💬 Mensagem ${index + 1}: ${type} - "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`);
-      
-      // New logic for splitting assistant messages
+
       if (type === 'assistant' && content.includes('\n\n')) {
         const chunks = content.split('\n\n').filter(c => c.trim() !== '');
         chunks.forEach((chunk, chunkIndex) => {
           localMessages.push({
-            id: `${record.id?.toString() || `msg_${index}`}_${chunkIndex}`, // Unique ID for each chunk
+            id: `${record.id?.toString() || `msg_${index}`}_${chunkIndex}`,
             content: chunk.trim(),
             type,
             timestamp: new Date(record.created_at || new Date().toISOString())
@@ -210,7 +245,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, [messages, isLoading]);
 
   useEffect(() => {
-    // Only save conversation when the assistant is not actively responding
     if (!isLoading && messages.length > 0 && !selectedSessionId && isInitialized) {
       const saveOrUpdateConversation = async () => {
         if (currentConversation && !isNewChat) {
@@ -221,13 +255,139 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           onNewChatStarted?.();
         }
       };
-
       saveOrUpdateConversation();
     }
   }, [messages, isLoading, currentConversation, saveConversation, updateConversation, isNewChat, onNewChatStarted, selectedSessionId, isInitialized]);
 
+  // Extrai sugestões do payload
+  const extractQuestionSuggestions = (raw: unknown): string[] | null => {
+    try {
+      const payloads = Array.isArray(raw) ? raw : [raw];
+
+      for (const item of payloads) {
+        if (!item || typeof item !== 'object') continue;
+
+        const containers: any[] = [];
+        const pushIfObj = (v: any) => (v && typeof v === 'object') ? containers.push(v) : null;
+
+        pushIfObj((item as any).output);
+        pushIfObj((item as any).data?.output);
+        pushIfObj((item as any).result?.output);
+        pushIfObj((item as any).content?.output);
+        // fallback: o próprio item pode ser o schema
+        pushIfObj(item);
+
+        for (const c of containers) {
+          if (c?.type === 'object' && c?.properties && typeof c.properties === 'object') {
+            const props = c.properties;
+            const keys = Object.keys(props).sort();
+            const questions = keys
+              .map(k => props[k]?.description || props[k]?.title || props[k]?.example || props[k]?.const || k)
+              .filter(q => typeof q === 'string' && q.trim().length > 0)
+              .slice(0, 6);
+
+            if (questions.length) return questions;
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
+  };
+
+  // Extrai texto "normal" da resposta
+  const extractResponseText = (data: WebhookResponse): string => {
+    if (data.output && typeof data.output === 'string') return data.output;
+    if (data.response && typeof data.response === 'string') return data.response;
+    if (data.message && typeof data.message === 'string') return data.message;
+    if (data.content && typeof data.content === 'string') return data.content;
+    if (data.text && typeof data.text === 'string') return data.text;
+    if (data.result && typeof data.result === 'string') return data.result;
+    if (data.data && typeof data.data === 'string') return data.data;
+    if (data.data && typeof data.data === 'object' && data.data !== null) {
+      const dataObj = data.data as Record<string, unknown>;
+      if (typeof dataObj.response === 'string') return dataObj.response;
+      if (typeof dataObj.message === 'string') return dataObj.message;
+      if (typeof dataObj.text === 'string') return dataObj.text;
+    }
+    return JSON.stringify(data, null, 2);
+  };
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const streamResponseAsSeparateMessages = async (fullText: string) => {
+    const chunks = fullText.split('\n\n').filter(c => c.trim() !== '');
+    for (const chunk of chunks) {
+      const messageId = (Date.now() + Math.random()).toString();
+      const assistantMessage: Message = {
+        id: messageId,
+        content: "",
+        type: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+
+      const characterDelay = 20;
+      const chunkTypingTime = chunk.length * characterDelay;
+      const maxDelay = 3000;
+      const effectiveTypingTime = Math.min(chunkTypingTime, maxDelay);
+      const delayPerCharacter = effectiveTypingTime > 0 && chunk.length > 0 ? effectiveTypingTime / chunk.length : 0;
+
+      let currentContent = "";
+      for (let i = 0; i < chunk.length; i++) {
+        currentContent += chunk[i];
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === messageId ? { ...msg, content: currentContent } : msg
+          )
+        );
+        if (delayPerCharacter > 0) {
+          await sleep(delayPerCharacter);
+        }
+      }
+      await sleep(1000);
+    }
+  };
+
+  const handleFeedback = async (ratedMessage: Message, userQuestion: Message | undefined, rating: 'positive' | 'negative') => {
+    if (!ratedMessage || ratedMessage.feedback) return;
+
+    const payload = {
+      question: userQuestion ? userQuestion.content : 'Contexto da pergunta não encontrado.',
+      answer: ratedMessage.content,
+      rating: rating,
+      sessionId: sessionId,
+      userId: currentUserId,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error(`Webhook failed with status ${response.status}`);
+
+      setMessages(prevMessages => prevMessages.map(m =>
+        m.id === ratedMessage.id ? { ...m, feedback: rating } : m
+      ));
+
+      toast({ title: "Feedback enviado", description: "Obrigado pela sua avaliação!" });
+    } catch (error) {
+      console.error("Failed to send feedback:", error);
+      toast({ title: "Erro", description: "Não foi possível enviar seu feedback. Tente novamente.", variant: "destructive" });
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+
+    // digitou algo -> remover chips de sugestões para não confundir
+    if (questionSuggestions.length) setQuestionSuggestions([]);
+
     setMessage(value);
 
     const lastWord = value.split(' ').pop() || '';
@@ -289,153 +449,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.size > MAX_FILE_SIZE) {
       toast({ title: "Erro", description: "O arquivo é muito grande (máx 10MB).", variant: "destructive" });
       return;
     }
-
     setAttachedFile(file);
   };
 
-  const extractResponseText = (data: WebhookResponse): string => {
-    // Prioritize the 'output' field as requested for the new logic
-    if (data.output && typeof data.output === 'string') {
-      return data.output;
-    }
-    if (data.response && typeof data.response === 'string') {
-      return data.response;
-    }
-    if (data.message && typeof data.message === 'string') {
-      return data.message;
-    }
-    if (data.content && typeof data.content === 'string') {
-      return data.content;
-    }
-    if (data.text && typeof data.text === 'string') {
-      return data.text;
-    }
-    if (data.result && typeof data.result === 'string') {
-      return data.result;
-    }
-    if (data.data && typeof data.data === 'string') {
-      return data.data;
-    }
-    if (data.data && typeof data.data === 'object' && data.data !== null) {
-      const dataObj = data.data as Record<string, unknown>;
-      if (dataObj.response && typeof dataObj.response === 'string') {
-        return dataObj.response;
-      }
-      if (dataObj.message && typeof dataObj.message === 'string') {
-        return dataObj.message;
-      }
-      if (dataObj.text && typeof dataObj.text === 'string') {
-        return dataObj.text;
-      }
-    }
-    return JSON.stringify(data, null, 2);
-  };
-
-  
-
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const streamResponseAsSeparateMessages = async (fullText: string) => {
-    const chunks = fullText.split('\n\n').filter(c => c.trim() !== '');
-  
-    for (const chunk of chunks) {
-      const messageId = (Date.now() + Math.random()).toString();
-      const assistantMessage: Message = {
-        id: messageId,
-        content: "",
-        type: 'assistant',
-        timestamp: new Date()
-      };
-      
-      // Add the new empty message bubble
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Typing effect for the current chunk
-      const characterDelay = 20;
-      const chunkTypingTime = chunk.length * characterDelay;
-      const maxDelay = 3000;
-      const effectiveTypingTime = Math.min(chunkTypingTime, maxDelay);
-      const delayPerCharacter = effectiveTypingTime > 0 && chunk.length > 0 ? effectiveTypingTime / chunk.length : 0;
-  
-      let currentContent = "";
-      for (let i = 0; i < chunk.length; i++) {
-        currentContent += chunk[i];
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === messageId ? { ...msg, content: currentContent } : msg
-          )
-        );
-        if (delayPerCharacter > 0) {
-          await sleep(delayPerCharacter);
-        }
-      }
-      
-      // Wait before showing the next message bubble
-      await sleep(1000); 
-    }
-  };
-
-  const handleFeedback = async (ratedMessage: Message, userQuestion: Message | undefined, rating: 'positive' | 'negative') => {
-    if (!ratedMessage || ratedMessage.feedback) return;
-
-    const payload = {
-      question: userQuestion ? userQuestion.content : 'Contexto da pergunta não encontrado.',
-      answer: ratedMessage.content,
-      rating: rating,
-      sessionId: sessionId,
-      userId: currentUserId,
-      timestamp: new Date().toISOString()
-    };
-
-    try {
-      const response = await fetch('https://webhook.vendaseguro.tech/webhook/cbc7d3b3-66ff-42b4-a1d4-303a03e60d5a', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Webhook failed with status ${response.status}`);
-      }
-
-      setMessages(prevMessages => prevMessages.map(m => 
-        m.id === ratedMessage.id ? { ...m, feedback: rating } : m
-      ));
-
-      toast({
-        title: "Feedback enviado",
-        description: "Obrigado pela sua avaliação!",
-      });
-
-    } catch (error) {
-      console.error("Failed to send feedback:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar seu feedback. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSendMessage = async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
-    if (event) {
-      event.preventDefault();
-    }
+    if (event) event.preventDefault();
 
-    if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) {
-      return;
-    }
+    if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) return;
 
     if (messages.length >= MESSAGE_LIMIT) {
       toast({
@@ -477,18 +504,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('type', fileToSend.type);
         formData.append('message', userMessageContent || `Arquivo enviado: ${fileToSend.name}`);
 
-        response = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          body: formData,
-        });
+        response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
 
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
         const data: WebhookResponse = await response.json();
-        let aiResponseContent = extractResponseText(data);
 
+        // Sugestões?
+        const suggestions = extractQuestionSuggestions(data);
+        if (suggestions && suggestions.length) {
+          setMessages(prev => [...prev, {
+            id: (Date.now() + Math.random()).toString(),
+            content: "Não encontrei uma resposta direta, selecione uma das sugestões abaixo",
+            type: 'assistant',
+            timestamp: new Date()
+          }]);
+          setQuestionSuggestions(suggestions.slice(0, 3));
+          setIsLoading(false);
+          return;
+        }
+
+        let aiResponseContent = extractResponseText(data);
         if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
           aiResponseContent = "Recebi o arquivo, mas não consegui processá-lo.";
         }
@@ -502,7 +538,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setMessages(prev => [...prev, assistantMessage]);
 
       } else {
-        // New logic for text messages with separate message bubbles
         const payload = {
           message: userMessageContent,
           timestamp: userMessage.timestamp.toISOString(),
@@ -518,23 +553,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
         const data: WebhookResponse = await response.json();
+
+        // Sugestões?
+        const suggestions = extractQuestionSuggestions(data);
+        if (suggestions && suggestions.length) {
+          setMessages(prev => [...prev, {
+            id: (Date.now() + Math.random()).toString(),
+            content: "Não encontrei uma resposta direta, selecione uma das sugestões abaixo",
+            type: 'assistant',
+            timestamp: new Date()
+          }]);
+          setQuestionSuggestions(suggestions.slice(0, 3));
+          setIsLoading(false);
+          return;
+        }
+
         const aiResponseContent = extractResponseText(data);
 
         if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
-            const assistantMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                content: "Não recebi uma resposta válida do assistente.",
-                type: 'assistant',
-                timestamp: new Date()
-            };
-            setMessages(prev => [...prev, assistantMessage]);
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            content: "Não recebi uma resposta válida do assistente.",
+            type: 'assistant',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, assistantMessage]);
         } else {
-            await streamResponseAsSeparateMessages(aiResponseContent);
+          await streamResponseAsSeparateMessages(aiResponseContent);
         }
       }
 
@@ -545,9 +593,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     } catch (error) {
       console.error('❌ Erro ao enviar mensagem ou processar resposta:', error);
-      // Only remove the user's message that initiated the failed response
       setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
-      
+
       let errorMessage = "Não foi possível obter a resposta do assistente. Tente novamente.";
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
@@ -556,11 +603,98 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           errorMessage = `Erro do servidor: ${error.message}`;
         }
       }
+      toast({ title: "Erro", description: errorMessage, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Enviar sugestão direto
+  const handleSendSuggestion = async (q: string): Promise<void> => {
+    if (isLoading || !sessionId || !currentUserId) return;
+
+    if (messages.length >= MESSAGE_LIMIT) {
       toast({
-        title: "Erro",
-        description: errorMessage,
+        title: "Limite de mensagens atingido",
+        description: "Por favor, inicie um novo chat para continuar.",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (questionSuggestions.length) setQuestionSuggestions([]);
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: q.trim(),
+      type: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        message: userMessage.content,
+        timestamp: userMessage.timestamp.toISOString(),
+        messageId: userMessage.id,
+        sessionId: sessionId,
+        userId: currentUserId,
+        type: 'text'
+      };
+
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+
+      const data: WebhookResponse = await response.json();
+
+      const suggestions = extractQuestionSuggestions(data);
+      if (suggestions && suggestions.length) {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + Math.random()).toString(),
+          content: "Não encontrei uma resposta direta, selecione uma das sugestões abaixo",
+          type: 'assistant',
+          timestamp: new Date()
+        }]);
+        setQuestionSuggestions(suggestions.slice(0, 3));
+        return;
+      }
+
+      const aiResponseContent = extractResponseText(data);
+      if (!aiResponseContent || aiResponseContent.trim() === '' || aiResponseContent === '{}') {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          content: "Não recebi uma resposta válida do assistente.",
+          type: 'assistant',
+          timestamp: new Date()
+        }]);
+      } else {
+        await streamResponseAsSeparateMessages(aiResponseContent);
+      }
+
+      if (isNewChat) {
+        setIsNewChat(false);
+        onNewChatStarted?.();
+      }
+    } catch (error) {
+      console.error('❌ Erro ao enviar sugestão:', error);
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+
+      let errorMessage = "Não foi possível obter a resposta do assistente. Tente novamente.";
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+        } else if (error.message.includes('HTTP')) {
+          errorMessage = `Erro do servidor: ${error.message}`;
+        }
+      }
+      toast({ title: "Erro", description: errorMessage, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -568,7 +702,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const renderWithEmphasis = (text: string) => {
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
-
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={index}>{part.slice(2, -2)}</strong>;
@@ -588,14 +721,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             {(isNewChat && messages.length > 0) || selectedSessionId ? (
               <div className="text-center py-2">
                 <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  {selectedSessionId 
+                  {selectedSessionId
                     ? `Sessão carregada • ${selectedSessionId.slice(-8)}`
                     : `Nova conversa iniciada • SessionID: ${sessionId.slice(-8)}`
                   }
                 </span>
               </div>
             ) : null}
-            
+
             {messages.map((msg, index) => {
               const showAvatar = msg.type === 'assistant' && (index === 0 || messages[index - 1]?.type !== 'assistant');
 
@@ -607,14 +740,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         <img src={sunbeamLogo} alt="AI" className="w-8 h-8" />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 flex-shrink-0" /> // Placeholder for alignment
+                      <div className="w-8 h-8 flex-shrink-0" />
                     )
                   )}
-                  
+
                   <div className={`flex-1 flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
                     <div className={`max-w-2xl transition-transform duration-200 active:scale-[0.97] ${
-                      msg.type === 'user' 
-                        ? 'bg-primary text-primary-foreground ml-12 rounded-2xl p-4 shadow-apple active:shadow-sm' 
+                      msg.type === 'user'
+                        ? 'bg-primary text-primary-foreground ml-12 rounded-2xl p-4 shadow-apple active:shadow-sm'
                         : 'bg-transparent border-none shadow-none p-0'
                     }`}>
                       {msg.file ? (
@@ -622,14 +755,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           {msg.file.type.startsWith('image/') ? (
                             <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
                           ) : (
-                            <a 
-                              href={msg.file.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
+                            <a
+                              href={msg.file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className={`flex items-center gap-3 p-3 rounded-lg ${
-                                msg.type === 'user' 
-                                ? 'bg-black/10 hover:bg-black/20'
-                                : 'bg-primary/10 hover:bg-primary/20'
+                                msg.type === 'user'
+                                  ? 'bg-black/10 hover:bg-black/20'
+                                  : 'bg-primary/10 hover:bg-primary/20'
                               }`}
                             >
                               <FileIcon className={`w-6 h-6 flex-shrink-0 ${
@@ -658,6 +791,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         </p>
                       )}
                     </div>
+
                     {msg.type === 'assistant' && msg.content && (
                       <div className="flex items-center gap-1 mt-2 pl-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <Button
@@ -694,19 +828,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </div>
                   )}
                 </div>
-              )
+              );
             })}
-            
+
             {isLoading && (
               <div className="flex gap-4 justify-start">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                   <img src={sunbeamLogo} alt="AI" className="w-5 h-5" />
                 </div>
                 <div className="bg-chat-bubble-assistant border border-border rounded-2xl p-4 mr-12">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                  <div className="flex flex-col">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                    </div>
+                    {/* 🔥 frase dinâmica */}
+                    {loadingBlurb && (
+                      <div className="mt-2 text-xs italic text-muted-foreground/80 font-light">
+                        {loadingBlurb}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -719,20 +861,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-2xl mx-auto px-6">
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
-              <img 
-                src={sunbeamLogo} 
-                alt="VIA" 
+              <img
+                src={sunbeamLogo}
+                alt="VIA"
                 className="w-full h-full object-contain"
               />
             </div>
-            
+
             <h1 className="text-3xl font-bold text-foreground mb-3">
               {userName ? `Olá ${userName} ` : "Olá, sou VIA."}
             </h1>
             <p className="text-lg text-muted-foreground">
               Como posso ajudá-lo hoje?
             </p>
-            
+
             {sessionId && (
               <p className="text-xs text-muted-foreground mt-4 opacity-50">
                 SessionID: {sessionId.slice(-8)}
@@ -745,6 +887,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="border-t border-border bg-chat-background p-6">
         <div className="max-w-4xl mx-auto">
           <div className="relative">
+
+            {/* Chips de sugestões acima do input */}
+            {questionSuggestions.length > 0 && (
+              <div className="bg-chat-input border border-border rounded-2xl p-3 mb-3">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Não encontrei uma resposta adequada para essa pergunta, quer tentar:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {questionSuggestions.map((q, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full hover:bg-primary/5"
+                      disabled={isLoading}
+                      onClick={() => handleSendSuggestion(q)}
+                    >
+                      {q}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-muted-foreground"
+                    onClick={() => setQuestionSuggestions([])}
+                    disabled={isLoading}
+                  >
+                    Ocultar
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {attachedFile && (
               <div className="bg-chat-input border border-border border-b-0 rounded-t-2xl p-3 -mb-2">
                 <div className="flex items-center justify-between bg-muted p-2 rounded-lg">
@@ -767,6 +942,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
               </div>
             )}
+
             <div className={`flex items-center gap-2 bg-chat-input border border-border p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
               <div className="relative w-full">
                 <Input
@@ -776,7 +952,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   placeholder={
                     messages.length >= MESSAGE_LIMIT
                       ? "Limite de mensagens atingido."
-                      : "Conversar com V.IA"
+                      : "Pergunte alguma coisa"
                   }
                   className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
                   disabled={isLoading || messages.length >= MESSAGE_LIMIT}
