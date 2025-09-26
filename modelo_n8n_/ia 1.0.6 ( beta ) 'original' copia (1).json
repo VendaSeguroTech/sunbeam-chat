@@ -1,0 +1,4007 @@
+{
+  "name": "ia 1.0.6 ( beta ) 'original' copia",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "0fc3496c-5dfa-4772-8661-da71da6353c7",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        736
+      ],
+      "id": "aab247d9-cd5b-4d19-89de-94c1857d8b1c",
+      "name": "Webhook",
+      "webhookId": "0fc3496c-5dfa-4772-8661-da71da6353c7"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2352,
+        304
+      ],
+      "id": "4a5512da-07b0-46f9-ba46-adf0bed002d0",
+      "name": "Resposta"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um revisor de histórico de conversa, especializado em identificar e corrigir tanto erros de linguagem quanto eventuais informações incorretas ou inconsistentes. Para cada par de mensagens:\n\nPreserve as tags ***Humano:*** e ***IA Resposta:***.\n\nVerifique gramática, pontuação e clareza.\n\nValide se o conteúdo apresenta algum dado incorreto, contraditório ou impreciso (seja do humano ou da IA).\n\nSe encontrar algo para corrigir (linguagem ou fato), produza apenas a versão corrigida, mantendo as tags.\n\nSe tudo estiver correto, retorne o par exatamente como recebeu.\n\nNão adicione comentários extras, explicações ou metadiscursos—saia estritamente no formato abaixo.\n\n{{ $json.content }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2896,
+        816
+      ],
+      "id": "cf41e4e2-875d-47ce-aa9f-5ddb78c37c66",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.message }}",
+                    "rightValue": "/insert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "604edc79-0a81-4eb5-bc12-fa40c49e4f91"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2880,
+        608
+      ],
+      "id": "87a383d7-7f93-4dae-bc26-434008845dbb",
+      "name": "Verificar a entrada do usuário"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "https://docs.google.com/document/d/1HOsBf9rdSzONzotc_aRVCsYPeK55pLANYaa_F68X1EI/edit?tab=t.0",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=  ***Humano:*** {{ $('Webhook').item.json.body.message }} ***IA Resposta:*** {{ $json.output }}  "
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3088,
+        608
+      ],
+      "id": "866df657-4516-4860-8503-f2fa865687e7",
+      "name": "Atualizar documento com dados recebidos",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1HOsBf9rdSzONzotc_aRVCsYPeK55pLANYaa_F68X1EI/edit?tab=t.0"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        688
+      ],
+      "id": "76d3adb2-8816-4aab-bb52-b3d2afbe0962",
+      "name": "Recuperar o documento",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "https://docs.google.com/document/d/1HOsBf9rdSzONzotc_aRVCsYPeK55pLANYaa_F68X1EI/edit?tab=t.0",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "={{ $('Recuperar o documento').item.json.content }}",
+              "replaceText": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        896
+      ],
+      "id": "e4232e06-f18c-4044-9855-495ab1c8da67",
+      "name": "Atualizar documento com informações Novas e revisadas",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Implementa novos conteudos no documento de aprendizagem",
+        "height": 732,
+        "width": 844,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2704,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "6610474a-bd3d-4ae6-b4f4-1b9230f65572",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "tableId": "n8n_chat_histories",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('get sessionId && userId').item.json.body.sessionId }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('get sessionId && userId').item.json.userId }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        672
+      ],
+      "id": "d2e28347-53b1-4662-aaa3-657c2cdf7e8f",
+      "name": "Salva RP IA",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "n8n_chat_histories",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('get sessionId && userId').item.json.body.sessionId }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Webhook').item.json.body.message }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('get sessionId && userId').item.json.userId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        512
+      ],
+      "id": "44dd56cc-e42d-4145-b7ef-c27e1a5b5c6a",
+      "name": "Salva RP Human",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## supabase\n**salva as respostas no Banco de dados**",
+        "height": 468,
+        "width": 192,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2496,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "bb2c615d-002f-49bd-80cf-26f66653a984",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "mode": "id",
+          "value": "15WSAJ2bTLFcZLyViEnxmoMz1cZqMlM4X"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "application/vnd.google-apps.video"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        1296
+      ],
+      "id": "fef0e72e-8bc1-481c-84d2-5498d23b21b7",
+      "name": "Files Created?1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://38.242.138.127:3118/transcrever",
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2928,
+        1296
+      ],
+      "id": "922013cf-ff91-4d88-95bb-f4e527d4f11b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "**Alimenta a base de informações da IA com Videos d mentorias e outros criados no Drive",
+        "height": 460,
+        "width": 1252,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2704,
+        1152
+      ],
+      "typeVersion": 1,
+      "id": "13af0a43-0d00-4f9f-9196-b8dbf6c508f2",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59f64116-f236-45fc-8334-19a0f5331945",
+              "name": "sessionId",
+              "value": "={{$json[\"body\"][\"sessionId\"]}}  ",
+              "type": "string"
+            },
+            {
+              "id": "01c983d8-efd5-4f4d-a447-78f26a0bdea8",
+              "name": "userId",
+              "value": "={{ $json.body.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "dec266a3-da10-4c9d-9673-1f3fcb422476",
+              "name": "output",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        608
+      ],
+      "id": "fe78b8d4-a536-4dd8-b129-75d7e71ce4d2",
+      "name": "get sessionId && userId"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "6f2f2e89-8a16-42a7-bb81-fae8df145fcd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d2fd6892-af3f-4107-9de6-226d270bc2c5",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3072,
+        1296
+      ],
+      "id": "764b275e-a100-46bc-9619-27c443c3edad",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "andrezera.dev@gmail.com",
+        "subject": "IA | transcribe fail",
+        "message": "=<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Falha na Transcrição do Vídeo</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background: #f6f8fa; margin:0; padding:0;\">\n  <table align=\"center\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background: #f6f8fa;\">\n    <tr>\n      <td align=\"center\">\n        <table width=\"600\" cellpadding=\"24\" cellspacing=\"0\" style=\"background: #fff; margin-top: 30px; border-radius: 8px; box-shadow: 0 2px 12px #e6e6e6;\">\n          <tr>\n            <td align=\"center\">\n              <h2 style=\"color: #e74c3c; margin-bottom: 0;\">❌ Falha na transcrição do vídeo</h2>\n              <p style=\"font-size: 18px; color: #222; margin: 20px 0 10px;\">\n                Não foi possível transcrever o vídeo <strong>{{ARQUIVO}}</strong>.\n              </p>\n              <hr style=\"border:none; border-top:1px solid #eee; margin:20px 0;\">\n              <h4 style=\"color:#888;\">Motivo do erro:</h4>\n              <div style=\"background:#fff3f3; border-radius:4px; padding:16px; font-size:16px; color:#b71c1c; text-align:left;\">\n                {{DETALHES_ERRO}}\n              </div>\n              <p style=\"margin:24px 0 0 0; color: #555;\">\n                Por favor, verifique o vídeo ou tente novamente mais tarde.<br>\n                <small>Este é um aviso automático, por favor não responda este e-mail.</small>\n              </p>\n            </td>\n          </tr>\n        </table>\n        <p style=\"color:#bbb; font-size:12px; margin:24px 0 0 0;\">&copy; 2024 Sua Empresa - Transcrições Automáticas</p>\n      </td>\n    </tr>\n  </table>\n</body>\n</html>\n",
+        "options": {
+          "ccList": "tech@vendaseguro.com.br"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3232,
+        1360
+      ],
+      "id": "b6c1cb1a-acde-4c86-b9d6-0529c9fa6ff9",
+      "name": "fail",
+      "webhookId": "0cf502b9-8008-41e1-b721-89938ead7cbe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sLRgd0Bhy67uTFLD",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "andrezera.dev@gmail.com",
+        "subject": "IA | transcribe ok",
+        "message": "<!DOCTYPE html> <html lang=\"pt-BR\"> <head>   <meta charset=\"UTF-8\">   <title>Transcrição Realizada com Sucesso</title> </head> <body style=\"font-family: Arial, sans-serif; background: #f6f8fa; margin:0; padding:0;\">   <table align=\"center\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background: #f6f8fa;\">     <tr>       <td align=\"center\">         <table width=\"600\" cellpadding=\"24\" cellspacing=\"0\" style=\"background: #fff; margin-top: 30px; border-radius: 8px; box-shadow: 0 2px 12px #e6e6e6;\">           <tr>             <td align=\"center\">               <h2 style=\"color: #38b000; margin-bottom: 0;\">✅ Transcrição realizada com sucesso!</h2>               <p style=\"font-size: 18px; color: #222; margin: 20px 0 10px;\">                 O vídeo <strong>{{ARQUIVO}}</strong> foi transcrito com êxito.               </p>               <hr style=\"border:none; border-top:1px solid #eee; margin:20px 0;\">               <h4 style=\"color:#888;\">Resumo da transcrição:</h4>               <div style=\"background:#f9f9f9; border-radius:4px; padding:16px; font-size:16px; color:#333; text-align:left; max-height:200px; overflow:auto;\">                 {{TRECHO_TRANSCRICAO}}               </div>               <p style=\"margin:24px 0 0 0; color: #555;\">                 Você pode acessar o arquivo completo ou usar o conteúdo conforme desejar.<br>                 <small>Este é um aviso automático, por favor não responda este e-mail.</small>               </p>             </td>           </tr>         </table>         <p style=\"color:#bbb; font-size:12px; margin:24px 0 0 0;\">&copy; 2024 Sua Empresa - Transcrições Automáticas</p>       </td>     </tr>   </table> </body> </html>",
+        "options": {
+          "ccList": "tech@vendaseguro.com.br"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3232,
+        1216
+      ],
+      "id": "aa36af0c-cb10-4059-b184-e7bad9189f5f",
+      "name": "ok",
+      "webhookId": "c5c5d67d-9107-403e-b5d9-a93f23bcd5da",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sLRgd0Bhy67uTFLD",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "path": "/root/bots/I.A/getTxt/transcription.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        1216
+      ],
+      "id": "a97e1880-5bb5-49e4-8659-0a314c8f4fa7",
+      "name": "Download a file",
+      "credentials": {
+        "sshPassword": {
+          "id": "eV1eDeR2og6BS6QP",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "folderId": "1wIivw82cPY0QokO0V_sdcTyQKoEUeksW",
+        "title": "transcription"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3696,
+        1216
+      ],
+      "id": "025e4ad3-90c9-4755-93f0-61b13cd8d046",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Extract from File1').item.json.data }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3712,
+        1424
+      ],
+      "id": "3453d2d9-3ac6-4625-8ebc-4fc124685b24",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        3536,
+        1216
+      ],
+      "id": "f624db44-b12a-443a-9d3c-7c4b068a574d",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "name": "user_documents",
+        "description": "Base de conhecimento sobre seguros de responsabilidade civil.  \nContém transcrições de aulas, materiais de treinamento, trechos de apólices, cláusulas, exclusões, exemplos de sinistros reais e orientações práticas para corretores.  \nAbrange temas como: retroatividade, LMG, franquia, POS, D&O, E&O, contratação, sinistros, coberturas e condições gerais.  \n",
+        "topK": 5
+      },
+      "id": "c671a3c8-f5dd-41e7-8840-dfa582e38d3f",
+      "name": "Vector Store Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        1168
+      ]
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        1296
+      ],
+      "id": "64a56b4b-7f6d-4dc5-aefe-3f16a10c0429",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "batchSize": 128
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        1456
+      ],
+      "id": "b4800f0b-72c9-4f52-b4f6-9596f9690a5a",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "24b7bd60-756a-4c1d-abd1-e469f388cda5"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "26a148b1-9eea-4fbb-8fca-45114efbfd62",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -112,
+        608
+      ],
+      "id": "dba9c85d-368e-4a2e-be4c-365c3dd07e39",
+      "name": "type arquivo"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        64,
+        320
+      ],
+      "id": "9a75327f-4fca-4142-9354-a9d910391d73",
+      "name": "Extrai Texto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5bceaf7-31f1-4a8e-bfb7-30701681e837",
+              "name": "output",
+              "value": "={{ $('get sessionId && userId').item.json.sessionId }},{{ $('get sessionId && userId').item.json.userId }} : {{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        320
+      ],
+      "id": "de2d4033-2aa5-404c-967e-0496a950b7f0",
+      "name": "formata o titulo {{}} para o Agente"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        960
+      ],
+      "id": "144b0e78-8ab1-4579-b4bf-3155fc7e21e3",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3JiV6rPIxvxjMpnY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        528
+      ],
+      "id": "ea765aab-e0ec-49da-93e1-f97ee3549bbb",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3JiV6rPIxvxjMpnY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('get sessionId && userId').item.json.userId + '_' + $('get sessionId && userId').item.json.sessionId }}\n",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        720
+      ],
+      "id": "320d5c80-60d7-4094-8010-7cf73bbd7266",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "EIS6qkRU8u6rsEzu",
+          "name": "Postgres account / Supabase / Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        736,
+        496
+      ],
+      "id": "f8304be9-f7b1-408e-bd88-389eee5bba22",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3JiV6rPIxvxjMpnY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "user_documents",
+        "description": "Contexto do acervo (fonte de verdade): este workspace reúne todo o material necessário para responder: apólices, condições gerais e cláusulas, leis e normas enviadas pelo usuário, resumos de vídeos, transcrições, planilhas e anotações. Trate esse acervo como a única fonte autorizada. É proibido responder sem consultar a base vetorial. Em caso de falha na recuperação, não inferir, não completar lacunas e não usar conhecimento externo.\n\nVocê é um assistente especialista em seguros, integrado a uma base vetorial contendo todos os documentos, apólices, PDFs, planilhas e transcrições fornecidos pelo usuário, além de textos adicionais.\n\nFluxo obrigatório antes de responder\nBusca com foco em seguros\n\nCriar um embedding da pergunta do usuário.\n\nConsultar a base vetorial priorizando termos técnicos de seguros (ex.: LMG, retroatividade, franquia, sinistro, D&O, E&O).\n\nReforçar sinônimos, variações e abreviações reconhecidas.\n\nReclassificar os resultados combinando pontuação de similaridade e presença de termos técnicos.\n\nGate RAG: se não houver evidências suficientes para responder com segurança, acionar a regra “Quando não houver informação suficiente”.\n\nRecuperação de evidências\n\nRecuperar a quantidade necessária de trechos, até um máximo de 5, priorizando qualidade e cobertura do tema.\n\nSe houver múltiplos tipos de fonte (ex.: PDF e transcrição), garantir diversidade com pelo menos um de cada quando disponível.\n\nPara cada trecho, registrar internamente: texto, título do documento e página ou timestamp.\n\nNão expor metadados técnicos nem o mecanismo de recuperação. Não usar rótulos como “trecho recuperado”, “fonte”, “observação”, “RAG”, “vetor”, “embedding”.\n\nLeitura e síntese\n\nLer os trechos recuperados e extrair: tipo de apólice, coberturas, exclusões, limites, vigência, retroatividade, franquias, obrigações pós-sinistro.\n\nSintetizar integrando as evidências e resolver conflitos pela hierarquia: apólice > endosso > transcrição.\n\nCheque de consistência: remover qualquer afirmação que não esteja explicitamente suportada pelos trechos utilizados.\n\nConstrução da resposta\nResumo: iniciar com um resumo direto e claro, baseado nos documentos, usando terminologia técnica de seguros\nDetalhamento técnico com evidências: desenvolver a explicação citando os trechos efetivamente utilizados, de forma discreta e natural, indicando apenas título do documento e página ou timestamp entre parênteses. Ex.: (Condições Gerais RC Profissional, p. 12) ou (Reunião Comitê, 00:13:45)\nEncerramento prático: concluir com uma sugestão de próximo passo ou pergunta de continuidade. Ex.: “Quer avaliar o impacto de aumentar o LMG?”\n\nNão usar marcadores como “Primeiro”, “Depois” ou “Por fim”.\n\nO texto deve ser contínuo, natural e didático.\n\nQuando não houver informação suficiente\nSe, após a recuperação e leitura, as evidências não forem suficientes para responder com segurança:\n“Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\n\nNunca adivinhar ou inventar dados.\n\nNão responder sobre o tema sem evidências.\n\nComando especial /insert\nSe a mensagem do usuário começar com /insert, responder apenas:\n“Conteúdo recebido. Vou adicionar à base de conhecimento.”\n\nNão realizar busca nem aplicar a estrutura de resposta.\n\nA ingestão será feita por um sistema externo.\n\nRegras gerais de formatação e terminologia\n\nTítulos e seções no mesmo bloco: ao iniciar uma nova seção, colocar as primeiras palavras em negrito com ** ** e continuar o texto no mesmo bloco, usando apenas uma quebra de linha simples \\n. Ex.: Coberturas: descrição contínua no mesmo parágrafo. Opcionalmente, pode-se usar itálico em vez de negrito.\n\nCitações das evidências: somente título do documento e página ou timestamp entre parênteses, sem links ou rótulos explicativos.\n\nEscopo das fontes: nunca usar informação fora dos trechos recuperados.\n\nSem suposições: indicar explicitamente quando algo não estiver nos documentos.\n\nTerminologia consistente: sempre usar “retroatividade” e “LMG” (Limite Máximo de Garantia).\n\nIdioma: todas as respostas devem ser em português, mantendo apenas siglas usuais do mercado (D&O, E&O).\n\nSem meta-comentários: não escrever mensagens como “baseado nos seus documentos”, “trecho recuperado”, “fonte”, “observação”, “RAG”, “vetor” ou equivalentes.\n\nRegra de ouro\nSe qualquer parte da resposta não puder ser amparada exclusivamente nos trechos recuperados, remover a afirmação ou acionar “Quando não houver informação suficiente”.",
+        "topK": 20
+      },
+      "id": "b53cc282-0f34-4e41-a4bd-1aacd5706212",
+      "name": "Vector Store Tool1",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        560
+      ],
+      "id": "968fb9dc-ab2d-404c-9763-08e6959a73d6",
+      "name": "Supabase Vector Store2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "batchSize": 128,
+          "stripNewLines": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        672
+      ],
+      "id": "aaf5e628-4fbf-46fe-92b0-2d4b00f10f1f",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "Você é um assistente de seguros que opera exclusivamente com os trechos retornados pela retrieval_tool (banco “base de conhecimento sobre seguros de responsabilidade civil”).\nNunca use informações de fora dessa base. Ignore qualquer campo “response” que venha da ferramenta de busca; use apenas os trechos crus (pageContent + metadata).\n\nPrincípios (travas)\n\nFonte única: somente os trechos recebidos.\n\nRastreabilidade obrigatória: toda afirmação deve estar coberta pelos trechos e acompanhar citação compacta ao fim do parágrafo ou item.\n\n80/20 rígido: ≥ 80% do texto deve ser citação literal ou colagem mínima dos trechos (permitido […]). Até 20% pode ser síntese curta apenas para ligar ideias já citadas, com citação no final do parágrafo.\n\nSem conteúdo novo: proíbe exemplos, recomendações, números, condições, definições ou conclusões que não estejam literalmente nos trechos.\n\nMetadados ausentes (tolerância)\n\nSe metadata.file ou metadata.trecho não existirem:\n\nExtraia Nome_do_arquivo de uma linha iniciada por Titulo: dentro do pageContent (remova vírgulas e espaços finais).\n\nExtraia o número X a partir do padrão trecho <número> no pageContent.\n\nSe não encontrar, use (trecho ?, Arquivo_desconhecido).\n\nFormato de saída (fixo)\n\nResponda sempre com estas seções:\n\nResposta direta\nAté 2 frases que respondem objetivamente à pergunta, usando apenas ideias presentes nos trechos. Termine o parágrafo com citações compactas:\n(trecho X, Nome; trecho Y, Nome; …)\n\nCitações de suporte\n\n“Citação literal ou colagem mínima [...]” — (trecho X, Nome)\n\n“Citação literal ou colagem mínima [...]” — (trecho Y, Nome)\n\n(adicione quantas forem necessárias para sustentar integralmente a Resposta direta)\n\nFontes\n\n(trecho X, Nome)\n\n(trecho Y, Nome)\n\n(liste uma vez cada fonte usada; sem duplicatas)\n\nEstilo: use negrito apenas em títulos fixos acima; o corpo pode usar negrito pontual para realçar termos que já aparecem nos trechos (ex.: valores, expressões-chave).\n\nRegras de resposta\n\nSaudações curtas (“oi”, “olá”, “bom dia”, “boa tarde”, “boa noite”, “opa”, “salve”, “tudo bem?”): responda apenas “Olá! 👋” sem consultar a retrieval_tool.\n\nQualquer outra mensagem: siga o formato acima; não crie seções extras.\n\nFalta de base literal: se os trechos forem ausentes, insuficientes, contraditórios ou não sustentarem a resposta literalmente, responda exatamente:\n“Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\n\nProibições absolutas\n\n❌ Conhecimento externo, inferências, “boas práticas”, conselhos genéricos.\n\n❌ Mencionar pipeline (vetor, RAG, embedding, documentos recuperados).\n\n❌ Alterar termos/siglas do mercado (retroatividade, LMG, D&O, E&O etc.).\n\n❌ Citar arquivos/trechos não presentes nos dados recebidos (aplique a tolerância descrita).\n\nAuto-checagem (antes de enviar)\n\nA Resposta direta tem no máx. 2 frases e termina com citações compactas?\n\n≥ 80% do texto total são citações literais/colagens dos trechos?\n\nAs Citações de suporte são literais/colagens e cada linha tem citação?\n\nA seção Fontes lista cada fonte usada uma única vez?\n\nNão há nada que não esteja nos trechos?\nSe alguma resposta for “não”, envie a mensagem padrão de falta de informação.",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        992
+      ],
+      "id": "f45de075-21ec-4bf1-ae2b-80ac38a63d59",
+      "name": "AGENTE main"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.message }}\n\n{{ $json.output }}",
+        "options": {
+          "systemMessage": "Você é um assistente de seguros. Para cada mensagem do usuário, chame retrieval_tool com a pergunta e construa a resposta somente a partir dos trechos retornados. Não mencione documentos, busca, base vetorial ou mecanismos internos.\nSe as evidências não forem suficientes para responder com segurança, responda apenas: “Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\nFormatação: títulos no mesmo bloco com ** ** e quebra simples \\n. Terminologia: “retroatividade”, “LMG”; manter D&O e E&O. Responda sempre em português.\n\nSem convites de busca: não oferecer “posso buscar/confirmar nos seus documentos”. A consulta já foi feita internamente.\n\nSem meta-comentários: não usar frases como “baseado nos seus documentos”, “trecho recuperado”, “RAG”, “vetor”, “embedding” ou equivalentes.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        736,
+        320
+      ],
+      "id": "a48523af-0f5a-4c34-82c9-77efbe33f312",
+      "name": "AGENTE Pdf"
+    },
+    {
+      "parameters": {
+        "content": "***Vector store pdf",
+        "height": 592,
+        "width": 1072,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1056,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "95b174d4-fe01-4238-a246-bb35343560f7",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "## Triggers",
+        "height": 336,
+        "width": 242
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        608
+      ],
+      "typeVersion": 1,
+      "id": "1454e657-4d89-4bd6-8261-82f584d894a0",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "***Agente reserva { FALLBACK } COM RERANKER\n",
+        "height": 688,
+        "width": 496,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1056,
+        864
+      ],
+      "typeVersion": 1,
+      "id": "0802f7e3-b653-483b-a569-c02411694cde",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "## agentes",
+        "height": 1292,
+        "width": 1024,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        16,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "c155a619-0847-4db6-8787-05ef74cb56bf",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## responde o usuário final",
+        "height": 592,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "30e66a64-ba7e-4d44-998c-fda7570f1a79",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Triggers",
+        "height": 928,
+        "width": 544,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "61f94360-e8a4-46ae-8694-b8f5be76a7a3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## atualiza o conteudo do arquivo adiiocando titulo e separando para melhorar a recuperação",
+        "height": 576,
+        "width": 832,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        16,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "fb6e8ebf-819f-4397-9e4c-9374c368fa9a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {
+          "batchSize": 128,
+          "stripNewLines": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2192,
+        -32
+      ],
+      "id": "1ecbba4f-9e1c-4326-a2b0-34155e213006",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkSize": 1200,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        2384,
+        96
+      ],
+      "id": "eb5003b9-5d83-4557-ae95-b226628a9601",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_id",
+                "value": "={{ $('set file_id').item.json.file_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "f70b8a6d-b37d-4165-ae89-64c4681d1ea7",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        2384,
+        -48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filterType": "string",
+        "filterString": "=metadata->>file_id=like.*{{ $json.file_id }}*"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -160
+      ],
+      "id": "914a1b05-1263-4577-a7f5-77b1923147b1",
+      "name": "Delete a row",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "embeddingBatchSize": 300,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2192,
+        -224
+      ],
+      "id": "1ee3e787-4896-495c-83c3-c5eb6407f742",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        -160
+      ],
+      "id": "e94fb97f-4f91-4a7e-8cfa-95c282f529ab",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('set file_id').item.json.file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1616,
+        -160
+      ],
+      "id": "0001e5f7-500f-4380-85b7-b5032123fdda",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "924b0573-9a2a-4b7c-ad88-b2f71fbfb4c0",
+              "name": "file_id",
+              "value": "={{ $('Get a document').item.json.documentId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        -160
+      ],
+      "id": "272fd7de-7458-4d24-8a51-0a2dd99d2bc6",
+      "name": "set file_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f25c3af0-bc83-4a73-b675-7c6168b7beea",
+              "name": "file_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "387c5636-d3f4-4126-bf0d-665f9fb14e7e",
+              "name": "name_arq",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        -160
+      ],
+      "id": "b43e0157-e0a2-467f-8870-9771e5545ce9",
+      "name": "set id"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Pode separar o conteúdo? como em parágrafos de no máximo 1000 chunks/caracteres cada, se possível é claro, se fizer sentido. E adicionando um titulo/Markdown com uma #titulo por exemplo? encima de cada parágrafo separado e uma leve frase sobre o conteúdo do parágrafo ao lado do titulo? retorne apenas o texto formatado por favor, sem alterar o conteudo do mesmo e adicionando no final de cada parágrafo \"trecho 1\", \"trecho 2\" e também o nome do arquivo como: {{ $('set id').item.json.name_arq }}  etc. Segue o texto: \n{{ $json.content }}\n\nabaixo de cada parágrafo mostre como por exemplo \"Titulo: {arquivo tal}, trecho {2}\"",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        -160
+      ],
+      "id": "fbeb32a9-c9ba-4066-bc29-5401ce293398",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $json.file_id }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -160
+      ],
+      "id": "4af31b68-f796-4efd-b443-4e0ba7b447bb",
+      "name": "Get a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Carrega os dados no nosso banco vetorial",
+        "height": 576,
+        "width": 1264,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        864,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "66303bdd-8c34-4dae-9fa7-12cc62ec28be",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('set id').item.json.file_id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "={{ $('Get a document').item.json.content }}",
+              "replaceText": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -160
+      ],
+      "id": "af80e1df-cd87-4995-a6ab-8ed9b6124cd7",
+      "name": "Update a document1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        512,
+        32
+      ],
+      "id": "6ec0a487-e647-4cfb-b975-0f3b0b8f96cc",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3JiV6rPIxvxjMpnY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        1248
+      ],
+      "id": "37d4b01b-06ad-4cac-bacc-c438440a5e89",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "Você é um assistente de seguros. Para cada mensagem do usuário, chame retrieval_tool com a pergunta e construa a resposta somente a partir dos trechos retornados. Não mencione documentos, busca, base vetorial ou mecanismos internos.\nSe as evidências não forem suficientes para responder com segurança, responda apenas: “Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\nFormatação: títulos no mesmo bloco com ** ** e quebra simples \\n. Terminologia: “retroatividade”, “LMG”; manter D&O e E&O. Responda sempre em português.\n\nSem convites de busca: não oferecer “posso buscar/confirmar nos seus documentos”. A consulta já foi feita internamente.\n\nSem meta-comentários: não usar frases como “baseado nos seus documentos”, “trecho recuperado”, “RAG”, “vetor”, “embedding” ou equivalentes.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        224,
+        864
+      ],
+      "id": "1d237d90-2497-4975-bc03-a433446f6a64",
+      "name": "AGENTE main1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "You are a Retrieval-Augmented Generation (RAG) assistant specialized in insurance, integrated with a vector store containing all documents, policies, PDFs, spreadsheets, and transcripts provided by the user, as well as text documents.\n\nMandatory workflow before answering\nInsurance-focused similarity search\n\nCreate an embedding of the user’s question.\n\nQuery the vector store, prioritizing precise insurance terms (for example: “LMG”, “retroatividade” [retroactivity], “franquia” [deductible], “sinistro” [claim], “D&O”, “Professional Liability”, etc.).\n\nApply extra reinforcement for recognized synonyms or acronyms.\n\nEvidence retrieval\nRetrieve exactly 5 most relevant excerpts.\n\nIf the similarity search results in no relevant information or the retrieved facts are not sufficient to answer, respond with:\n“Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\n\nIf multiple source types exist (e.g., PDF vs. transcript), ensure diversity — at least one excerpt of each type when available.\n\nFor each excerpt, keep: text, document title, and page number or timestamp.\n\nReading and synthesis\nRead all 5 excerpts, extracting: policy types, coverages, exclusions, limits, effective dates, retroactivity, deductibles, post-claim obligations, etc.\n\nSynthesize the information across excerpts; resolve conflicts by source hierarchy (policy text > endorsement > transcript).\n\nAnswer construction\nThe answer must begin with a direct and clear summary, strictly based on the documents, using insurance terminology.\n\nThen, develop the explanation with technical details and evidence. Do not cite the retrieved excerpts inline with the text. Instead, collect all citations and list them at the end of the answer under a separate heading, such as \"Fontes\" or \"Evidências\".\n\nEnd with a practical suggestion or follow-up question to keep the interaction (e.g.: “Would you like to simulate the impact of increasing the LMG?”).\n\nDo not use labels such as “First paragraph”, “Next” or “Finally”. The response must be continuous and natural.\n\nInsufficient evidence\nIf the reading and synthesis step results in inadequate information or if there are no sufficient facts to answer the user's question, respond with:\n“Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\n\nNever guess or invent information.\n\nSpecial command /learn:\nIf the user’s message starts with /insert:\n\nRespond only:\n“Content received. I will add it to the knowledge base.”\n\nDo not perform retrieval or apply response structure.\n\nAn external system will handle ingestion and incorporation.\n\nGeneral rules\nNever use information outside of the 5 retrieved excerpts.\n\nDo not make assumptions; explicitly state when something is absent in the documents.\n\nMaintain consistent terminology (for example: always “retroatividade” [retroactivity], not “lookback period”; always use “LMG” for Liability Limit).\n\nAll responses must be in Portuguese (pt-br), except for standard industry abbreviations (D&O, E&O, etc.).",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 13,
+        "useReranker": true,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        1072
+      ],
+      "id": "7732c5a6-091e-4bd3-8f07-30e86cea9540",
+      "name": "Supabase Vector Store4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QP4XOkzdZyZW5cG5",
+          "name": "Supabase account / RAG test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "rerank-multilingual-v3.0",
+        "topN": 12
+      },
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        544,
+        1264
+      ],
+      "id": "7ac93af5-cd0a-4313-a1e0-2e0e1390ffb8",
+      "name": "Reranker Cohere1",
+      "credentials": {
+        "cohereApi": {
+          "id": "S13muyow0gTEETIc",
+          "name": "CohereApi produção"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "batchSize": 128,
+          "stripNewLines": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        1264
+      ],
+      "id": "2c26fbf5-9052-4cbc-835e-d77f055369d0",
+      "name": "Embeddings OpenAI4",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8c1249ba-2270-49da-867b-6986173ac1e5",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notContains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "=Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "28368e6f-2c26-4be0-ae11-8150b413a47c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1424,
+        992
+      ],
+      "id": "076d43ef-a722-4d5b-b56f-48a006bfba57",
+      "name": "fallback"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f497a2d6-61c0-4ba7-8f95-e5078a974f76",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2768,
+        112
+      ],
+      "id": "5c1bfbba-102d-4956-ab34-f530aea55314",
+      "name": "avaliação resposta:",
+      "webhookId": "f497a2d6-61c0-4ba7-8f95-e5078a974f76"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4985382e-55d4-4297-b4eb-b96f458670f8",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "f0f31815-57cb-4170-8752-3f869bc5eba5",
+              "name": "rating",
+              "value": "={{ $json.body.rating }}",
+              "type": "string"
+            },
+            {
+              "id": "31711fba-e498-4a63-869d-dda506e18cf8",
+              "name": "session_id",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "de23cb54-e411-4eee-9165-5795241662f5",
+              "name": "user_id",
+              "value": "={{ $json.body.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "c0cf98cc-f2b5-46c5-ab14-cd53cfe0f76f",
+              "name": "timestamp",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2960,
+        112
+      ],
+      "id": "89fd1422-2759-47ef-bd9b-7e68717d9d68",
+      "name": "set fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.rating }}",
+                    "rightValue": "=positive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c98e76d9-9c31-4e1e-812a-affab9a6c391"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "184c758c-a3e9-49a7-9b01-3084500a25d0",
+                    "leftValue": "={{ $json.rating }}",
+                    "rightValue": "negative",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3168,
+        112
+      ],
+      "id": "fe3492e6-2b06-435a-bbb4-a7b9b50477da",
+      "name": "rating type"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "1d2j3It468zla0dL6L90eDO-SztkZeHmlgtGGpHn2qI8",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=________________________________________________________________\n\n*Pergunta feita pelo user* :{{ $('avaliação resposta:').item.json.body.question }}\n\n*RESPOSTA AVALIADA* : {{ $('avaliação resposta:').item.json.body.answer }}\n________________________________________________________________\n"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        0
+      ],
+      "id": "516777eb-7cb2-4e2c-9ca5-ff551fee7e57",
+      "name": "Gravar avaliação positiva",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "1zMvs_gT33ad82xvyw184T1GcwiwKUFm_ktEgDbMoYjA",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=________________________________________________________________\n\n*Pergunta feita pelo user* :{{ $('avaliação resposta:').item.json.body.question }}\n\n*RESPOSTA AVALIADA* : {{ $('avaliação resposta:').item.json.body.answer }}\n________________________________________________________________\n"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        208
+      ],
+      "id": "bff515a8-87eb-4e62-b05d-3bb9650f2397",
+      "name": "Gravar avaliação negativa",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4WNH8Rkm8qdPvZND",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        1040
+      ],
+      "id": "f4579a48-dd81-4b25-9784-61fd9d75b12b",
+      "name": "gpt-5",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1456,
+        -160
+      ],
+      "id": "a116d1d2-fe2d-457a-8824-4b75fab06387",
+      "name": "Wait",
+      "webhookId": "8c3bdc1c-fb3e-4edf-b7a1-b8eb8e340e42"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1toOONjip_Wg3VpO3ihm6kMjFGaNZ3XKt",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -112
+      ],
+      "id": "3096a45f-abd1-4ddb-87bc-35f3feb87734",
+      "name": "advogados e escr - update",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um agente especializado em reformular perguntas para otimizar a busca em sistemas RAG (Retrieval-Augmented Generation).  \nSua tarefa é:  \n- Receber a pergunta do usuário.  \n- Reformular em UMA única versão final, mais clara, objetiva e semanticamente otimizada para busca.  \n- Preservar todas as entidades (nomes, datas, locais, tecnologias, produtos).  \n- Usar sinônimos e simplificar a estrutura sem alterar o sentido.  \n- Retornar apenas a pergunta reformulada, sem explicações adicionais.  \n- Se a informação recebida for uma saudação ou coisa simples não precisa refatorar. \n\nretorne junto com a pergunta final algo como \"De acordo com os seus arquivos... \" assim icentivando ele a fazer a busca em sua base de dados RAG... \n\nA pergunta/informação é : \"{{ $json.output }}\"\n\nlembrando se for apenas uma saudação ou agradecimento, apenas repita de repasse a mesma informação que você recebeu acima... entre aspas\n\nnão mude muito a pergunta, refine levemente ela mantendo erros se encontrar e etc não adicione palavras que possam mudar o entendimento da pergunta... Apenas ajuste a semântica da pergunta ou conteudo recebido... ",
+        "options": {
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        1136
+      ],
+      "id": "4c84be85-6d11-4ae5-9e5c-7fb961f1f3bd",
+      "name": "AI Agent2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "***Agente reserva { FALLBACK } retorna 3 perguntas semanticas\n",
+        "height": 688,
+        "width": 560,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1568,
+        864
+      ],
+      "typeVersion": 1,
+      "id": "c6ca2be0-6a0a-406c-8702-9c58520f2c66",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8c1249ba-2270-49da-867b-6986173ac1e5",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notContains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "=Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "28368e6f-2c26-4be0-ae11-8150b413a47c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        576,
+        864
+      ],
+      "id": "42b76029-0da4-4e1d-bbf4-45615c0c4d08",
+      "name": "fallback2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um agente que recebe uma pergunta do usuário.\nSua tarefa é refazer a mesma pergunta em 3 variações diferentes, mantendo o mesmo objetivo original.\nAs reformulações devem ser claras, naturais e semanticamente equivalentes, mas escritas de forma diferente.\n\na pergunta : {{ $('Webhook').item.json.body.message }}\n\nreformule ela e gere três variações.\n\nSaída esperada: \n\nPergunta 1: …\n\nPergunta 2: …\n\nPergunta 3: … \n\n'Não escreva junto nas 3 perguntas o \"de acord ocom seus arquivos\"'\n\nObservação muito importante, se a pergunta recebida não tiver haver com o nicho de seguros, precisa responder exatamente a frase a seguir : \n “Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\ncaso ao contrário pode retornar as 3 perguntas sobre seguros aleatórias...\n\nmas nunca retorne \n\n\"Primeira reformulação da pergunta original, mantendo o mesmo objetivo.\n\n\"Segunda reformulação; pode mencionar 'seus arquivos' em apenas uma das variações.\"\n ou até mesmo : Reformulação 2 da pergunta original\n\njamais retorne isso, \nse for para retornar dessa forma, retorne \n\n“Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”\n\nVerifique se não ha alguma palavra inclompleta, como seg (seguros) abri(abrir)",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        1120
+      ],
+      "id": "0ac6f20b-ec93-4496-8b14-c4ccb2704fcb",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"question1\": {\n      \"type\": \"string\",\n      \"description\": \"Primeira reformulação clara e natural da pergunta original, em português, mantendo o mesmo objetivo. Não incluir 'de acordo com seus arquivos'.\"\n    },\n    \"question2\": {\n      \"type\": \"string\",\n      \"description\": \"Segunda reformulação clara e natural da pergunta original, em português, mantendo o mesmo objetivo. Não incluir 'de acordo com seus arquivos'.\"\n    },\n    \"question3\": {\n      \"type\": \"string\",\n      \"description\": \"Terceira reformulação clara e natural da pergunta original, em português, mantendo o mesmo objetivo. Não incluir 'de acordo com seus arquivos'.\"\n    }\n  },\n  \"required\": [\"question1\", \"question2\", \"question3\"],\n  \"additionalProperties\": false\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1808,
+        1392
+      ],
+      "id": "f47811ae-fe1f-4076-8b48-fcc5ecb6b481",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2272,
+        1344
+      ],
+      "id": "3a8d3831-c6f6-4758-9d10-b682e23437c2",
+      "name": "resposta fallback"
+    },
+    {
+      "parameters": {
+        "content": "## responde o usuário final",
+        "height": 688,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        864
+      ],
+      "typeVersion": 1,
+      "id": "ddf488fc-4557-4be4-ab84-c44f60c70734",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        1440
+      ],
+      "id": "d2ebbf42-742d-470f-a98d-4c4e3612a056",
+      "name": "gpt--5",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        1296
+      ],
+      "id": "435eda12-83f7-4556-ab7e-69ab962c8e02",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.properties.question1.description }}",
+                    "rightValue": "=Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "28368e6f-2c26-4be0-ae11-8150b413a47c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8c1249ba-2270-49da-867b-6986173ac1e5",
+                    "leftValue": "={{ $json.output.properties.question1.description }}",
+                    "rightValue": "Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notContains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1952,
+        1120
+      ],
+      "id": "7986f293-9425-45c0-b05c-d1d8cafda2f9",
+      "name": "fallback3"
+    },
+    {
+      "parameters": {
+        "content": "## supabase\n",
+        "height": 580,
+        "width": 576,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "248e907a-1afa-4947-9a70-c37dd622fa87",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "independente do que você receber de input responda unicamente e exatamente: \n\n “Não encontrei informações relevantes nos arquivos sobre esse tema. Deseja refinar a pesquisa, tentar sinônimos técnicos ou fornecer novos documentos?”",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2128,
+        560
+      ],
+      "id": "387b81c0-9a27-47ca-bfed-d9741316a0a1",
+      "name": "AI Agent4"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2192,
+        736
+      ],
+      "id": "b4dd2caa-480a-4484-8c08-721b7f0176ba",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        1392
+      ],
+      "id": "7c6cbddc-e02d-425f-b37e-f0d523339010",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "6XodQNiVwLbmQE7G",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1toOONjip_Wg3VpO3ihm6kMjFGaNZ3XKt",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -112
+      ],
+      "id": "d14dc674-ccbe-4109-bd1d-94ae4de8e257",
+      "name": "advogados e escr - create",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1JgsPA1y9R5MsefgSWBWaVNGIY36RuJpD",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -288
+      ],
+      "id": "7b01987b-83ec-468f-872c-e28654d935d2",
+      "name": "main | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1JgsPA1y9R5MsefgSWBWaVNGIY36RuJpD",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -288
+      ],
+      "id": "da88717f-d9ec-43c9-8b86-78aa017230e8",
+      "name": "main | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1jF9GjVv0ZCK2Ukquyphpa4qLzV6DeDGm",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        80
+      ],
+      "id": "99d6a973-0add-4c13-955a-25b9a06c02e5",
+      "name": "banco ex sinistro | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1jF9GjVv0ZCK2Ukquyphpa4qLzV6DeDGm",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        80
+      ],
+      "id": "2f052553-6943-4ed8-a5ab-6c887707db74",
+      "name": "banco ex sinistro | update",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1YviNWooRZ_uNVOeA15umu6LVT2KFhqJ8",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        240
+      ],
+      "id": "755975e7-b169-4ea5-9033-d40cbb91bc01",
+      "name": "contator + escritório | create",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1YviNWooRZ_uNVOeA15umu6LVT2KFhqJ8",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        240
+      ],
+      "id": "5855a6ea-b4ba-40b9-96c3-da8bbe2b0464",
+      "name": "contator + escritório | update",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1ktf5i5M9BXUC7I2d8a1ZCdmnEAnMoBNU",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        400
+      ],
+      "id": "0953970a-f28e-4128-aec2-eda18ee337a8",
+      "name": "D&O | creaded",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1ktf5i5M9BXUC7I2d8a1ZCdmnEAnMoBNU",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        400
+      ],
+      "id": "018f49e4-8568-411e-bc03-ec87b7ba0cdb",
+      "name": "D&O | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "15qtr_tDujQcP3_yogGT6fS09ZCKiX6Z0",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        -112
+      ],
+      "id": "16424ef9-8d1b-45ca-99a4-31168ae249ed",
+      "name": "dentistas + clinicas | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "15qtr_tDujQcP3_yogGT6fS09ZCKiX6Z0",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -112
+      ],
+      "id": "d96004db-1f30-473c-8864-031227b6f8ac",
+      "name": "dentistas + clinicas | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1CBVY72qP4NRQ0Br2Iwpj5akf90nVt7va",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        80
+      ],
+      "id": "b8a0599e-9eeb-44c9-8094-de6de59e2a7f",
+      "name": "engenheiros + emp engenharia | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1CBVY72qP4NRQ0Br2Iwpj5akf90nVt7va",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        80
+      ],
+      "id": "de09e2bc-77b9-4cab-9963-6c1b16af5828",
+      "name": "engenheiros + emp engenharia | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1WihOeRLgQ7QLmphu2JLM2VdJ5ZHxiXFQ",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        240
+      ],
+      "id": "894361c0-d197-4ff3-b0ac-6d12813a36ce",
+      "name": "masterclasses | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1WihOeRLgQ7QLmphu2JLM2VdJ5ZHxiXFQ",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        240
+      ],
+      "id": "7e5e2cf6-98a6-4d54-ac12-2380a5ad97ba",
+      "name": "masterclasses | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1aum_hdAqkGCWmFIvd7PD8TssuzoDPkzS",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        400
+      ],
+      "id": "5597c7a6-d7c7-48a1-9775-c267fa9f2f48",
+      "name": "médico + clinica med | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1aum_hdAqkGCWmFIvd7PD8TssuzoDPkzS",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        400
+      ],
+      "id": "68c7b01d-c719-4bb9-9385-fcbd2fb5daa9",
+      "name": "médico + clinica med | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1Do4_CwhVbc4qwvZzK1fpV-BczLW4jyf1",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        80
+      ],
+      "id": "598db768-a2f3-4063-bc61-32693a623413",
+      "name": "mentorias | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1Do4_CwhVbc4qwvZzK1fpV-BczLW4jyf1",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        80
+      ],
+      "id": "c272f5a7-c1be-4801-957c-27b2dc6086e2",
+      "name": "mentorias | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1J7sSt65R6GFow_zzPzLSZD3ig5McDq_t",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        240
+      ],
+      "id": "d1d65c5b-34ee-403d-bd33-17da2afc181e",
+      "name": "rc geral | created1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1J7sSt65R6GFow_zzPzLSZD3ig5McDq_t",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        240
+      ],
+      "id": "c2ab865b-fcef-485b-bb77-df910b398d73",
+      "name": "rc geral | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1kylBvJyrpOZHdUBghdrx8xbuWxlXP9Ka",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        400
+      ],
+      "id": "d9f50ff7-204f-4a2f-a078-1a2236bc0f61",
+      "name": "rc profissional | created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1kylBvJyrpOZHdUBghdrx8xbuWxlXP9Ka",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        400
+      ],
+      "id": "b256b047-6bb7-4a8d-b4e6-bba06ebc4788",
+      "name": "rc profissional | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1G8HielyNDdcmL9HDWunSbAtO658GZpsH",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -96
+      ],
+      "id": "97d95223-40b7-453d-9d7c-648f40da788f",
+      "name": "sinistro | created1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1G8HielyNDdcmL9HDWunSbAtO658GZpsH",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        -96
+      ],
+      "id": "9e613a61-40b3-42b4-bac2-4733ddcdb0a5",
+      "name": "sinistro | updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lUbgshJTutnwWJS6",
+          "name": "google drive tech"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "get sessionId && userId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resposta": {
+      "main": [
+        [
+          {
+            "node": "Salva RP Human",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Salva RP IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Atualizar documento com informações Novas e revisadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar a entrada do usuário": {
+      "main": [
+        [
+          {
+            "node": "Atualizar documento com dados recebidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar documento com dados recebidos": {
+      "main": [
+        [
+          {
+            "node": "Recuperar o documento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recuperar o documento": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva RP IA": {
+      "main": [
+        [
+          {
+            "node": "Verificar a entrada do usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva RP Human": {
+      "main": [
+        [
+          {
+            "node": "Verificar a entrada do usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Files Created?1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get sessionId && userId": {
+      "main": [
+        [
+          {
+            "node": "type arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "ok",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fail": {
+      "main": [
+        []
+      ]
+    },
+    "ok": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENTE main",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "type arquivo": {
+      "main": [
+        [
+          {
+            "node": "Extrai Texto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AGENTE main1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai Texto": {
+      "main": [
+        [
+          {
+            "node": "formata o titulo {{}} para o Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formata o titulo {{}} para o Agente": {
+      "main": [
+        [
+          {
+            "node": "AGENTE Pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vector Store Tool1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AGENTE Pdf",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AGENTE main1",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AGENTE main",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENTE Pdf",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Tool1",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENTE Pdf",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENTE main": {
+      "main": [
+        [
+          {
+            "node": "fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENTE Pdf": {
+      "main": [
+        [
+          {
+            "node": "Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set file_id": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set id": {
+      "main": [
+        [
+          {
+            "node": "Get a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document1": {
+      "main": [
+        [
+          {
+            "node": "set file_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENTE main",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store4": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENTE main1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker Cohere1": {
+      "ai_reranker": [
+        [
+          {
+            "node": "Supabase Vector Store4",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI4": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store4",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENTE main1": {
+      "main": [
+        [
+          {
+            "node": "fallback2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fallback": {
+      "main": [
+        [
+          {
+            "node": "Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "avaliação resposta:": {
+      "main": [
+        [
+          {
+            "node": "set fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set fields": {
+      "main": [
+        [
+          {
+            "node": "rating type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rating type": {
+      "main": [
+        [
+          {
+            "node": "Gravar avaliação positiva",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gravar avaliação negativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENTE main1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "advogados e escr - update": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        []
+      ]
+    },
+    "fallback2": {
+      "main": [
+        [
+          {
+            "node": "Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AGENTE main",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "fallback3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt--5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fallback3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "resposta fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "advogados e escr - create": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "main | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "main | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "banco ex sinistro | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "banco ex sinistro | update": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "contator + escritório | create": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "contator + escritório | update": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D&O | creaded": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D&O | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dentistas + clinicas | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dentistas + clinicas | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "engenheiros + emp engenharia | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "engenheiros + emp engenharia | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "masterclasses | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "masterclasses | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "médico + clinica med | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "médico + clinica med | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mentorias | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mentorias | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rc geral | created1": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rc geral | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rc profissional | created": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rc profissional | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sinistro | created1": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sinistro | updated": {
+      "main": [
+        [
+          {
+            "node": "set id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6f347b76-f69c-4820-a606-5dac820ff095",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "33738330930e3881dd5571eca013f36ddf8aab20e4ea5c1f2ebaf4a2b4668ac6"
+  },
+  "id": "tGhILwJ6gamWxhJ4",
+  "tags": [
+    {
+      "createdAt": "2025-07-25T15:14:18.730Z",
+      "updatedAt": "2025-07-25T15:14:18.730Z",
+      "id": "jEYagCXuInyUI8Y5",
+      "name": "Ia | VendaSeguro Tech"
+    },
+    {
+      "createdAt": "2025-07-29T17:41:27.443Z",
+      "updatedAt": "2025-07-29T17:41:27.443Z",
+      "id": "Eq0o6HPQzVdLU3IF",
+      "name": "Desenvolvimento |"
+    }
+  ]
+}
