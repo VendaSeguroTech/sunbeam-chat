@@ -21,7 +21,7 @@ const MaintenanceToggle = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Modo Manutenção</CardTitle>
+        <CardTitle className="text-lg font-semibold">Modo Manutenção</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-4">

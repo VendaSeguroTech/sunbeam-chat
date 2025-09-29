@@ -104,7 +104,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Carregar comandos
   useEffect(() => {
-    const loadedCommands = ['/suporte'];
+    const loadedCommands = ['/suporte', '/insert'];
     setCommands(loadedCommands);
   }, []);
 
@@ -714,10 +714,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-chat-background relative">
+    <div className="flex-1 flex flex-col h-[100svh] bg-chat-background relative">
       {messages.length > 0 ? (
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+          <div className="max-w-4xl w-full mx-auto space-y-4 sm:space-y-5 md:space-y-6 px-0">
             {(isNewChat && messages.length > 0) || selectedSessionId ? (
               <div className="text-center py-2">
                 <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
@@ -733,7 +733,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               const showAvatar = msg.type === 'assistant' && (index === 0 || messages[index - 1]?.type !== 'assistant');
 
               return (
-                <div key={msg.id} className={`group flex items-start gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div key={msg.id} className={`group flex items-start gap-3 sm:gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.type === 'assistant' && (
                     showAvatar ? (
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -745,15 +745,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   )}
 
                   <div className={`flex-1 flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`max-w-2xl transition-transform duration-200 active:scale-[0.97] ${
+                    <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                       msg.type === 'user'
-                        ? 'bg-primary text-primary-foreground ml-12 rounded-2xl p-4 shadow-apple active:shadow-sm'
+                        ? 'bg-[#ff773d] dark:bg-[#303030] text-[#eeeeee] dark:text-[#FFFFFF] ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-apple active:shadow-sm'
                         : 'bg-transparent border-none shadow-none p-0'
                     }`}>
                       {msg.file ? (
                         <div className="flex flex-col gap-2">
                           {msg.file.type.startsWith('image/') ? (
-                            <img src={msg.file.url} alt={msg.file.name} className="max-w-xs rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, '_blank')} />
+                            <img
+                              src={msg.file.url}
+                              alt={msg.file.name}
+                              className="max-w-full sm:max-w-xs h-auto rounded-lg cursor-pointer" 
+                              onClick={() => window.open(msg.file.url, '_blank')} 
+                            />
                           ) : (
                             <a
                               href={msg.file.url}
@@ -786,7 +791,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
                       )}
                       {msg.type === 'user' && (
-                        <p className={`text-xs mt-2 opacity-70 text-primary-foreground/70`}>
+                        <p className="text-[10px] sm:text-xs mt-2 opacity-70 text-primary-foreground/70 dark:text-white">
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       )}
@@ -833,10 +838,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             {isLoading && (
               <div className="flex gap-4 justify-start">
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                  <img src={sunbeamLogo} alt="AI" className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:!bg-[#303030] flex items-center justify-center flex-shrink-0">
+                  <img src={sunbeamLogo} alt="AI" className="w-5 h-5 dark:filter dark:invert" />
                 </div>
-                <div className="bg-chat-bubble-assistant border border-border rounded-2xl p-4 mr-12">
+                <div className="bg-chat-bubble-assistant border border-border rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
                   <div className="flex flex-col">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
@@ -859,7 +864,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-2xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
               <img
                 src={sunbeamLogo}
@@ -868,10 +873,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               />
             </div>
 
-            <h1 className="text-3xl font-bold text-foreground mb-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
               {userName ? `Olá ${userName} ` : "Olá, sou VIA."}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base sm:text-lg text-muted-foreground">
               Como posso ajudá-lo hoje?
             </p>
 
@@ -884,13 +889,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
       )}
 
-      <div className="border-t border-border bg-chat-background p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="sticky bottom-0 border-t border-border bg-chat-background/95 backdrop-blur supports-[backdrop-filter]:bg-chat-background/80 p-3 sm:p-4 md:p-6 pb-[max(env(safe-area-inset-bottom),12px)]">
+        <div className="max-w-4xl w-full mx-auto">
           <div className="relative">
 
             {/* Chips de sugestões acima do input */}
             {questionSuggestions.length > 0 && (
-              <div className="bg-chat-input border border-border rounded-2xl p-3 mb-3">
+              <div className="bg-chat-input border border-border rounded-2xl p-2.5 sm:p-3 mb-2 sm:mb-3">
                 <p className="text-xs text-muted-foreground mb-2">
                   Não encontrei uma resposta adequada para essa pergunta, quer tentar:
                 </p>
@@ -943,7 +948,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             )}
 
-            <div className={`flex items-center gap-2 bg-chat-input border border-border p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
+            <div className={`flex items-center gap-2 bg-chat-input dark:bg-[#303030] border border-border p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
               <div className="relative w-full">
                 <Input
                   value={message}
@@ -954,7 +959,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                   }
-                  className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+                  className="flex-1 border-0 bg-[#F8FAFC] dark:bg-[#303030] placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base dark:text-white"
                   disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                 />
                 <input
@@ -964,8 +969,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   className="hidden"
                   accept="image/png, image/jpeg, image/gif, application/pdf"
                 />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/gif, application/pdf"
+                />
                 {showSuggestions && (
-                  <ul className="absolute bottom-full mb-1 left-0 w-full max-h-40 overflow-auto bg-white border border-gray-300 rounded shadow z-10">
+                  <ul className="absolute bottom-full mb-1 left-0 w-full max-h-48 sm:max-h-56 overflow-auto bg-white border border-gray-300 rounded shadow z-10 text-sm">
                     {filteredCommands.map((cmd, index) => (
                       <li
                         key={cmd}
@@ -986,7 +998,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 hover:bg-muted"
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 hover:bg-muted"
                   onClick={handlePaperclipClick}
                   disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                 >
@@ -997,7 +1009,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onClick={handleSendMessage}
                   disabled={(!message.trim() && !attachedFile) || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
                   size="sm"
-                  className="h-8 w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
@@ -1009,7 +1021,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
 
             {messages.length >= MESSAGE_WARNING_THRESHOLD && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
+              <p className="text-[11px] sm:text-xs text-muted-foreground text-center mt-2">
                 {messages.length >= MESSAGE_LIMIT
                   ? "Você atingiu o limite de mensagens. Por favor, inicie um novo chat."
                   : `${MESSAGE_LIMIT - messages.length} mensagens restantes neste chat.`
@@ -1017,11 +1029,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </p>
             )}
 
-            <div className="flex justify-center gap-2 mt-4 cursor-not-allowed">
+            <div className="flex flex-wrap justify-center gap-2 mt-3 sm:mt-4 cursor-not-allowed">
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary cursor-not-allowed"
+                className="rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary cursor-not-allowed bg-[#F8FAFC] dark:bg-[#303030] dark:text-white"
               >
                 <Sparkles className="w-4 h-4 mr-2 " />
                 Criatividade Avançada
@@ -1029,7 +1041,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary cursor-not-allowed"
+                className="rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary cursor-not-allowed bg-[#F8FAFC] dark:bg-[#303030] dark:text-white"
               >
                 <Search className="w-4 h-4 mr-2" />
                 Pesquisar
@@ -1037,7 +1049,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center mt-4">
+          <p className="text-[11px] sm:text-xs text-muted-foreground text-center mt-3 sm:mt-4">
             A IA pode cometer erros. Considere verificar informações importantes.
           </p>
         </div>

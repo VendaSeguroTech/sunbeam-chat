@@ -41,19 +41,57 @@ const ChatLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-chat-background">
-      {/* Sidebar */}
-      <ChatSidebar 
-        isOpen={sidebarOpen} 
-        onConversationSelect={handleConversationSelect}
-        onSessionSelect={handleSessionSelect}
-        toggleSidebar={toggleSidebar}
-      />
-      
+    <div className="relative flex h-[100svh] w-full bg-chat-background overflow-hidden">
+      {/* Sidebar: vira drawer no mobile */}
+      <div
+        className={`
+          md:relative md:translate-x-0 md:z-0
+          fixed inset-y-0 left-0 z-40
+          transition-transform duration-300
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        <ChatSidebar
+          isOpen={sidebarOpen}
+          onConversationSelect={handleConversationSelect}
+          onSessionSelect={handleSessionSelect}
+          toggleSidebar={toggleSidebar}
+        />
+      </div>
+
+      {/* Backdrop no mobile quando aberta */}
+      {sidebarOpen && (
+        <div
+          onClick={toggleSidebar}
+          className="fixed inset-0 bg-black/40 md:hidden z-30"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Botão flutuante para abrir o menu no mobile quando estiver fechado */}
+      {!sidebarOpen && (
+        <Button
+          onClick={toggleSidebar}
+          variant="default"
+          size="icon"
+          className="
+            md:hidden fixed top-4 left-4 z-50
+            h-10 w-10 rounded-full shadow-lg
+            bg-primary text-primary-foreground
+          "
+          aria-label="Abrir menu"
+          aria-controls="app-sidebar"
+          aria-expanded={sidebarOpen}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
+
+
       {/* Chat principal */}
-      <div className="flex-1">
-        <ChatInterface 
-          key={chatKey} // Força re-render quando nova conversa é iniciada
+      <div className="flex-1 min-w-0">
+        <ChatInterface
+          key={chatKey}
           selectedConversation={selectedConversation}
           selectedSessionId={selectedSessionId}
           onNewChatStarted={handleNewChatStarted}

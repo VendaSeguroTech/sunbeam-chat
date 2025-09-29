@@ -136,14 +136,14 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
         <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">Estatísticas do usuário</h2>
+          <h2 className="text-lg font-semibold mb-2">Estatísticas do usuário</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-100 p-4 rounded shadow"><h3 className="text-lg font-medium">Usuários Registrados</h3><p className="text-3xl font-bold">{totalUsers ?? '...'}</p></div>
             <div className="bg-gray-100 p-4 rounded shadow"><h3 className="text-lg font-medium">Usuários Online (Realtime)</h3><p className="text-3xl font-bold">{onlineUsers.length}</p></div>
           </div>
         </section>
         <section>
-          <h2 className="text-xl font-semibold mb-2">Gerenciamento de usuário</h2>
+          <h2 className="text-lg font-semibold mb-2">Gerenciamento de usuário</h2>
           <div className="flex gap-2 mb-4">
             <Button onClick={() => setShowCreateUserForm(!showCreateUserForm)}>{showCreateUserForm ? 'Fechar' : 'Criar Usuário'}</Button>
             <Button onClick={handleListUsers}>{showUserList ? 'Fechar Lista' : 'Listar Usuários'}</Button>

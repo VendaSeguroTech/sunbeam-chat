@@ -35,7 +35,7 @@ import { Menu } from "lucide-react";
 interface ChatSidebarProps {
   isOpen: boolean;
   onConversationSelect?: (conversation: ConversationHistory | null) => void;
-  onSessionSelect?: (sessionId: string | null) => void; // Nova prop adicionada
+  onSessionSelect?: (sessionId: string | null) => void;
   toggleSidebar: () => void;
 }
 
@@ -52,12 +52,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
   useEffect(() => {
     if (isRotating) {
-      const timer = setTimeout(() => setIsRotating(false), 2000); // Duração da animação
+      const timer = setTimeout(() => setIsRotating(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [isRotating]);
 
-  // Hook para conversas antigas (sistema antigo)
   const {
     conversations,
     currentConversation,
@@ -68,7 +67,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     loadConversations
   } = useConversationHistory();
 
-  // Hook para sessões do n8n
   const {
     sessions,
     isLoading: isLoadingSessions,
@@ -123,7 +121,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     await deleteConversation(conversationId);
-    // Se a conversa deletada for a atual, limpar seleção
     if (currentConversation?.id === conversationId) {
       onConversationSelect?.(null);
     }
@@ -132,20 +129,17 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     await deleteSession(sessionId);
-    // Refazer fetch para atualizar lista de sessões
     await refetchSessions();
-    // Limpar seleção se a sessão deletada estiver selecionada
     onSessionSelect?.(null);
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    
-    // Reset time part for accurate day difference calculation
+
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
+
     const diffTime = startOfToday.getTime() - startOfDate.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -165,15 +159,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
   return (
     <TooltipProvider>
+      {/* ✅ ABERTURA NORMAL (sem self-closing) */}
       <div
+        id="app-sidebar"
         className={`
-          ${isOpen ? 'w-72' : 'w-16'}
+          ${isOpen ? 'md:w-72 w-[80vw]' : 'md:w-16 w-[64px]'}
           transition-all duration-300 ease-in-out
-          flex flex-col h-screen bg-chat-sidebar border-r border-border shadow-md
+          flex flex-col h-[100svh] bg-chat-sidebar border-r border-border shadow-md
+          md:rounded-none rounded-r-2xl
         `}
       >
         {/* Header */}
-        <div className="border-b border-border p-4 h-[69px] flex items-center">
+        <div className="border-b border-border px-3 md:px-4 h-[60px] md:h-[69px] flex items-center">
           <div className={`flex items-center ${isOpen ? 'justify-between w-full' : 'justify-center'}`}>
             {isOpen ? (
               <>
@@ -192,12 +189,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                            onClick={handleToggleSidebar}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
+                          onClick={handleToggleSidebar}
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 md:h-8 md:w-8 hover:bg-primary/10 hover:text-primary transition-colors"
                         >
-                            <Menu className="h-4 w-4" />
+                          <Menu className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -209,12 +206,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                            onClick={() => navigate('/admin')}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          onClick={() => navigate('/admin')}
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 md:h-8 md:w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
                         >
-                            <Shield className="h-4 w-4" />
+                          <Shield className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -225,12 +222,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                          onClick={() => setIsSettingsOpen(true)}
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
+                        onClick={() => setIsSettingsOpen(true)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 md:h-8 md:w-8 hover:bg-primary/10 hover:text-primary transition-colors"
                       >
-                          <Settings className="h-4 w-4" />
+                        <Settings className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -240,7 +237,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 </div>
               </>
             ) : (
-              <div 
+              <div
                 className="relative flex items-center justify-center w-full h-full"
                 onMouseEnter={() => setIsHoveringLogo(true)}
                 onMouseLeave={() => setIsHoveringLogo(false)}
@@ -263,7 +260,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     onClick={handleToggleSidebar}
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="h-9 w-9 md:h-8 md:w-8 p-0 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
@@ -274,20 +271,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
 
         {/* New Chat Button */}
-        <div className="p-4">
+        <div className="px-3 py-3 md:p-4">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 onClick={handleNewConversation}
                 variant="default"
-                className={`${
-                  isOpen ? 'w-full justify-start gap-2' : 'w-10 h-10 p-0 mx-auto'
-                } bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200`}
+                className={`${isOpen ? 'w-full justify-start gap-2' : 'w-10 h-10 p-0 mx-auto'} bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200`}
               >
                 <Plus className="w-4 h-4 flex-shrink-0" />
-                {isOpen && (
-                  <span className="animate-fade-in">Novo Chat</span>
-                )}
+                {isOpen && <span className="animate-fade-in">Novo Chat</span>}
               </Button>
             </TooltipTrigger>
             {!isOpen && (
@@ -299,7 +292,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
 
         {/* Chat History */}
-        <div className="flex-1 px-4 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 px-3 md:px-4 overflow-y-auto custom-scrollbar">
           {isOpen ? (
             <>
               <div className="text-sm text-muted-foreground mb-4 animate-fade-in">
@@ -316,7 +309,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 </div>
               ) : (
                 <div className="space-y-4 animate-fade-in">
-                  {/* Sessões do n8n (mais recentes) */}
                   {sessions.length > 0 && (
                     <div className="space-y-2">
                       <div className="text-xs text-muted-foreground font-medium">
@@ -366,7 +358,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     </div>
                   )}
 
-                  {/* Conversas antigas (sistema antigo) */}
                   {conversations.length > 0 && (
                     <div className="space-y-2">
                       {sessions.length > 0 && (
@@ -379,9 +370,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                           key={conversation.id}
                           onClick={() => handleConversationClick(conversation)}
                           className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
-                            currentConversation?.id === conversation.id
-                              ? 'bg-primary/10 border border-primary/20'
-                              : ''
+                            currentConversation?.id === conversation.id ? 'bg-primary/10 border border-primary/20' : ''
                           }`}
                         >
                           <div className="flex-1 min-w-0">
@@ -439,7 +428,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border px-3 py-3 md:p-4">
           {isOpen ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -479,7 +468,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           )}
         </div>
       </div>
-      {/* Settings Dialog */}
+      {/* ✅ FECHAMENTO DO CONTAINER PRINCIPAL ACIMA */}
+
+      {/* Settings Dialog (pode ficar fora do container, mas ainda dentro do TooltipProvider) */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent>
           <DialogHeader>
