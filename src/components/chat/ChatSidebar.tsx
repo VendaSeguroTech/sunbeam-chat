@@ -238,7 +238,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               </>
             ) : (
               <div
-                className="relative flex items-center justify-center w-full h-full"
+                className="relative flex items-center justify-center w-full h-full mt-0 md:mt-0 sm:mt-6"
                 onMouseEnter={() => setIsHoveringLogo(true)}
                 onMouseLeave={() => setIsHoveringLogo(false)}
               >

@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
 import ChatInterface from "./ChatInterface";
 import { ConversationHistory } from "@/hooks/useConversationHistory";
+import ModelSelector from "./ModelSelector"; // Import the new component
 
 const ChatLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
+  const [selectedModel, setSelectedModel] = useState<string>("basic"); // Novo estado para o modelo selecionado
 
   const toggleSidebar = (): void => {
     setSidebarOpen(!sidebarOpen);
@@ -18,7 +20,7 @@ const ChatLayout: React.FC = () => {
   const handleConversationSelect = (conversation: ConversationHistory | null) => {
     setSelectedConversation(conversation);
     setSelectedSessionId(null); // Limpar sessão do n8n quando selecionar conversa antiga
-    
+
     // Se for uma nova conversa (null), incrementar a key para forçar re-render
     if (conversation === null) {
       setChatKey(prev => prev + 1);
@@ -28,7 +30,7 @@ const ChatLayout: React.FC = () => {
   const handleSessionSelect = (sessionId: string | null) => {
     setSelectedSessionId(sessionId);
     setSelectedConversation(null); // Limpar conversa antiga quando selecionar sessão do n8n
-    
+
     // Se for uma nova conversa (null), incrementar a key para forçar re-render
     if (sessionId === null) {
       setChatKey(prev => prev + 1);
@@ -38,6 +40,10 @@ const ChatLayout: React.FC = () => {
   const handleNewChatStarted = () => {
     // Callback quando uma nova conversa é realmente criada (após primeira mensagem)
     console.log('Nova conversa foi salva no banco de dados');
+  };
+
+  const handleModelChange = (value: string) => {
+    setSelectedModel(value);
   };
 
   return (
@@ -89,12 +95,16 @@ const ChatLayout: React.FC = () => {
 
 
       {/* Chat principal */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 relative"> {/* Added relative here for positioning */}
+        <div className="absolute top-4 left-4 z-10"> {/* Positioned ModelSelector */}
+          <ModelSelector onValueChange={handleModelChange} defaultValue={selectedModel} />
+        </div>
         <ChatInterface
           key={chatKey}
           selectedConversation={selectedConversation}
           selectedSessionId={selectedSessionId}
           onNewChatStarted={handleNewChatStarted}
+          selectedModel={selectedModel} // Pass the selected model to ChatInterface
         />
       </div>
     </div>

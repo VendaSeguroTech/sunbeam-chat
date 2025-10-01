@@ -1,0 +1,59 @@
+# Variável para definir o cabeçalho Connection baseado no cabeçalho Upgrade
+map $http_upgrade $http_connection {
+    default upgrade;
+    '' close;
+}
+
+# HTTP -> redireciona para HTTPS
+server {
+    listen 80;
+    server_name supabase.vendaseguro.tech;
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS com proxy para o Supabase
+server {
+    listen 443 ssl http2;
+    server_name supabase.vendaseguro.tech;
+
+    # --- Certificados ---
+    ssl_certificate       /etc/letsencrypt/live/supabase.vendaseguro.tech/fullchain.pem;
+    ssl_certificate_key   /etc/letsencrypt/live/supabase.vendaseguro.tech/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/supabase.vendaseguro.tech/chain.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    # Uploads maiores (se precisar)
+    client_max_body_size 50m;
+
+    # --- Localização para WebSocket (Realtime) ---
+    # Trata especificamente o caminho do realtime para habilitar WebSockets
+    location /realtime/v1/ {
+        # É recomendado usar 127.0.0.1 em vez do IP público aqui
+        proxy_pass http://127.0.0.1:8070;
+        proxy_http_version 1.1;
+
+        # Cabeçalhos necessários para a conexão WebSocket funcionar
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $http_connection;
+
+        # Cabeçalhos essenciais de proxy (precisam ser repetidos aqui)
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # --- Localização para todo o resto (API, Studio, etc.) ---
+    # Todas as outras requisições (auth, rest, storage, etc.) cairão aqui
+    location / {
+        # É recomendado usar 127.0.0.1 em vez do IP público aqui
+        proxy_pass http://127.0.0.1:8070;
+
+        # Cabeçalhos essenciais de proxy
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

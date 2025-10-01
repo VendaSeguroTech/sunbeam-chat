@@ -13,6 +13,7 @@ interface ChatInterfaceProps {
   selectedConversation?: ConversationHistory | null;
   selectedSessionId?: string | null;
   onNewChatStarted?: () => void;
+  selectedModel?: string; // Nova prop para o modelo selecionado
 }
 
 interface WebhookResponse {
@@ -29,7 +30,8 @@ interface WebhookResponse {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   selectedConversation,
   selectedSessionId,
-  onNewChatStarted
+  onNewChatStarted,
+  selectedModel // Desestruturar a nova prop
 }) => {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -503,6 +505,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('userId', currentUserId);
         formData.append('type', fileToSend.type);
         formData.append('message', userMessageContent || `Arquivo enviado: ${fileToSend.name}`);
+        formData.append('model', selectedModel || 'basic'); // Adicionar o modelo selecionado aqui
 
         response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
 
@@ -544,7 +547,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           messageId: userMessage.id,
           sessionId: sessionId,
           userId: currentUserId,
-          type: 'text'
+          type: 'text',
+          model: selectedModel, // Adicionar o modelo selecionado aqui
         };
 
         response = await fetch(WEBHOOK_URL, {
@@ -641,7 +645,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         messageId: userMessage.id,
         sessionId: sessionId,
         userId: currentUserId,
-        type: 'text'
+        type: 'text',
+        model: selectedModel, // Adicionar o modelo selecionado aqui
       };
 
       const response = await fetch(WEBHOOK_URL, {
@@ -948,7 +953,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             )}
 
-            <div className={`flex items-center gap-2 bg-chat-input dark:bg-[#303030] border border-border p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
+            <div className={`flex items-center gap-2 bg-chat-input dark:bg-[#303030] border border-border p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
               <div className="relative w-full">
                 <Input
                   value={message}
