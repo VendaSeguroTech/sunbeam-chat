@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase/client'; 
 import { Button } from '@/components/ui/button'; 
-import OnlineUsersCard from './OnlineUsersCard'; 
+import UserActivityCard from './UserActivityCard'; 
 import { usePresenceContext } from '@/contexts/PresenceContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -53,19 +53,86 @@ const AdminPanel: React.FC = () => {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+
+    console.log('🔄 Tentando criar usuário:', newUserEmail);
+
     try {
-      const { data, error } = await supabase.auth.signUp({ email: newUserEmail, password: newUserPassword });
-      if (error) throw error;
-      if (data.user) {
-        const { error: profileError } = await supabase.from('profiles').insert([{ id: data.user.id, email: data.user.email, role: 'default' }]);
-        if (profileError) throw profileError;
+      // Criar usuário no Supabase Auth com auto-confirmação
+      const { data, error } = await supabase.auth.signUp({
+        email: newUserEmail,
+        password: newUserPassword,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            email_confirm: true // Tenta auto-confirmar
+          }
+        }
+      });
+
+      console.log('📧 Resposta do signUp:', { data, error });
+
+      if (error) {
+        // Se o erro for sobre email já existe, mostre mensagem mais clara
+        if (error.message.includes('already registered')) {
+          throw new Error('Este email já está cadastrado no sistema.');
+        }
+        throw error;
       }
-      setMessage('Usuário criado com sucesso! Verifique o e-mail para confirmação.');
+
+      if (data.user) {
+        console.log('✅ Usuário criado no Auth:', data.user.id);
+
+        // Aguardar um pouco para garantir que o trigger do banco executou
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Verificar se o perfil já foi criado por um trigger
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .single();
+
+        if (!existingProfile) {
+          console.log('📝 Criando perfil manualmente...');
+          // Criar perfil na tabela profiles
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: data.user.id,
+              email: data.user.email,
+              role: 'default',
+              name: newUserEmail.split('@')[0] // Nome padrão baseado no email
+            }]);
+
+          if (profileError) {
+            console.error('❌ Erro ao criar perfil:', profileError);
+            // Se o erro for de duplicata, não é crítico
+            if (!profileError.message.includes('duplicate')) {
+              throw profileError;
+            }
+          }
+        } else {
+          console.log('✅ Perfil já existe (criado por trigger)');
+        }
+
+        console.log('✅ Processo completo!');
+      }
+
+      // Mensagem de sucesso diferente se precisar confirmar email
+      const needsConfirmation = data.user && !data.user.email_confirmed_at;
+      const successMsg = needsConfirmation
+        ? '✅ Usuário criado! ⚠️ Pode precisar confirmar o email antes de fazer login.'
+        : '✅ Usuário criado com sucesso! O usuário já pode fazer login.';
+
+      setMessage(successMsg);
       setNewUserEmail('');
       setNewUserPassword('');
       fetchTotalUserCount();
+      fetchUsers(); // Atualizar lista de usuários
       setShowCreateUserForm(false);
+
     } catch (error: unknown) {
+      console.error('❌ Erro completo:', error);
       handleError(error, 'criar usuário');
     }
   };
@@ -149,7 +216,53 @@ const AdminPanel: React.FC = () => {
             <Button onClick={handleListUsers}>{showUserList ? 'Fechar Lista' : 'Listar Usuários'}</Button>
           </div>
           {showCreateUserForm && (
-            <form onSubmit={handleCreateUser} className="bg-white p-6 rounded shadow-md"> {/* Form styling */}
+            <form onSubmit={handleCreateUser} className="bg-white dark:bg-gray-800 p-6 rounded shadow-md">
+              <h3 className="text-lg font-semibold mb-4">Criar Novo Usuário</h3>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-1">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    placeholder="usuario@exemplo.com"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium mb-1">
+                    Senha
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">A senha deve ter pelo menos 6 caracteres</p>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button type="submit" className="flex-1">
+                    Criar Usuário
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateUserForm(false)}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
             </form>
           )}
           {showUserList && (
@@ -182,7 +295,7 @@ const AdminPanel: React.FC = () => {
             </div>
           )}
         </section>
-        <OnlineUsersCard />
+        <UserActivityCard />
       </div>
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>

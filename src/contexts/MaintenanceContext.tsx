@@ -46,7 +46,11 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
           setIsMaintenanceMode(newStatus);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.warn('Realtime não disponível para monitorar modo de manutenção. Usando apenas estado inicial.');
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

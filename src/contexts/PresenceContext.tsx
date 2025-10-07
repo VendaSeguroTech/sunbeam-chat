@@ -43,6 +43,7 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     const channelName = 'online-users';
     let channel: RealtimeChannel | null = null;
+    let retryAttempted = false;
 
     if (session?.user) {
       channel = supabase.channel(channelName, {
@@ -73,10 +74,17 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
             user_id: session.user.id,
             email: session.user.email,
           });
-        } else if (status === 'CHANNEL_ERROR') {
-          const errorMessage = 'Failed to subscribe to presence channel.';
-          console.error(errorMessage);
-          setError(errorMessage);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          if (!retryAttempted) {
+            retryAttempted = true;
+            const errorMessage = 'Realtime não está disponível no servidor Supabase.';
+            console.warn(errorMessage, 'A funcionalidade de presença foi desabilitada.');
+            setError(errorMessage);
+            // Limpa o canal para evitar múltiplas tentativas
+            if (channel) {
+              supabase.removeChannel(channel);
+            }
+          }
         }
       });
     }

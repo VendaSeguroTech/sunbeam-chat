@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // --- INFORMAÇÕES DE CONEXÃO ---
 // Altere estas variáveis para testar outras conexões
-const supabaseUrl = 'http://38.242.138.127:8070'; 
+const supabaseUrl = 'https://supabase.vendaseguro.tech'; 
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU5MTE0ODAwLCJleHAiOjE5MTY4ODEyMDB9.qwETpJf9wXfGmh3E0SfLdg6xXnTK3cgWp_tkfnR5hKQ';
 // --- FIM DAS INFORMAÇÕES DE CONEXÃO ---
 

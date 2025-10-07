@@ -16,11 +16,13 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, defaultVal
   return (
     <Select onValueChange={onValueChange} defaultValue={defaultValue}>
       <SelectTrigger className="w-[180px] ml-20 md:ml-0">
-        <SelectValue placeholder="Select a model" />
+        <SelectValue placeholder="Selecione o modelo" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="basic">Modelo Basico-1</SelectItem>
-        <SelectItem value="global">Modelo Global-2</SelectItem>
+        <SelectItem value="d&o" className="cursor-pointer">D&O</SelectItem>
+        <SelectItem value="rc-profissional" className="cursor-pointer">RC Profissional</SelectItem>
+        <SelectItem value="rc-geral" className="cursor-pointer">RC Geral</SelectItem>
+        <SelectItem value="global" className="cursor-pointer">Global</SelectItem>
       </SelectContent>
     </Select>
   );

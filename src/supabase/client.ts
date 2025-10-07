@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://tfemwpqacbgresenuksm.supabase.co'; 
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmZW13cHFhY2JncmVzZW51a3NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NDkyMTIsImV4cCI6MjA2ODQyNTIxMn0.qJ-Yd4bbRdnw-plVVv2XVOq6ENA1xti2XzPvYPuM5Ng'; // Substitua pela sua chave
+const supabaseUrl = 'https://supabase.vendaseguro.tech'; 
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU5MTE0ODAwLCJleHAiOjE5MTY4ODEyMDB9.qwETpJf9wXfGmh3E0SfLdg6xXnTK3cgWp_tkfnR5hKQ';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

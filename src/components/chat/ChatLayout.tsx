@@ -11,7 +11,7 @@ const ChatLayout: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
-  const [selectedModel, setSelectedModel] = useState<string>("basic"); // Novo estado para o modelo selecionado
+  const [selectedModel, setSelectedModel] = useState<string>("global"); // Novo estado para o modelo selecionado
 
   const toggleSidebar = (): void => {
     setSidebarOpen(!sidebarOpen);

@@ -23,22 +23,23 @@ export const useUserRole = () => {
             .single();
 
           if (profileError) {
-            console.error('Error fetching profile:', profileError);
+            console.error('❌ Error fetching profile:', profileError);
             setUserRole('default'); // Default to non-admin on error
           } else if (profileData && profileData.role) {
             const roleFromProfile = profileData.role;
-            console.log('User role from profiles table:', roleFromProfile); // DEBUG LOG
+            console.log('✅ User role from profiles table:', roleFromProfile);
+
             if (roleFromProfile === 'admin') {
+              console.log('🔑 User is ADMIN');
               setUserRole('admin');
             } else {
+              console.log('👤 User is DEFAULT');
               setUserRole('default');
             }
           } else {
-            console.log('No role found in profiles table for user:', user.id); // DEBUG LOG
+            console.warn('⚠️ No role found in profiles table for user:', user.id);
             setUserRole('default'); // Default to non-admin if no role found
           }
-          console.log('Final userRole:', userRole); // DEBUG LOG
-          console.log('Final isAdmin:', userRole === 'admin'); // DEBUG LOG
         }
       } catch (error) {
         console.error('Erro ao verificar role do usuário:', error);
