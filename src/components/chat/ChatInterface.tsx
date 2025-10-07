@@ -60,7 +60,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
 
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  // const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -185,7 +187,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             id: `${record.id?.toString() || `msg_${index}`}_${chunkIndex}`,
             content: chunk.trim(),
             type,
-            timestamp: new Date(record.created_at || new Date().toISOString())
+            timestamp: new Date(record.created_at || new Date().toISOString()),
+            model: record.model // Incluir modelo usado
           });
         });
       } else {
@@ -193,7 +196,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           id: record.id?.toString() || `msg_${index}`,
           content: content.trim(),
           type,
-          timestamp: new Date(record.created_at || new Date().toISOString())
+          timestamp: new Date(record.created_at || new Date().toISOString()),
+          model: record.model // Incluir modelo usado
         });
       }
     });
@@ -318,7 +322,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const streamResponseAsSeparateMessages = async (fullText: string) => {
+  const streamResponseAsSeparateMessages = async (fullText: string, model?: string) => {
     const chunks = fullText.split('\n\n').filter(c => c.trim() !== '');
     for (const chunk of chunks) {
       const messageId = (Date.now() + Math.random()).toString();
@@ -326,7 +330,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         id: messageId,
         content: "",
         type: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
+        model: model
       };
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -520,7 +525,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             id: (Date.now() + Math.random()).toString(),
             content: "Não encontrei uma resposta direta, selecione uma das sugestões abaixo",
             type: 'assistant',
-            timestamp: new Date()
+            timestamp: new Date(),
+            model: selectedModel
           }]);
           setQuestionSuggestions(suggestions.slice(0, 3));
           setIsLoading(false);
@@ -536,7 +542,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           id: (Date.now() + 1).toString(),
           content: aiResponseContent,
           type: 'assistant',
-          timestamp: new Date()
+          timestamp: new Date(),
+          model: selectedModel
         };
         setMessages(prev => [...prev, assistantMessage]);
 
@@ -568,7 +575,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             id: (Date.now() + Math.random()).toString(),
             content: "Não encontrei uma resposta direta, selecione uma das sugestões abaixo",
             type: 'assistant',
-            timestamp: new Date()
+            timestamp: new Date(),
+            model: selectedModel
           }]);
           setQuestionSuggestions(suggestions.slice(0, 3));
           setIsLoading(false);
@@ -582,11 +590,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             id: (Date.now() + 1).toString(),
             content: "Não recebi uma resposta válida do assistente.",
             type: 'assistant',
-            timestamp: new Date()
+            timestamp: new Date(),
+            model: selectedModel
           };
           setMessages(prev => [...prev, assistantMessage]);
         } else {
-          await streamResponseAsSeparateMessages(aiResponseContent);
+          await streamResponseAsSeparateMessages(aiResponseContent, selectedModel);
         }
       }
 
@@ -665,7 +674,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           id: (Date.now() + Math.random()).toString(),
           content: "Não encontrei uma resposta direta, selecione uma das sugestões abaixo",
           type: 'assistant',
-          timestamp: new Date()
+          timestamp: new Date(),
+          model: selectedModel
         }]);
         setQuestionSuggestions(suggestions.slice(0, 3));
         return;
@@ -677,10 +687,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           id: (Date.now() + 1).toString(),
           content: "Não recebi uma resposta válida do assistente.",
           type: 'assistant',
-          timestamp: new Date()
+          timestamp: new Date(),
+          model: selectedModel
         }]);
       } else {
-        await streamResponseAsSeparateMessages(aiResponseContent);
+        await streamResponseAsSeparateMessages(aiResponseContent, selectedModel);
       }
 
       if (isNewChat) {
@@ -718,6 +729,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     });
   };
 
+  const formatModelName = (model?: string): string => {
+    if (!model) return '';
+
+    const modelNames: Record<string, string> = {
+      'global': 'Global',
+      'd&o': 'D&O',
+      'rc-profissional': 'RC Profissional',
+      'rc-geral': 'RC Geral',
+    };
+
+    return modelNames[model] || model;
+  };
+
   return (
     <div className="flex-1 flex flex-col h-[100svh] bg-chat-background relative">
       {messages.length > 0 ? (
@@ -736,6 +760,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             {messages.map((msg, index) => {
               const showAvatar = msg.type === 'assistant' && (index === 0 || messages[index - 1]?.type !== 'assistant');
+              const showModel = msg.type === 'assistant' && msg.model && showAvatar;
 
               return (
                 <div key={msg.id} className={`group flex items-start gap-3 sm:gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -750,6 +775,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   )}
 
                   <div className={`flex-1 flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
+                    {/* Exibir modelo usado apenas no primeiro bloco da resposta da IA */}
+                    {showModel && (
+                      <div className="text-[10px] text-muted-foreground mb-1 px-2 opacity-60">
+                        Modelo: {formatModelName(msg.model)}
+                      </div>
+                    )}
+
                     <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                       msg.type === 'user'
                         ? 'bg-[#ff773d] dark:bg-[#303030] text-[#eeeeee] dark:text-[#FFFFFF] ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-apple active:shadow-sm'
@@ -790,13 +822,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               </div>
                             </a>
                           )}
-                          {msg.content && <p className="text-sm leading-relaxed whitespace-pre-wrap pt-2">{renderWithEmphasis(msg.content)}</p>}
+                          {msg.content && <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap pt-2">{renderWithEmphasis(msg.content)}</p>}
                         </div>
                       ) : (
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
+                        <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
                       )}
+
+                      {/* Horário - para usuário e assistente */}
                       {msg.type === 'user' && (
                         <p className="text-[10px] sm:text-xs mt-2 opacity-70 text-primary-foreground/70 dark:text-white">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
+
+                      {msg.type === 'assistant' && (
+                        <p className="text-[10px] sm:text-xs mt-2 opacity-60 text-muted-foreground">
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       )}

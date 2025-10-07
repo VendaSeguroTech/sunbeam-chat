@@ -12,6 +12,7 @@ export interface N8nChatMessage {
   message: string | MessageContent | null;
   user_id: string;
   created_at?: string; // Opcional para compatibilidade
+  model?: string; // Modelo de IA usado (d&o, rc-profissional, rc-geral, global)
 }
 
 export interface ChatSession {
@@ -34,4 +35,5 @@ export interface Message {
     name: string;
   };
   feedback?: 'positive' | 'negative';
+  model?: string; // Modelo de IA usado para gerar esta resposta
 }
