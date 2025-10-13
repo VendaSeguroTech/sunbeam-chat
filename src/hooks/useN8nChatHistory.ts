@@ -193,7 +193,8 @@ export const useN8nChatHistory = () => {
         session_id: record.session_id,
         message: record.message as string | MessageContent | null,
         user_id: record.user_id,
-        created_at: record.created_at || new Date().toISOString()
+        created_at: record.created_at || new Date().toISOString(),
+        model: record.model // Incluir o modelo usado
       }));
       
       return formattedData;

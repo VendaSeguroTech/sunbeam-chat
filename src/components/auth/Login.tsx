@@ -68,11 +68,11 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full mx-auto p-8 bg-chat-input border border-border rounded-2xl shadow-md">
         {/* Logo */}
         <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
-          <img src={sunbeamLogo} alt="VIA" className="w-full h-full object-contain" />
+          <img src={sunbeamLogo} alt="Experta" className="w-full h-full object-contain" />
         </div>
 
         {/* Título */}
-        <h1 className="text-2xl font-bold text-foreground text-center mb-6">Bem-vindo à VIA 🦊</h1>
+        <h1 className="text-2xl font-bold text-foreground text-center mb-6">Bem-vindo à Experta 🦊</h1>
 
         {/* Formulário */}
         <div className="space-y-4">

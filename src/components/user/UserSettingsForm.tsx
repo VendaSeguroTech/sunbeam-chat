@@ -4,6 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/supabase/client';
+import { useTokens } from '@/hooks/useTokens';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Coins } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface UserSettingsFormProps {
   onSave?: () => void;
@@ -13,6 +17,8 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
   const { toast } = useToast();
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
+  const { tokens, hasUnlimitedTokens, isLoading: tokensLoading } = useTokens();
+  const { userRole } = useUserRole();
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -75,6 +81,29 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
 
   return (
     <form onSubmit={handleSave} className="space-y-4">
+      {/* Token Counter */}
+      <div className="bg-muted/50 p-4 rounded-lg border border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Coins className="h-5 w-5 text-yellow-600" />
+            <Label className="text-base font-semibold">Seus Tokens</Label>
+          </div>
+          <Badge variant={hasUnlimitedTokens ? "default" : tokens > 0 ? "secondary" : "destructive"} className="text-lg px-3 py-1">
+            {tokensLoading ? '...' : hasUnlimitedTokens ? '∞' : tokens}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          {hasUnlimitedTokens
+            ? userRole === 'admin'
+              ? 'Você tem tokens ilimitados como administrador.'
+              : 'Você possui tokens ilimitados.'
+            : tokens > 0
+            ? `Você tem ${tokens} ${tokens === 1 ? 'token disponível' : 'tokens disponíveis'}. Cada pergunta consome 1 token.`
+            : 'Você não tem mais tokens disponíveis. Entre em contato com um administrador para recarregar.'}
+        </p>
+      </div>
+
+      {/* User Name */}
       <div>
         <Label htmlFor="userName">Nome</Label>
         <Input

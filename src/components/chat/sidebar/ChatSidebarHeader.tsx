@@ -24,13 +24,13 @@ const ChatSidebarHeader: React.FC<ChatSidebarHeaderProps> = ({
           <>
             <div className="flex items-center gap-2">
               {" "}
-              {/* Group V.IA and logo */}
+              {/* Group Experta and logo */}
               <span className="font-semibold text-lg text-foreground animate-fade-in ml-10">
-                V.IA
+                Experta
               </span>
               <img
                 src={sunbeamLogo}
-                alt="VIA Logo"
+                alt="Experta"
                 className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
               />
             </div>
@@ -57,7 +57,7 @@ const ChatSidebarHeader: React.FC<ChatSidebarHeaderProps> = ({
         ) : (
           <img
             src={sunbeamLogo}
-            alt="VIA Logo"
+            alt="Experta"
             className="w-8 h-8 rounded-lg object-contain flex-shrink-0 mt-10"
           />
         )}

@@ -4,6 +4,7 @@ export interface User {
   role: 'admin' | 'default';
   created_at: string;
   is_online?: boolean;
+  tokens?: number;
 }
 
 export interface UserStats {

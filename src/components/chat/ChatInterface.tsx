@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationHistory, ConversationHistory } from "@/hooks/useConversationHistory";
 import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
+import { useTokens } from "@/hooks/useTokens";
 import { supabase } from "@/supabase/client";
 import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
 import sunbeamLogo from "@/assets/logo2.png";
@@ -42,6 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [userName, setUserName] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [isAdvancedCreativity, setIsAdvancedCreativity] = useState<boolean>(false);
 
   // Autocomplete de comandos
   const [commands, setCommands] = useState<string[]>([]);
@@ -54,14 +56,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // 🔥 Frases dinâmicas durante o loading
   const [loadingBlurb, setLoadingBlurb] = useState<string>("");
-  const hasShownThabataOnceRef = useRef<boolean>(false); // garante exibir “o que a Thabata responderia?” só 1x em toda a sessão
+  const hasShownThabataOnceRef = useRef<boolean>(false); // garante exibir "o que a Thabata responderia?" só 1x em toda a sessão
+  const hasShownLowTokensWarning = useRef<boolean>(false); // controla aviso de tokens baixos
 
   const { toast } = useToast();
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
+  const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken, refreshTokens } = useTokens();
 
   const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  // const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -147,7 +151,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, [isLoading]);
 
+  // Aviso de tokens baixos
+  useEffect(() => {
+    if (!hasUnlimitedTokens && tokens === 3 && !hasShownLowTokensWarning.current) {
+      hasShownLowTokensWarning.current = true;
+      toast({
+        title: "⚠️ Poucos tokens restantes!",
+        description: `Você tem apenas ${tokens} tokens disponíveis. Entre em contato com um administrador para recarregar.`,
+        variant: "default",
+        duration: 6000,
+      });
+    }
 
+    // Reset do aviso quando tokens aumentam (admin adicionou mais tokens)
+    if (tokens > 3) {
+      hasShownLowTokensWarning.current = false;
+    }
+  }, [tokens, hasUnlimitedTokens, toast]);
 
   const convertN8nMessagesToLocal = (n8nMessages: N8nChatMessage[]): Message[] => {
     console.log('🔄 Convertendo mensagens do n8n:', n8nMessages);
@@ -471,6 +491,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) return;
 
+    // Verificar tokens antes de enviar
+    if (!canSendMessage) {
+      toast({
+        title: "Tokens insuficientes",
+        description: "Você não possui tokens disponíveis. Entre em contato com um administrador para recarregar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (messages.length >= MESSAGE_LIMIT) {
       toast({
         title: "Limite de mensagens atingido",
@@ -500,6 +530,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setAttachedFile(null);
     setIsLoading(true);
 
+    // Decrementar token (admins não gastam tokens, verificação interna no hook)
+    const tokenDecremented = await decrementToken();
+    if (!tokenDecremented && !hasUnlimitedTokens) {
+      toast({
+        title: "Erro ao processar token",
+        description: "Não foi possível decrementar seu token. Tente novamente.",
+        variant: "destructive",
+      });
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      setIsLoading(false);
+      return;
+    }
+
     try {
       let response: Response;
 
@@ -511,6 +554,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('type', fileToSend.type);
         formData.append('message', userMessageContent || `Arquivo enviado: ${fileToSend.name}`);
         formData.append('model', selectedModel || 'basic'); // Adicionar o modelo selecionado aqui
+        formData.append('advancedCreativity', isAdvancedCreativity ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.' : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Não retorne listas, bullet points ou enumerações. Seja conciso e direto ao ponto.');
 
         response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
 
@@ -556,6 +600,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           userId: currentUserId,
           type: 'text',
           model: selectedModel, // Adicionar o modelo selecionado aqui
+          advancedCreativity: isAdvancedCreativity ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.' : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Não retorne listas, bullet points ou enumerações. Seja conciso e direto ao ponto.',
         };
 
         response = await fetch(WEBHOOK_URL, {
@@ -626,6 +671,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendSuggestion = async (q: string): Promise<void> => {
     if (isLoading || !sessionId || !currentUserId) return;
 
+    // Verificar tokens antes de enviar
+    if (!canSendMessage) {
+      toast({
+        title: "Tokens insuficientes",
+        description: "Você não possui tokens disponíveis. Entre em contato com um administrador para recarregar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (messages.length >= MESSAGE_LIMIT) {
       toast({
         title: "Limite de mensagens atingido",
@@ -647,6 +702,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Decrementar token
+    const tokenDecremented = await decrementToken();
+    if (!tokenDecremented && !hasUnlimitedTokens) {
+      toast({
+        title: "Erro ao processar token",
+        description: "Não foi possível decrementar seu token. Tente novamente.",
+        variant: "destructive",
+      });
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         message: userMessage.content,
@@ -656,6 +724,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         userId: currentUserId,
         type: 'text',
         model: selectedModel, // Adicionar o modelo selecionado aqui
+        advancedCreativity: isAdvancedCreativity ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.' : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Não retorne listas, bullet points ou enumerações. Seja conciso e direto ao ponto.',
       };
 
       const response = await fetch(WEBHOOK_URL, {
@@ -913,13 +982,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
               <img
                 src={sunbeamLogo}
-                alt="VIA"
+                alt="Experta"
                 className="w-full h-full object-contain"
               />
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-              {userName ? `Olá ${userName} ` : "Olá, sou VIA."}
+              {userName ? `Olá ${userName} ` : "Olá, sou Experta."}
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground">
               Como posso ajudá-lo hoje?
@@ -1000,12 +1069,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder={
-                    messages.length >= MESSAGE_LIMIT
+                    !canSendMessage
+                      ? "Sem tokens disponíveis. Contate um administrador."
+                      : messages.length >= MESSAGE_LIMIT
                       ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                   }
                   className="flex-1 border-0 bg-[#F8FAFC] dark:bg-[#303030] placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base dark:text-white"
-                  disabled={isLoading || messages.length >= MESSAGE_LIMIT}
+                  disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                 />
                 <input
                   type="file"
@@ -1074,13 +1145,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </p>
             )}
 
-            <div className="flex flex-wrap justify-center gap-2 mt-3 sm:mt-4 cursor-not-allowed">
+            <div className="flex flex-wrap justify-center gap-2 mt-3 sm:mt-4">
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary cursor-not-allowed bg-[#F8FAFC] dark:bg-[#303030] dark:text-white"
+                onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)}
+                className={`rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary bg-[#F8FAFC] dark:bg-[#303030] dark:text-white transition-all ${
+                  isAdvancedCreativity ? 'bg-primary/10 border-primary' : ''
+                }`}
               >
-                <Sparkles className="w-4 h-4 mr-2 " />
+                <Sparkles className={`w-4 h-4 mr-2 ${isAdvancedCreativity ? 'fill-current' : ''}`} />
                 Criatividade Avançada
               </Button>
               <Button

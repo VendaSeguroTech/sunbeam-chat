@@ -6,6 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -48,7 +55,14 @@ import {
   Trash2,
   RefreshCw,
   Users,
-  UserCheck
+  UserCheck,
+  Coins,
+  Plus,
+  Minus,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -58,12 +72,23 @@ interface User {
   name: string | null;
   role: 'admin' | 'default';
   last_seen: string | null;
+  tokens: number;
+  unlimited_tokens: boolean;
 }
 
 const ImprovedAdminPanel: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalUsers, setTotalUsers] = useState<number>(0);
+
+  // Search and Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'default'>('all');
+  const [tokenFilter, setTokenFilter] = useState<'all' | 'low' | 'zero' | 'hasTokens'>('all');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Create User Dialog
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -73,6 +98,11 @@ const ImprovedAdminPanel: React.FC = () => {
   // Delete User Dialog
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Token Management Dialog
+  const [showTokenDialog, setShowTokenDialog] = useState(false);
+  const [userToEditTokens, setUserToEditTokens] = useState<User | null>(null);
+  const [tokenAmount, setTokenAmount] = useState<number>(0);
 
   const { onlineUsers } = usePresenceContext();
 
@@ -98,6 +128,47 @@ const ImprovedAdminPanel: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Filtrar e paginar usuários
+  const getFilteredUsers = () => {
+    let filtered = [...users];
+
+    // Filtro de busca (nome ou email)
+    if (searchTerm) {
+      filtered = filtered.filter(user =>
+        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtro de role
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+
+    // Filtro de tokens
+    if (tokenFilter === 'zero') {
+      filtered = filtered.filter(user => user.role !== 'admin' && user.tokens === 0);
+    } else if (tokenFilter === 'low') {
+      filtered = filtered.filter(user => user.role !== 'admin' && user.tokens > 0 && user.tokens <= 5);
+    } else if (tokenFilter === 'hasTokens') {
+      filtered = filtered.filter(user => user.role !== 'admin' && user.tokens > 0);
+    }
+
+    return filtered;
+  };
+
+  const filteredUsers = getFilteredUsers();
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset para página 1 quando filtros mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, tokenFilter]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,6 +234,24 @@ const ImprovedAdminPanel: React.FC = () => {
     }
   };
 
+  const handleToggleUnlimitedTokens = async (user: User) => {
+    const newValue = !user.unlimited_tokens;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ unlimited_tokens: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success(`Tokens ilimitados ${newValue ? 'ativados' : 'desativados'} para ${user.email}`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Erro ao alterar tokens ilimitados:', error);
+      toast.error('Erro ao alterar a configuração de tokens ilimitados.');
+    }
+  };
+
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
 
@@ -181,6 +270,63 @@ const ImprovedAdminPanel: React.FC = () => {
     } finally {
       setShowDeleteDialog(false);
       setUserToDelete(null);
+    }
+  };
+
+  const handleAddTokens = async () => {
+    if (!userToEditTokens || tokenAmount <= 0) return;
+
+    try {
+      const newTokenCount = (userToEditTokens.tokens || 0) + tokenAmount;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ tokens: newTokenCount })
+        .eq('id', userToEditTokens.id);
+
+      if (error) throw error;
+
+      toast.success(`${tokenAmount} tokens adicionados a ${userToEditTokens.email}`);
+
+      // Fechar dialog e limpar estados ANTES de recarregar
+      setShowTokenDialog(false);
+      setUserToEditTokens(null);
+      setTokenAmount(0);
+
+      // Recarregar dados após fechar
+      await fetchUsers();
+    } catch (error) {
+      console.error('Erro ao adicionar tokens:', error);
+      toast.error('Erro ao adicionar tokens');
+    }
+  };
+
+  const handleRemoveTokens = async () => {
+    if (!userToEditTokens || tokenAmount <= 0) return;
+
+    try {
+      const currentTokens = userToEditTokens.tokens || 0;
+      const newTokenCount = Math.max(0, currentTokens - tokenAmount);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ tokens: newTokenCount })
+        .eq('id', userToEditTokens.id);
+
+      if (error) throw error;
+
+      toast.success(`${tokenAmount} tokens removidos de ${userToEditTokens.email}`);
+
+      // Fechar dialog e limpar estados ANTES de recarregar
+      setShowTokenDialog(false);
+      setUserToEditTokens(null);
+      setTokenAmount(0);
+
+      // Recarregar dados após fechar
+      await fetchUsers();
+    } catch (error) {
+      console.error('Erro ao remover tokens:', error);
+      toast.error('Erro ao remover tokens');
     }
   };
 
@@ -235,25 +381,76 @@ const ImprovedAdminPanel: React.FC = () => {
       {/* User Management Card */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Gerenciamento de Usuários</CardTitle>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchUsers}
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Atualizar
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setShowCreateDialog(true)}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Novo Usuário
-              </Button>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <CardTitle>Gerenciamento de Usuários</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchUsers}
+                  disabled={loading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setShowCreateDialog(true)}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Novo Usuário
+                </Button>
+              </div>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex flex-col md:flex-row gap-3">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome ou email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              {/* Role Filter */}
+              <Select value={roleFilter} onValueChange={(value: any) => setRoleFilter(value)}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrar por role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="default">Usuário</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Token Filter */}
+              <Select value={tokenFilter} onValueChange={(value: any) => setTokenFilter(value)}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <Coins className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrar por tokens" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tokens</SelectItem>
+                  <SelectItem value="hasTokens">Com tokens</SelectItem>
+                  <SelectItem value="low">Poucos tokens (≤5)</SelectItem>
+                  <SelectItem value="zero">Sem tokens</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Results info */}
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                Mostrando {paginatedUsers.length} de {filteredUsers.length} usuários
+                {filteredUsers.length !== totalUsers && ` (${totalUsers} no total)`}
+              </span>
             </div>
           </div>
         </CardHeader>
@@ -263,13 +460,14 @@ const ImprovedAdminPanel: React.FC = () => {
               <TableRow>
                 <TableHead>Usuário</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Tokens</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Último Acesso</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {paginatedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex flex-col">
@@ -290,6 +488,14 @@ const ImprovedAdminPanel: React.FC = () => {
                         'Usuário'
                       )}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Coins className="h-4 w-4 text-yellow-600" />
+                      <span className="font-medium">
+                        {(user.role === 'admin' || user.unlimited_tokens) ? '∞' : (user.tokens || 0)}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {isUserOnline(user.id) ? (
@@ -326,6 +532,25 @@ const ImprovedAdminPanel: React.FC = () => {
                             </>
                           )}
                         </DropdownMenuItem>
+                        {user.role !== 'admin' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleToggleUnlimitedTokens(user)}>
+                              <Coins className="h-4 w-4 mr-2" />
+                              <span>{user.unlimited_tokens ? 'Desativar Tokens Ilimitados' : 'Ativar Tokens Ilimitados'}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setUserToEditTokens(user);
+                                setTokenAmount(0);
+                                setShowTokenDialog(true);
+                              }}
+                            >
+                              <Coins className="h-4 w-4 mr-2" />
+                              Gerenciar Tokens
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => {
@@ -342,15 +567,46 @@ const ImprovedAdminPanel: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {users.length === 0 && !loading && (
+              {paginatedUsers.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Nenhum usuário encontrado
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    {searchTerm || roleFilter !== 'all' || tokenFilter !== 'all'
+                      ? 'Nenhum usuário encontrado com os filtros aplicados'
+                      : 'Nenhum usuário encontrado'}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -400,6 +656,63 @@ const ImprovedAdminPanel: React.FC = () => {
               <Button type="submit">Criar Usuário</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Token Management Dialog */}
+      <Dialog open={showTokenDialog} onOpenChange={setShowTokenDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerenciar Tokens</DialogTitle>
+            <DialogDescription>
+              Gerenciar tokens para <strong>{userToEditTokens?.email}</strong>
+              <br />
+              Tokens atuais: <strong>{userToEditTokens?.tokens || 0}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tokenAmount">Quantidade de Tokens</Label>
+              <Input
+                id="tokenAmount"
+                type="number"
+                min="1"
+                placeholder="Digite a quantidade"
+                value={tokenAmount || ''}
+                onChange={(e) => setTokenAmount(parseInt(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowTokenDialog(false);
+                setUserToEditTokens(null);
+                setTokenAmount(0);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleRemoveTokens}
+              disabled={tokenAmount <= 0}
+            >
+              <Minus className="h-4 w-4 mr-2" />
+              Remover
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddTokens}
+              disabled={tokenAmount <= 0}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

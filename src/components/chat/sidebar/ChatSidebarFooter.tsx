@@ -29,7 +29,7 @@ const ChatSidebarFooter: React.FC<ChatSidebarFooterProps> = ({
             <ThemeToggle />
           </div>
           <div className="text-xs text-muted-foreground text-center animate-fade-in">
-            VIA v1.0
+            Experta v1.0
           </div>
         </div>
       ) : (

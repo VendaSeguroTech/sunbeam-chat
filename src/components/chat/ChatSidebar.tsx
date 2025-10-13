@@ -177,11 +177,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 <div className="flex items-center gap-2">
                   <img
                     src={sunbeamLogo}
-                    alt="VIA Logo"
+                    alt="Experta"
                     className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${isRotating ? 'logo-rotate' : ''}`}
                   />
                   <span className="font-display font-semibold text-lg text-foreground animate-fade-in">
-                    Expert.IA
+                    Experta
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -247,12 +247,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <TooltipTrigger asChild>
                       <img
                         src={sunbeamLogo}
-                        alt="VIA Logo"
+                        alt="Experta"
                         className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${isRotating ? 'logo-rotate' : ''}`}
                       />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="font-display">Expert.IA</p>
+                      <p className="font-display">Experta</p>
                     </TooltipContent>
                   </Tooltip>
                 ) : (
@@ -444,7 +444,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 <ThemeToggle />
               </div>
               <div className="text-xs text-muted-foreground text-center animate-fade-in">
-                VIA v1.0.6 (beta)
+                Experta v1.0.6 (beta)
               </div>
             </div>
           ) : (
