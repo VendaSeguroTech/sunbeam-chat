@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Plus, MessageSquare, Trash2, MoreHorizontal, LogOut, Shield, Settings } from "lucide-react";
+import {
+  Plus,
+  MessageSquare,
+  Trash2,
+  MoreHorizontal,
+  LogOut,
+  Shield,
+  Settings,
+  Pencil,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,6 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -16,7 +26,10 @@ import {
 } from "@/components/ui/tooltip";
 import { supabase } from "@/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useConversationHistory, ConversationHistory } from "@/hooks/useConversationHistory";
+import {
+  useConversationHistory,
+  ConversationHistory,
+} from "@/hooks/useConversationHistory";
 import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate } from "react-router-dom";
@@ -30,7 +43,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import sunbeamLogo from "@/assets/logo2.png";
 import UserSettingsForm from "@/components/user/UserSettingsForm";
 
-import { Menu } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -43,12 +56,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   isOpen,
   onConversationSelect,
   onSessionSelect,
-  toggleSidebar
+  toggleSidebar,
 }) => {
   const { toast } = useToast();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
+
+  // Dialog de Renomear
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameSessionId, setRenameSessionId] = useState<string>("");
+  const [newTitle, setNewTitle] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isRotating) {
@@ -64,14 +83,15 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     deleteConversation,
     startNewConversation,
     setCurrentConversation,
-    loadConversations
+    loadConversations,
   } = useConversationHistory();
 
   const {
     sessions,
     isLoading: isLoadingSessions,
     deleteSession,
-    refetch: refetchSessions
+    renameSession: renameSessionHook,
+    refetch: refetchSessions,
   } = useN8nChatHistory();
 
   const { isAdmin } = useUserRole();
@@ -92,7 +112,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         description: "Você foi desconectado com sucesso.",
       });
     } catch (error) {
-      console.error('Erro no logout:', error);
+      console.error("Erro no logout:", error);
       toast({
         title: "Erro",
         description: "Não foi possível fazer logout. Tente novamente.",
@@ -118,52 +138,99 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     onSessionSelect?.(sessionId);
   };
 
-  const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Aceita evento opcional p/ funcionar com onSelect do Dropdown
+  const handleDeleteConversation = async (
+    conversationId: string,
+    e?: React.SyntheticEvent
+  ) => {
+    e?.stopPropagation?.();
     await deleteConversation(conversationId);
     if (currentConversation?.id === conversationId) {
       onConversationSelect?.(null);
     }
   };
 
-  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Aceita evento opcional p/ funcionar com onSelect do Dropdown
+  const handleDeleteSession = async (sessionId: string, e?: React.SyntheticEvent) => {
+    e?.stopPropagation?.();
     await deleteSession(sessionId);
-    await refetchSessions();
-    onSessionSelect?.(null);
+  };
+
+  const handleRenameClick = (sessionId: string, currentTitle: string) => {
+    setRenameSessionId(sessionId);
+    setNewTitle(currentTitle);
+    // abre o modal de forma controlada
+    setRenameDialogOpen(true);
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!newTitle.trim() || !renameSessionId) return;
+
+    try {
+      setIsSaving(true);
+      await renameSessionHook(renameSessionId, newTitle.trim());
+      // fecha DEPOIS do await para UX consistente
+      setRenameDialogOpen(false);
+      setRenameSessionId("");
+      setNewTitle("");
+    } catch (error) {
+      console.error("Erro ao renomear:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setRenameDialogOpen(open);
+    if (!open) {
+      // Limpar estado ao fechar para evitar problemas de estado
+      setRenameSessionId("");
+      setNewTitle("");
+      setIsSaving(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
 
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const startOfDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
 
     const diffTime = startOfToday.getTime() - startOfDate.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Hoje';
-    if (diffDays === 1) return 'Ontem';
+    if (diffDays === 0) return "Hoje";
+    if (diffDays === 1) return "Ontem";
     if (diffDays <= 7) return `${diffDays} dias atrás`;
 
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
     });
   };
 
   const isLoading = isLoadingConversations || isLoadingSessions;
   const hasAnyHistory = conversations.length > 0 || sessions.length > 0;
 
+  // ====== ATÉ AQUI (antes do return) ======
+
+
   return (
     <TooltipProvider>
-      {/* ✅ ABERTURA NORMAL (sem self-closing) */}
       <div
         id="app-sidebar"
         className={`
-          ${isOpen ? 'md:w-72 w-[80vw]' : 'md:w-16 w-[64px]'}
+          ${isOpen ? "md:w-72 w-[80vw]" : "md:w-16 w-[64px]"}
           transition-all duration-300 ease-in-out
           flex flex-col h-[100svh] bg-chat-sidebar border-r border-border shadow-md
           md:rounded-none rounded-r-2xl
@@ -171,14 +238,20 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       >
         {/* Header */}
         <div className="border-b border-border px-3 md:px-4 h-[60px] md:h-[69px] flex items-center">
-          <div className={`flex items-center ${isOpen ? 'justify-between w-full' : 'justify-center'}`}>
+          <div
+            className={`flex items-center ${
+              isOpen ? "justify-between w-full" : "justify-center"
+            }`}
+          >
             {isOpen ? (
               <>
                 <div className="flex items-center gap-2">
                   <img
                     src={sunbeamLogo}
                     alt="Experta"
-                    className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${isRotating ? 'logo-rotate' : ''}`}
+                    className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${
+                      isRotating ? "logo-rotate" : ""
+                    }`}
                   />
                   <span className="font-display font-semibold text-lg text-foreground animate-fade-in">
                     Experta
@@ -194,7 +267,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                           size="icon"
                           className="h-9 w-9 md:h-8 md:w-8 hover:bg-primary/10 hover:text-primary transition-colors"
                         >
-                          <Menu className="h-4 w-4" />
+                          <PanelLeft className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -206,7 +279,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          onClick={() => navigate('/admin')}
+                          onClick={() => navigate("/admin")}
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9 md:h-8 md:w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
@@ -248,7 +321,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       <img
                         src={sunbeamLogo}
                         alt="Experta"
-                        className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${isRotating ? 'logo-rotate' : ''}`}
+                        className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${
+                          isRotating ? "logo-rotate" : ""
+                        }`}
                       />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -262,7 +337,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     size="icon"
                     className="h-9 w-9 md:h-8 md:w-8 p-0 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
-                    <Menu className="h-4 w-4" />
+                    <PanelLeft className="h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -277,7 +352,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               <Button
                 onClick={handleNewConversation}
                 variant="default"
-                className={`${isOpen ? 'w-full justify-start gap-2' : 'w-10 h-10 p-0 mx-auto'} bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200`}
+                className={`${
+                  isOpen ? "w-full justify-start gap-2" : "w-10 h-10 p-0 mx-auto"
+                } bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200 shadow-sm`}
               >
                 <Plus className="w-4 h-4 flex-shrink-0" />
                 {isOpen && <span className="animate-fade-in">Novo Chat</span>}
@@ -328,11 +405,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                               </h3>
                             </div>
                             <p className="text-xs text-muted-foreground opacity-70">
-                              {formatDate(session.updated_at)} • {session.message_count} mensagens
+                              {formatDate(session.updated_at)} •{" "}
+                              {session.message_count} mensagens
                             </p>
                           </div>
 
-                          <DropdownMenu>
+                          <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
@@ -343,9 +421,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                 <MoreHorizontal className="w-3 h-3" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="shadow-lg">
                               <DropdownMenuItem
-                                onClick={(e) => handleDeleteSession(session.session_id, e)}
+                                onSelect={(e) => {
+                                  e.preventDefault(); // impede o dropdown de fechar antes
+                                  handleRenameClick(session.session_id, session.title);
+                                }}
+                              >
+                                <Pencil className="w-3 h-3 mr-2" />
+                                Renomear
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(e) => handleDeleteSession(session.session_id, e)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="w-3 h-3 mr-2" />
@@ -368,9 +455,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       {conversations.map((conversation) => (
                         <div
                           key={conversation.id}
-                          onClick={() => handleConversationClick(conversation)}
+                          onClick={() =>
+                            handleConversationClick(conversation)
+                          }
                           className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
-                            currentConversation?.id === conversation.id ? 'bg-primary/10 border border-primary/20' : ''
+                            currentConversation?.id === conversation.id
+                              ? "bg-primary/10 border border-primary/20"
+                              : ""
                           }`}
                         >
                           <div className="flex-1 min-w-0">
@@ -385,7 +476,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                             </p>
                           </div>
 
-                          <DropdownMenu>
+                          <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
@@ -396,9 +487,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                 <MoreHorizontal className="w-3 h-3" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="shadow-lg">
                               <DropdownMenuItem
-                                onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                                onSelect={(e) =>
+                                  handleDeleteConversation(conversation.id, e)
+                                }
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="w-3 h-3 mr-2" />
@@ -444,7 +537,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 <ThemeToggle />
               </div>
               <div className="text-xs text-muted-foreground text-center animate-fade-in">
-                Experta v1.0.6 (beta)
+                Experta v1.0.7 (beta)
               </div>
             </div>
           ) : (
@@ -468,9 +561,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           )}
         </div>
       </div>
-      {/* ✅ FECHAMENTO DO CONTAINER PRINCIPAL ACIMA */}
 
-      {/* Settings Dialog (pode ficar fora do container, mas ainda dentro do TooltipProvider) */}
+      {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent>
           <DialogHeader>
@@ -480,6 +572,44 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             </DialogDescription>
           </DialogHeader>
           <UserSettingsForm onSave={() => setIsSettingsOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Conversation Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+          <DialogContent
+            onOpenAutoFocus={(e) => e.preventDefault()} // (opcional) evita autofocus disputando com o dropdown
+          >
+          <DialogHeader>
+            <DialogTitle>Renomear Conversa</DialogTitle>
+            <DialogDescription>
+              Digite um novo título para esta conversa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Novo título da conversa"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleRenameSubmit();
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setRenameDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleRenameSubmit}>
+                Salvar
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </TooltipProvider>

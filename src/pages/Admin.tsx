@@ -17,23 +17,34 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8">
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Área Administrativa</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate('/chat')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para o Chat
-            </Button>
-            <Button variant="destructive" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
+        <header className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-2xl sm:text-3xl font-bold">Área Administrativa</h1>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/chat')}
+                className="w-full sm:w-auto"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Voltar para o Chat</span>
+                <span className="sm:hidden">Chat</span>
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleLogout}
+                className="w-full sm:w-auto"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </div>
         </header>
-        <main className="space-y-6">
+        <main className="space-y-4 sm:space-y-6">
           {/* Modo Manutenção */}
           <MaintenanceToggle />
 

@@ -21,23 +21,24 @@ const MaintenanceToggle = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Modo Manutenção</CardTitle>
+        <CardTitle className="text-lg sm:text-xl font-semibold">Modo Manutenção</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
           <Switch
             id="maintenance-mode"
             checked={isMaintenanceMode}
             onCheckedChange={handleToggle}
             aria-label="Ativar ou desativar o modo de manutenção"
+            className="self-start sm:self-auto"
           />
-          <Label htmlFor="maintenance-mode" className="flex flex-col space-y-1">
-            <span>
+          <Label htmlFor="maintenance-mode" className="flex flex-col space-y-1 cursor-pointer">
+            <span className="text-sm sm:text-base font-medium">
               {isMaintenanceMode
                 ? "Desativar modo manutenção"
                 : "Ativar modo manutenção"}
             </span>
-            <span className="font-normal leading-snug text-muted-foreground">
+            <span className="text-xs sm:text-sm font-normal leading-snug text-muted-foreground">
               Ao ativar, apenas administradores terão acesso ao sistema.
             </span>
           </Label>

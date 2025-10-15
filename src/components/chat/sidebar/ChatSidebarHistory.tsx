@@ -157,20 +157,20 @@ const ChatSidebarHistory: React.FC<ChatSidebarHistoryProps> = ({
                       </DropdownMenu>
                     </div>
                   ))}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex justify-center">
+            <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
+              <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
             </div>
-          )}
-        </>
-      ) : (
-        <div className="flex justify-center">
-          <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
-            <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
 export default ChatSidebarHistory;

@@ -1,0 +1,58 @@
+{
+  "testType": "message-parallel",
+  "timestamp": "2025-10-14T12:12:58.194Z",
+  "config": {
+    "total": 5,
+    "staggerDelay": 100,
+    "webhookUrl": "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7"
+  },
+  "total": 5,
+  "success": 5,
+  "failed": 0,
+  "successRate": 100,
+  "failureRate": 0,
+  "times": {
+    "avg": 15201.6,
+    "min": 7551,
+    "max": 41115
+  },
+  "duration": 41520,
+  "parallelWindow": 41517,
+  "throughput": 0.12043259387720692,
+  "statusCodes": {
+    "200": 5
+  },
+  "errors": [],
+  "responses": [
+    {
+      "question": "Quais seguradoras aceitam médicos?",
+      "answer": "**Seguradoras para Médicos**\n\nA aceitação de seguradoras para médicos e clínicas médicas varia bastante dependendo das coberturas desejadas e das características da prática. Ao buscar seguros para méd",
+      "duration": 7551,
+      "model": "rc-geral"
+    },
+    {
+      "question": "Olá, tudo bem?",
+      "answer": "Olá! Eu estou bem, obrigada. Espero que você também esteja.\n\nOs documentos mencionam a importância de entender as nuances do RC Empregador e seguro de vida, que frequentemente são confundidos. Na próx",
+      "duration": 8046,
+      "model": "global"
+    },
+    {
+      "question": "Qual a diferença entre RC Profissional e RC Geral?",
+      "answer": "O **RC Geral** (Responsabilidade Civil Geral) é um seguro essencial para qualquer empresa, cobrindo riscos universais e comuns a todas as atividades. Ele abrange danos relacionados à existência, uso e",
+      "duration": 8899,
+      "model": "rc-profissional"
+    },
+    {
+      "question": "Como funciona o processo de contratação?",
+      "answer": "O processo de contratação pode variar dependendo do tipo de seguro e da relação estabelecida.\n\n**Para contratação de sistemas e grupos de consultoria:**\nAo contratar, você terá a opção de adquirir o s",
+      "duration": 10397,
+      "model": "global"
+    },
+    {
+      "question": "Quanto custa um seguro de responsabilidade civil?",
+      "answer": "**Resposta direta**\nNão recebi nenhuma pergunta (veio “null”). Pode dizer o que você precisa? (trecho ?, Arquivo_desconhecido)\n\n**Citações de suporte**\n“Não recebi nenhuma pergunta (veio ‘null’). Pode",
+      "duration": 41115,
+      "model": "d&o"
+    }
+  ]
+}

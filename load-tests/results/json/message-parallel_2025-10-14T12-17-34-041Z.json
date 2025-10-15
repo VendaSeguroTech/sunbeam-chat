@@ -1,0 +1,101 @@
+{
+  "testType": "message-parallel",
+  "timestamp": "2025-10-14T12:17:34.042Z",
+  "config": {
+    "total": 10,
+    "staggerDelay": 100,
+    "webhookUrl": "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7"
+  },
+  "total": 17,
+  "success": 2,
+  "failed": 15,
+  "successRate": 11.76470588235294,
+  "failureRate": 88.23529411764706,
+  "times": {
+    "avg": 24504,
+    "min": 10128,
+    "max": 38880
+  },
+  "duration": 61510,
+  "parallelWindow": 61507,
+  "throughput": 0.2763913050547092,
+  "statusCodes": {
+    "200": 2
+  },
+  "errors": [
+    {
+      "messageIndex": 0,
+      "userId": "a4440859-d8e4-47da-ab71-b9cf6998ebec",
+      "message": "Olá, tudo bem?",
+      "error": "Timeout (>60s)"
+    },
+    {
+      "messageIndex": 0,
+      "userId": "a4440859-d8e4-47da-ab71-b9cf6998ebec",
+      "message": "Olá, tudo bem?",
+      "error": "socket hang up"
+    },
+    {
+      "messageIndex": 2,
+      "userId": "ceed9704-3ba0-4be1-b001-ea9923ae9a1d",
+      "message": "Quais seguradoras aceitam médicos?",
+      "error": "Timeout (>60s)"
+    },
+    {
+      "messageIndex": 2,
+      "userId": "ceed9704-3ba0-4be1-b001-ea9923ae9a1d",
+      "message": "Quais seguradoras aceitam médicos?",
+      "error": "socket hang up"
+    },
+    {
+      "messageIndex": 4,
+      "userId": "d13a3817-460e-48f1-a2e8-b2d80b023ad7",
+      "message": "Como funciona o processo de contratação?",
+      "error": "Timeout (>60s)"
+    },
+    {
+      "messageIndex": 4,
+      "userId": "d13a3817-460e-48f1-a2e8-b2d80b023ad7",
+      "message": "Como funciona o processo de contratação?",
+      "error": "socket hang up"
+    },
+    {
+      "messageIndex": 5,
+      "userId": "a4440859-d8e4-47da-ab71-b9cf6998ebec",
+      "message": "Qual o prazo de vigência do seguro?",
+      "error": "Timeout (>60s)"
+    },
+    {
+      "messageIndex": 5,
+      "userId": "a4440859-d8e4-47da-ab71-b9cf6998ebec",
+      "message": "Qual o prazo de vigência do seguro?",
+      "error": "socket hang up"
+    },
+    {
+      "messageIndex": 6,
+      "userId": "5bf87856-aeda-429b-a8e4-a15886deb67f",
+      "message": "Preciso de cobertura internacional?",
+      "error": "Timeout (>60s)"
+    },
+    {
+      "messageIndex": 6,
+      "userId": "5bf87856-aeda-429b-a8e4-a15886deb67f",
+      "message": "Preciso de cobertura internacional?",
+      "error": "socket hang up"
+    }
+  ],
+  "responses": [
+    {
+      "question": "Qual a diferença entre RC Profissional e RC Geral?",
+      "answer": "A diferença essencial entre o **RC Geral** e o **RC Profissional** reside na natureza dos riscos que cada um cobre.\n\nO **RC Geral** é um seguro fundamental e necessário para qualquer empresa, independ",
+      "duration": 10128,
+      "model": "rc-profissional"
+    },
+    {
+      "question": "Quanto custa um seguro de responsabilidade civil?",
+      "answer": "{\"type\":\"object\",\"properties\":{\"question1\":{\"type\":\"string\",\"description\":\"Qual é o preço de um seguro de responsabilidade civil?\"},\"question2\":{\"type\":\"string\",\"description\":\"Quanto se paga por um se",
+      "duration": 38880,
+      "model": "d&o"
+    }
+  ]
+}

@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Clock, MessageSquare } from 'lucide-react';
+import { RefreshCw, Clock, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/supabase/client';
+import UserChatHistoryDialog from './UserChatHistoryDialog';
 
 interface UserActivity {
   id: string;
@@ -18,6 +19,12 @@ const UserActivityCard: React.FC = () => {
   const [users, setUsers] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserActivity | null>(null);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
 
   const fetchUserActivity = async () => {
     setLoading(true);
@@ -105,41 +112,64 @@ const UserActivityCard: React.FC = () => {
     return diffMins < 5; // Considerado online se visto nos últimos 5 minutos
   };
 
-  return (
-    <Card className="mt-8">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Atividade dos Usuários</CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchUserActivity}
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+  const handleUserClick = (user: UserActivity) => {
+    setSelectedUser(user);
+    setShowHistoryDialog(true);
+  };
 
-        <div className="space-y-4">
-          {users.length > 0 ? (
-            users.map((user) => (
-              <div
-                key={user.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium">
-                      {user.name || user.email}
-                    </span>
-                    {isOnline(user.last_seen) && (
-                      <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">
-                        Online
-                      </Badge>
-                    )}
-                  </div>
+  // Cálculo da paginação
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  return (
+    <>
+      <Card className="mt-8">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <CardTitle className="text-xl sm:text-2xl">Atividade dos Usuários</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchUserActivity}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+          {/* Info de paginação */}
+          <div className="mb-4 text-sm text-muted-foreground">
+            Mostrando {paginatedUsers.length} de {users.length} usuários
+            {totalPages > 1 && ` (Página ${currentPage} de ${totalPages})`}
+          </div>
+
+          <div className="space-y-4">
+            {paginatedUsers.length > 0 ? (
+              paginatedUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        onClick={() => handleUserClick(user)}
+                        className="text-sm font-medium hover:underline cursor-pointer text-left hover:text-primary transition-colors"
+                      >
+                        {user.name || user.email}
+                      </button>
+                      {isOnline(user.last_seen) && (
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">
+                          Online
+                        </Badge>
+                      )}
+                    </div>
 
                   {user.name && (
                     <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -174,11 +204,52 @@ const UserActivityCard: React.FC = () => {
           )}
         </div>
 
+        {/* Controles de paginação */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Página {currentPage} de {totalPages}
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="flex-1 sm:flex-none"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="flex-1 sm:flex-none"
+              >
+                Próxima
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 text-xs text-muted-foreground">
           <p>Atualizado automaticamente a cada 30 segundos</p>
         </div>
       </CardContent>
     </Card>
+
+    {/* Dialog de histórico de conversas */}
+    <UserChatHistoryDialog
+      userId={selectedUser?.id || null}
+      userName={selectedUser?.name || ''}
+      userEmail={selectedUser?.email || ''}
+      open={showHistoryDialog}
+      onOpenChange={setShowHistoryDialog}
+    />
+    </>
   );
 };
 

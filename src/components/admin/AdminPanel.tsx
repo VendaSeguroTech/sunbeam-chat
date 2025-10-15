@@ -279,7 +279,7 @@ const AdminPanel: React.FC = () => {
                         </li>
                       </PopoverTrigger>
                       {selectedUser?.id === user.id && (
-                        <PopoverContent className="w-48 p-2">
+                        <PopoverContent className="w-48 p-2 shadow-lg">
                           <div className="flex flex-col gap-1">
                             <Button variant="ghost" onClick={() => handleSetRole(user.id, 'admin')} disabled={user.role === 'admin'}>Tornar Admin</Button>
                             <Button variant="ghost" onClick={() => handleSetRole(user.id, 'default')} disabled={user.role === 'default'}>Remover Admin</Button>

@@ -382,14 +382,15 @@ const ImprovedAdminPanel: React.FC = () => {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <CardTitle>Gerenciamento de Usuários</CardTitle>
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <CardTitle className="text-xl sm:text-2xl">Gerenciamento de Usuários</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={fetchUsers}
                   disabled={loading}
+                  className="w-full sm:w-auto"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   Atualizar
@@ -397,6 +398,7 @@ const ImprovedAdminPanel: React.FC = () => {
                 <Button
                   size="sm"
                   onClick={() => setShowCreateDialog(true)}
+                  className="w-full sm:w-auto"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Novo Usuário
@@ -455,18 +457,22 @@ const ImprovedAdminPanel: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Tokens</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Último Acesso</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {/* Wrapper com scroll horizontal para mobile */}
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[180px]">Usuário</TableHead>
+                      <TableHead className="min-w-[100px]">Role</TableHead>
+                      <TableHead className="min-w-[80px]">Tokens</TableHead>
+                      <TableHead className="min-w-[90px]">Status</TableHead>
+                      <TableHead className="min-w-[100px]">Último Acesso</TableHead>
+                      <TableHead className="text-right min-w-[80px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
               {paginatedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
@@ -576,23 +582,27 @@ const ImprovedAdminPanel: React.FC = () => {
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
               <div className="text-sm text-muted-foreground">
                 Página {currentPage} de {totalPages}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
+                  className="flex-1 sm:flex-none"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
                 </Button>
                 <Button
@@ -600,9 +610,10 @@ const ImprovedAdminPanel: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
+                  className="flex-1 sm:flex-none"
                 >
                   Próxima
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             </div>

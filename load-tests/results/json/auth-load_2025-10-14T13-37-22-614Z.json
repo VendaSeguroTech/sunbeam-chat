@@ -1,0 +1,22 @@
+{
+  "testType": "auth-load",
+  "timestamp": "2025-10-14T13:37:22.626Z",
+  "config": {
+    "total": 5,
+    "interval": 500,
+    "supabaseUrl": "https://supabase.vendaseguro.tech"
+  },
+  "total": 5,
+  "success": 5,
+  "failed": 0,
+  "successRate": 100,
+  "failureRate": 0,
+  "times": {
+    "avg": 556.4,
+    "min": 319,
+    "max": 947
+  },
+  "duration": 3210,
+  "throughput": 1.557632398753894,
+  "errors": []
+}

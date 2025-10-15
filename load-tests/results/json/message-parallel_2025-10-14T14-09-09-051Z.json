@@ -1,0 +1,58 @@
+{
+  "testType": "message-parallel",
+  "timestamp": "2025-10-14T14:09:09.052Z",
+  "config": {
+    "total": 30,
+    "staggerDelay": 400,
+    "webhookUrl": "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7"
+  },
+  "total": 30,
+  "success": 30,
+  "failed": 0,
+  "successRate": 100,
+  "failureRate": 0,
+  "times": {
+    "avg": 112194.87,
+    "min": 4270,
+    "max": 207224
+  },
+  "duration": 215504,
+  "parallelWindow": 215495,
+  "throughput": 0.13921436692266642,
+  "statusCodes": {
+    "200": 30
+  },
+  "errors": [],
+  "responses": [
+    {
+      "question": "Olá, tudo bem?",
+      "answer": "Olá! Tudo bem, e com você?",
+      "duration": 4270,
+      "model": "global"
+    },
+    {
+      "question": "Qual a diferença entre RC Profissional e RC Geral?",
+      "answer": "A principal diferença entre **RC Profissional** e **RC Geral** reside nos tipos de riscos que cada um cobre e na sua obrigatoriedade.\n\nO **RC Geral** é um seguro essencial e necessário para qualquer e",
+      "duration": 11053,
+      "model": "rc-profissional"
+    },
+    {
+      "question": "Quais documentos são necessários?",
+      "answer": "Para contratar um seguro, geralmente são necessários os seguintes documentos:\n\n**Para Cotação e Contratação:**\n*   **Questionário de Avaliação de Risco:** Este documento contém perguntas sobre os risc",
+      "duration": 39985,
+      "model": "global"
+    },
+    {
+      "question": "Quais seguradoras aceitam médicos?",
+      "answer": "Para médicos pessoa física, as seguradoras que trabalham com seguro de responsabilidade profissional incluem Argo, Argoana, Chubb, Excelsior, Eze, Fator, Cove, Mapfre, Porto Seguro e Unimed.\n\nAs cober",
+      "duration": 42439,
+      "model": "global"
+    },
+    {
+      "question": "O seguro cobre erros e omissões?",
+      "answer": "Sim, o seguro de Responsabilidade Civil Profissional (RC Profissional ou E&O) cobre prejuízos financeiros e danos morais resultantes de erros e omissões no exercício da profissão.\n\n**Cobertura de Erro",
+      "duration": 46832,
+      "model": "rc-profissional"
+    }
+  ]
+}

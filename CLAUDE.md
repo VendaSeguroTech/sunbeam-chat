@@ -404,3 +404,280 @@ docker ps | grep postgres
 - Check console for warnings (not errors)
 - Presence features will be disabled but app continues working
 - Use `UserActivityCard` for user monitoring instead of Realtime presence
+
+## Load Testing System
+
+### Overview
+The project includes a comprehensive load testing suite in the `load-tests/` directory for benchmarking system performance under various conditions.
+
+### Available Test Scripts
+
+#### 1. `message-load-test-parallel.js`
+**Purpose**: Simulates concurrent users sending messages simultaneously (stress test)
+
+**Usage**:
+```bash
+node load-tests/message-load-test-parallel.js [num-messages] [stagger-delay-ms]
+```
+
+**Parameters**:
+- `num-messages`: Total number of messages to send concurrently
+- `stagger-delay-ms`: Delay in milliseconds between firing each message (prevents instant overload)
+
+**Configuration**:
+- Webhook URL: Line 24
+- Test User IDs: Lines 43-49
+- Available Models: Line 52 (`global`, `rc-profissional`, `rc-geral`, `d&o`)
+- **Timeout**: 5 minutes (300000ms) per message (line 200)
+
+**Behavior**:
+- Fires all messages with small delays between them
+- Waits for ALL responses in parallel using `Promise.all()`
+- Measures individual response times and overall throughput
+- Calculates parallel processing window
+- Tests system capacity under concurrent load
+
+**Example Scenarios**:
+```bash
+# Light test (5 messages, 500ms delay)
+node load-tests/message-load-test-parallel.js 5 500
+
+# Moderate test (10 messages, 100ms delay)
+node load-tests/message-load-test-parallel.js 10 100
+
+# Heavy stress test (50 messages, 50ms delay)
+node load-tests/message-load-test-parallel.js 50 50
+
+# Burst test (30 messages, instant)
+node load-tests/message-load-test-parallel.js 30 0
+```
+
+#### 2. `message-load-test-with-response.js`
+**Purpose**: Tests sequential message processing with full AI response validation
+
+**Usage**:
+```bash
+node load-tests/message-load-test-with-response.js [num-messages] [interval-ms]
+```
+
+**Parameters**:
+- `num-messages`: Total number of messages to send sequentially
+- `interval-ms`: Wait time between messages (recommended: 5000ms+)
+
+**Configuration**:
+- Webhook URL: Line 20
+- Test User IDs: Lines 39-45
+- Available Models: Line 48
+- **Timeout**: 60 seconds per message (line 188)
+
+**Behavior**:
+- Sends ONE message at a time
+- Waits for complete AI response before sending next
+- Measures actual AI response time
+- Validates response quality and content
+- Tests sustained performance over time
+
+**Example Scenarios**:
+```bash
+# Basic latency test (3 messages, 15s interval)
+node load-tests/message-load-test-with-response.js 3 15000
+
+# Quality test (5 messages, 10s interval)
+node load-tests/message-load-test-with-response.js 5 10000
+
+# Stability test (10 messages, 5s interval)
+node load-tests/message-load-test-with-response.js 10 5000
+```
+
+#### 3. `auth-load-test.js`
+**Purpose**: Tests authentication system under concurrent login attempts
+
+**Usage**:
+```bash
+node load-tests/auth-load-test.js [num-users] [interval-ms]
+```
+
+**Parameters**:
+- `num-users`: Number of concurrent login attempts
+- `interval-ms`: Delay between login attempts
+
+**Configuration**:
+- Supabase URL: Line 17
+- Supabase Anon Key: Line 18
+- Test User Credentials: Lines 27-38 (requires pre-created users)
+
+**Behavior**:
+- Simulates multiple users logging in simultaneously
+- Tests Supabase Auth performance
+- Measures login response times
+- Validates session creation
+
+**Example Scenarios**:
+```bash
+# Basic auth test (5 logins, 500ms delay)
+node load-tests/auth-load-test.js 5 500
+
+# Moderate load (20 logins, 100ms delay)
+node load-tests/auth-load-test.js 20 100
+
+# Stress test (50 logins, 50ms delay)
+node load-tests/auth-load-test.js 50 50
+```
+
+### Automatic Report Generation
+
+All test scripts automatically generate detailed reports using the `utils/report-generator.js` module:
+
+#### Generated Files
+
+1. **Individual JSON Results** (`load-tests/results/json/`)
+   - One JSON file per test execution
+   - Filename format: `{test-type}_{timestamp}.json`
+   - Contains full test configuration, statistics, errors, and sample responses
+
+2. **Consolidated Markdown Report** (`load-tests/results/ALL_TESTS_REPORT.md`)
+   - Cumulative report of ALL test executions
+   - Never overwrites - always appends new results
+   - Includes automatic analysis with performance ratings
+   - Grouped by test type with timestamps
+
+3. **Index Summary** (`load-tests/results/INDEX.md`)
+   - Quick reference table of all tests
+   - Shows: date, success count, total count, success rate
+   - Grouped by test type for easy comparison
+
+#### Report Generator Functions
+
+Located in `load-tests/utils/report-generator.js`:
+
+```javascript
+// Save individual test result as JSON
+saveTestResultJSON(testType, resultObject)
+
+// Append to consolidated Markdown report
+appendToConsolidatedReport(testType, resultObject)
+
+// Update index with all test summaries
+generateIndexReport()
+
+// Optional: Clean old results (keeps last N)
+cleanOldResults(keepLast = 50)
+```
+
+#### Test Result Structure
+
+```javascript
+{
+  testType: 'message-parallel' | 'message-sequential' | 'auth-load',
+  timestamp: ISO string,
+  config: {
+    total: number,
+    interval: number,
+    webhookUrl: string
+  },
+  total: number,
+  success: number,
+  failed: number,
+  successRate: percentage,
+  failureRate: percentage,
+  times: {
+    avg: milliseconds,
+    min: milliseconds,
+    max: milliseconds
+  },
+  duration: milliseconds,
+  throughput: requests per second,
+  statusCodes: { code: count },
+  errors: array (max 10),
+  responses: array (max 5 samples)
+}
+```
+
+### Performance Metrics Interpretation
+
+#### Success Rate
+- **100%**: Perfect - no failures
+- **≥90%**: Excellent - production ready
+- **70-90%**: Good - acceptable with some failures
+- **50-70%**: Regular - needs optimization
+- **<50%**: Critical - system unstable
+
+#### Response Time
+- **<3s**: Fast - excellent user experience
+- **3-10s**: Normal - acceptable performance
+- **10-30s**: Slow - needs optimization
+- **>30s**: Very Slow - critical issue
+
+#### Throughput
+- Measured in requests/second or responses/second
+- Higher is better
+- Compare against baseline after optimizations
+
+### Testing Best Practices
+
+1. **Progressive Testing**: Start with small loads and increase gradually
+2. **Consistent Timing**: Run tests at similar times for fair comparison
+3. **Document Changes**: Note code changes before each test run
+4. **Establish Baselines**: Define acceptable performance thresholds
+5. **Monitor Trends**: Use consolidated report to track performance over time
+
+### Common Test Workflows
+
+#### Daily (After Deploy)
+```bash
+node load-tests/message-load-test-parallel.js 10 100
+```
+
+#### Weekly (Comprehensive)
+```bash
+node load-tests/auth-load-test.js 10 100
+node load-tests/message-load-test-parallel.js 20 100
+node load-tests/message-load-test-with-response.js 5 10000
+```
+
+#### Monthly (Full Benchmark)
+```bash
+node load-tests/auth-load-test.js 20 100
+node load-tests/message-load-test-parallel.js 50 100
+node load-tests/message-load-test-with-response.js 10 5000
+```
+
+#### Pre-Release (Stress Test)
+```bash
+node load-tests/auth-load-test.js 50 50
+node load-tests/message-load-test-parallel.js 100 50
+node load-tests/message-load-test-with-response.js 10 5000
+```
+
+### Documentation
+
+- **`load-tests/GUIA_DE_USO_BENCHMARKS.md`**: Comprehensive usage guide with all scenarios
+- **`load-tests/GUIA_RAPIDO.md`**: Quick start guide for common operations
+- **`load-tests/README.md`**: Technical documentation and script details
+
+### Troubleshooting Load Tests
+
+#### "Cannot find module"
+Ensure you're in the correct directory:
+```bash
+cd load-tests
+node message-load-test-parallel.js 10 100
+```
+
+#### High Timeout Rate
+- Increase interval between messages
+- Reduce total number of concurrent messages
+- Check N8N webhook capacity and AI model response times
+- Verify database connection limits
+
+#### Low Success Rate
+- Check N8N workflow logs for errors
+- Verify webhook URL is correct and accessible
+- Check Supabase rate limits
+- Ensure test user IDs exist in database
+- Review server resources (CPU, memory, network)
+
+#### Connection Refused
+- Verify N8N webhook is running and accessible
+- Test webhook manually: `curl -X POST {WEBHOOK_URL}`
+- Check firewall and network settings

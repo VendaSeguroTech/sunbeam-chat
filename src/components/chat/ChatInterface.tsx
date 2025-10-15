@@ -1062,7 +1062,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             )}
 
-            <div className={`flex items-center gap-2 bg-chat-input dark:bg-[#303030] border border-border p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
+            <div className={`flex items-center gap-2 bg-chat-input dark:bg-[#303030] border border-border p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
               <div className="relative w-full">
                 <Input
                   value={message}
@@ -1114,7 +1114,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 hover:bg-muted"
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 hover:bg-muted rounded-full"
                   onClick={handlePaperclipClick}
                   disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                 >
@@ -1125,7 +1125,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onClick={handleSendMessage}
                   disabled={(!message.trim() && !attachedFile) || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
                   size="sm"
-                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
                 >
                   {isLoading ? (
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
