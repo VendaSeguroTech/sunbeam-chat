@@ -8,8 +8,7 @@ import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
 import { useTokens } from "@/hooks/useTokens";
 import { supabase } from "@/supabase/client";
 import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
-import logoExpertaLight from "@/assets/logo-experta.png";
-import logoExpertaDark from "@/assets/logo-experta-reduzida.png";
+import sunbeamLogo from "@/assets/logo2.png";
 
 interface ChatInterfaceProps {
   selectedConversation?: ConversationHistory | null;
@@ -177,18 +176,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     n8nMessages.forEach((record, index) => {
       const message = record.message;
       let content = 'Mensagem sem conteúdo';
-      let type: 'user' | 'assistant' = 'assistant';
+      let type: 'user' | 'assistant' = 'user';
 
-      // Primeiro, tenta extrair o tipo e conteúdo do objeto message
       if (typeof message === 'string') {
         content = message;
-        // Para strings simples, assume alternância mas prefere verificar o contexto
-        // Se não há type explícito, usa a alternância como fallback
         type = index % 2 === 0 ? 'user' : 'assistant';
       } else if (message && typeof message === 'object') {
         const messageObj = message as MessageContent;
-
-        // Extrai o conteúdo
         if (messageObj.content && typeof messageObj.content === 'string') {
           content = messageObj.content;
         } else if (messageObj.message && typeof messageObj.message === 'string') {
@@ -198,14 +192,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         } else {
           content = JSON.stringify(messageObj, null, 2);
         }
-
-        // CRÍTICO: Prioriza o campo type do objeto
-        if (messageObj.type) {
-          type = messageObj.type;
-        } else {
-          // Fallback para alternância apenas se não houver type
-          type = index % 2 === 0 ? 'user' : 'assistant';
-        }
+        type = messageObj.type || (index % 2 === 0 ? 'user' : 'assistant');
       } else if (message === null || message === undefined) {
         content = 'Mensagem vazia';
         type = index % 2 === 0 ? 'user' : 'assistant';
@@ -213,7 +200,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       console.log(`💬 Mensagem ${index + 1}: ${type} - "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`);
 
-      // Se for mensagem da assistente e contém quebras de linha duplas, divide em chunks
       if (type === 'assistant' && content.includes('\n\n')) {
         const chunks = content.split('\n\n').filter(c => c.trim() !== '');
         chunks.forEach((chunk, chunkIndex) => {
@@ -222,7 +208,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             content: chunk.trim(),
             type,
             timestamp: new Date(record.created_at || new Date().toISOString()),
-            model: record.model
+            model: record.model // Incluir modelo usado
           });
         });
       } else {
@@ -231,7 +217,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           content: content.trim(),
           type,
           timestamp: new Date(record.created_at || new Date().toISOString()),
-          model: record.model
+          model: record.model // Incluir modelo usado
         });
       }
     });
@@ -850,8 +836,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   {msg.type === 'assistant' && (
                     showAvatar ? (
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <img src={logoExpertaLight} alt="AI" className="w-8 h-8 rounded-full block dark:hidden" />
-                        <img src={logoExpertaDark} alt="AI" className="w-8 h-8 rounded-full hidden dark:block" />
+                        <img src={sunbeamLogo} alt="AI" className="w-8 h-8" />
                       </div>
                     ) : (
                       <div className="w-8 h-8 flex-shrink-0" />
@@ -966,12 +951,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             })}
 
             {isLoading && (
-              <div className="flex items-start gap-4 justify-start">
-                <div className="animated-gradient-border-wrap rounded-full">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 dark:!bg-[#303030] flex items-center justify-center flex-shrink-0">
-                    <img src={logoExpertaLight} alt="AI" className="w-8 h-8 rounded-full block dark:hidden" />
-                    <img src={logoExpertaDark} alt="AI" className="w-8 h-8 rounded-full hidden dark:block" />
-                  </div>
+              <div className="flex gap-4 justify-start">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:!bg-[#303030] flex items-center justify-center flex-shrink-0">
+                  <img src={sunbeamLogo} alt="AI" className="w-5 h-5 dark:filter dark:invert" />
                 </div>
                 <div className="bg-chat-bubble-assistant border border-border rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
                   <div className="flex flex-col">
@@ -997,22 +979,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
-            {/* <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
               <img
                 src={sunbeamLogo}
                 alt="Experta"
                 className="w-full h-full object-contain"
               />
-            </div> */}
+            </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-              {userName ? (
-                <>
-                  Olá <span className="animated-gradient-text font-semibold">{userName}</span>
-                </>
-              ) : (
-                "Olá, sou Experta."
-              )}
+              {userName ? `Olá ${userName} ` : "Olá, sou Experta."}
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground">
               Como posso ajudá-lo hoje?
@@ -1176,7 +1152,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)}
                 className={`rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary bg-[#F8FAFC] dark:bg-[#303030] dark:text-white transition-all ${
                   isAdvancedCreativity ? 'bg-primary/10 border-primary' : ''
-                } ${!isAdvancedCreativity ? 'glow-button' : ''}`}              >
+                }`}
+              >
                 <Sparkles className={`w-4 h-4 mr-2 ${isAdvancedCreativity ? 'fill-current' : ''}`} />
                 Criatividade Avançada
               </Button>

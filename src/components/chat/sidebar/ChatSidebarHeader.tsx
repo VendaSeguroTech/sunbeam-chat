@@ -22,18 +22,24 @@ const ChatSidebarHeader: React.FC<ChatSidebarHeaderProps> = ({
       <div className="flex items-center justify-between">
         {isOpen ? (
           <>
-            <div className="flex items-center gap-2">
-              {" "}
-              {/* Group Experta and logo */}
-              <span className="font-semibold text-lg text-foreground animate-fade-in ml-10">
-                Experta
-              </span>
-              <img
-                src={sunbeamLogo}
-                alt="Experta"
-                className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <span 
+              className="font-light text-5xl animate-fade-in ml-10"
+              style={{
+                background: 'linear-gradient(90deg, #FFDBB5 0%, #FFAA7F 25%, #FF8A95 50%, #B68AC8 75%, #8FC5ED 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              Experta
+            </span>
+            <img
+              src={sunbeamLogo}
+              alt="Experta"
+              className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
+            />
+          </div>
             {isAdmin && (
               <Button
                 onClick={() => navigate("/admin")}

@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import sunbeamLogo from "@/assets/logo2.png";
 import UserSettingsForm from "@/components/user/UserSettingsForm";
 
 import { PanelLeft } from "lucide-react";
@@ -245,15 +246,14 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             {isOpen ? (
               <>
                 <div className="flex items-center gap-2">
-                  <span 
-                    className="font-light text-2xl animate-fade-in ml-10"
-                    style={{
-                      background: 'linear-gradient(90deg, #FFDBB5 0%, #FFAA7F 25%, #FF8A95 50%, #B68AC8 75%, #8FC5ED 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    }}
-                  >
+                  <img
+                    src={sunbeamLogo}
+                    alt="Experta"
+                    className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${
+                      isRotating ? "logo-rotate" : ""
+                    }`}
+                  />
+                  <span className="font-display font-semibold text-lg text-foreground animate-fade-in">
                     Experta
                   </span>
                 </div>
@@ -318,20 +318,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 {!isHoveringLogo ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      {/* "Ex" com gradiente */}
-                      <span
-                        className="ex-gradient-mark font-light select-none text-2xl"
-                        style={{
-                          background: 'linear-gradient(90deg, #FFDBB5 0%, #FFAA7F 25%, #FF8A95 50%, #B68AC8 75%, #8FC5ED 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text'
-                        }}
-                        aria-label="Experta"
-                        role="img"
-                      >
-                        Ex
-                      </span>
+                      <img
+                        src={sunbeamLogo}
+                        alt="Experta"
+                        className={`w-8 h-8 rounded-lg object-contain flex-shrink-0 ${
+                          isRotating ? "logo-rotate" : ""
+                        }`}
+                      />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="font-display">Experta</p>
@@ -353,24 +346,19 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
 
         {/* New Chat Button */}
-        <div className={isOpen ? "px-3 py-3 md:p-4" : "py-3 md:py-4 px-0"}>
+        <div className="px-3 py-3 md:p-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={isOpen ? "" : "flex justify-center"}>
-                <Button
-                  onClick={handleNewConversation}
-                  variant="default"
-                  size={isOpen ? "default" : "icon"}
-                  className={`${
-                    isOpen
-                      ? "w-full justify-start gap-2 px-3"  // 👈 padding de volta no aberto
-                      : "h-10 w-10 p-0"                    // 👈 sem padding no fechado
-                  } bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200 shadow-sm`}
-                >
-                  <Plus className="w-4 h-4 flex-shrink-0" />
-                  {isOpen && <span className="animate-fade-in">Novo Chat</span>}
-                </Button>
-              </div>
+              <Button
+                onClick={handleNewConversation}
+                variant="default"
+                className={`${
+                  isOpen ? "w-full justify-start gap-2" : "w-10 h-10 p-0 mx-auto"
+                } bg-primary hover:bg-primary-hover text-primary-foreground shadow-glow transition-all duration-200 shadow-sm`}
+              >
+                <Plus className="w-4 h-4 flex-shrink-0" />
+                {isOpen && <span className="animate-fade-in">Novo Chat</span>}
+              </Button>
             </TooltipTrigger>
             {!isOpen && (
               <TooltipContent>
@@ -379,8 +367,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             )}
           </Tooltip>
         </div>
-
-
 
         {/* Chat History */}
         <div className="flex-1 px-3 md:px-4 overflow-y-auto custom-scrollbar">

@@ -7,7 +7,7 @@ import { ConversationHistory } from "@/hooks/useConversationHistory";
 import ModelSelector from "./ModelSelector"; // Import the new component
 
 const ChatLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
@@ -96,7 +96,7 @@ const ChatLayout: React.FC = () => {
 
       {/* Chat principal */}
       <div className="flex-1 min-w-0 relative"> {/* Added relative here for positioning */}
-        <div className="absolute top-4 left-20 md:left-4 z-10 animated-gradient-border-wrap rounded-md"> {/* Positioned ModelSelector */}
+        <div className="absolute top-4 left-4 z-10"> {/* Positioned ModelSelector */}
           <ModelSelector onValueChange={handleModelChange} defaultValue={selectedModel} />
         </div>
         <ChatInterface
