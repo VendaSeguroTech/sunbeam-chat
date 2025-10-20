@@ -231,12 +231,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         className={`
           ${isOpen ? "md:w-72 w-[80vw]" : "md:w-16 w-[64px]"}
           transition-all duration-300 ease-in-out
-          flex flex-col h-[100svh] bg-chat-sidebar shadow-md
+          flex flex-col h-[100svh] bg-white shadow-lg
           md:rounded-none rounded-r-2xl
         `}
       >
         {/* Header */}
-        <div className="border-b border-white/10 px-3 md:px-4 h-[60px] md:h-[69px] flex items-center">
+        <div className="border-b border-gray-200 px-3 md:px-4 h-[60px] md:h-[69px] flex items-center">
           <div
             className={`flex items-center ${
               isOpen ? "justify-between w-full" : "justify-center"
@@ -246,7 +246,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               <>
                 <div className="flex items-center gap-2">
                   <span 
-                    className="font-light text-2xl animate-fade-in ml-10 text-white"
+                    className="font-semibold text-xl animate-fade-in text-gray-900"
                   >
                     Experta
                   </span>
@@ -259,7 +259,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                           onClick={handleToggleSidebar}
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 md:h-8 md:w-8 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                          className="h-9 w-9 md:h-8 md:w-8 hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors rounded-full"
                         >
                           <PanelLeft className="h-4 w-4" />
                         </Button>
@@ -276,7 +276,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                           onClick={() => navigate("/admin")}
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 md:h-8 md:w-8 hover:bg-red-500/10 text-white/70 hover:text-red-400 transition-colors"
+                          className="h-9 w-9 md:h-8 md:w-8 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors rounded-full"
                         >
                           <Shield className="h-4 w-4" />
                         </Button>
@@ -292,7 +292,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         onClick={() => setIsSettingsOpen(true)}
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 md:h-8 md:w-8 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                        className="h-9 w-9 md:h-8 md:w-8 hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors rounded-full"
                       >
                         <Settings className="h-4 w-4" />
                       </Button>
@@ -313,7 +313,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span
-                        className="ex-gradient-mark font-light select-none text-2xl text-white"
+                        className="font-semibold select-none text-xl text-gray-900"
                         aria-label="Experta"
                         role="img"
                       >
@@ -373,39 +373,39 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         <div className="flex-1 px-3 md:px-4 overflow-y-auto custom-scrollbar">
           {isOpen ? (
               <>
-                <div className="text-sm text-white/60 mb-4 animate-fade-in">
+                <div className="text-sm text-gray-600 mb-4 animate-fade-in">
                   Histórico de conversas
                 </div>
 
                 {isLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-white/30 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 ) : !hasAnyHistory ? (
-                  <div className="text-sm text-white/40 italic animate-fade-in">
+                  <div className="text-sm text-gray-400 italic animate-fade-in">
                     Nenhum histórico ainda
                   </div>
                 ) : (
                   <div className="space-y-4 animate-fade-in">
                     {sessions.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs text-white/50 font-medium">
+                        <div className="text-xs text-gray-500 font-medium">
                           Conversas Recentes (beta - testes)
                         </div>
                         {sessions.map((session) => (
                           <div
                             key={session.session_id}
                             onClick={() => handleSessionClick(session.session_id)}
-                            className="group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-white/5"
+                            className="group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100"
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <MessageSquare className="w-3 h-3 text-white/50 flex-shrink-0" />
-                                <h3 className="text-xs font-medium truncate text-white/90">
+                                <MessageSquare className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                                <h3 className="text-xs font-medium truncate text-gray-900">
                                   {session.title}
                                 </h3>
                               </div>
-                              <p className="text-xs text-white/40 opacity-70">
+                              <p className="text-xs text-gray-500 opacity-70">
                                 {formatDate(session.updated_at)} •{" "}
                                 {session.message_count} mensagens
                               </p>
@@ -449,7 +449,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     {conversations.length > 0 && (
                       <div className="space-y-2">
                         {sessions.length > 0 && (
-                          <div className="text-xs text-white/50 font-medium mt-4">
+                          <div className="text-xs text-gray-500 font-medium mt-4">
                             Conversas Antigas
                           </div>
                         )}
@@ -459,20 +459,20 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                             onClick={() =>
                               handleConversationClick(conversation)
                             }
-                            className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-white/5 ${
+                            className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 ${
                               currentConversation?.id === conversation.id
-                                ? "bg-white/10 border border-white/20"
+                                ? "bg-gray-100 border border-gray-300"
                                 : ""
                             }`}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                              <MessageSquare className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                              <h3 className="text-xs font-medium truncate">
+                              <MessageSquare className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                              <h3 className="text-xs font-medium truncate text-gray-900">
                                 {conversation.title}
                               </h3>
                             </div>
-                            <p className="text-xs text-muted-foreground opacity-70">
+                            <p className="text-xs text-gray-500 opacity-70">
                               {formatDate(conversation.updated_at)}
                             </p>
                           </div>
@@ -522,14 +522,14 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border px-3 py-3 md:p-4">
+        <div className="border-t border-gray-200 px-3 py-3 md:p-4">
           {isOpen ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Button
                   onClick={handleLogout}
                   variant="ghost"
-                  className="justify-start gap-2 text-muted-foreground hover:text-foreground text-xs p-2 h-auto"
+                  className="justify-start gap-2 text-gray-600 hover:text-gray-900 text-xs p-2 h-auto"
                 >
                   <LogOut className="w-3 h-3" />
                   Sair
@@ -537,7 +537,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
                 <ThemeToggle />
               </div>
-              <div className="text-xs text-muted-foreground text-center animate-fade-in">
+              <div className="text-xs text-gray-500 text-center animate-fade-in">
                 Experta v1.0.7 (beta)
               </div>
             </div>
@@ -551,7 +551,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     variant="ghost"
                     className="w-6 h-6 p-0 mx-auto flex items-center justify-center"
                   >
-                    <LogOut className="w-3 h-3 text-muted-foreground" />
+                    <LogOut className="w-3 h-3 text-gray-600" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>

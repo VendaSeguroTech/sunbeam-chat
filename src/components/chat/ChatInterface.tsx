@@ -826,7 +826,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[100svh] bg-chat-background relative">
+    <div className="flex-1 flex flex-col h-[100svh] relative">
       {messages.length > 0 ? (
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           <div className="max-w-4xl w-full mx-auto space-y-4 sm:space-y-5 md:space-y-6 px-0">
@@ -868,8 +868,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                     <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                       msg.type === 'user'
-                        ? 'bg-chat-bubble-user dark:bg-[#303030] text-gray-800 dark:text-[#FFFFFF] ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm active:shadow-sm'
-                        : 'bg-chat-bubble-assistant dark:bg-[#303030] text-gray-800 dark:text-white rounded-2xl p-3 sm:p-4 shadow-sm'
+                        ? 'bg-[#F5D5A8] text-gray-900 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm'
+                        : 'bg-white text-gray-900 border border-gray-200 rounded-2xl p-3 sm:p-4 shadow-sm'
                     }`}>
                       {msg.file ? (
                         <div className="flex flex-col gap-2">
@@ -914,7 +914,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                       {/* Horário - para usuário e assistente */}
                       {msg.type === 'user' && (
-                        <p className="text-[10px] sm:text-xs mt-2 opacity-70 text-primary-foreground/70 dark:text-white">
+                        <p className="text-[10px] sm:text-xs mt-2 opacity-70 text-gray-700">
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       )}
@@ -968,12 +968,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             {isLoading && (
               <div className="flex items-start gap-4 justify-start">
                 <div className="animated-gradient-border-wrap rounded-full">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 dark:!bg-[#303030] flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                     <img src={logoExpertaLight} alt="AI" className="w-8 h-8 rounded-full block dark:hidden" />
                     <img src={logoExpertaDark} alt="AI" className="w-8 h-8 rounded-full hidden dark:block" />
                   </div>
                 </div>
-                <div className="bg-chat-bubble-assistant border border-border rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
+                <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
                   <div className="flex flex-col">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
@@ -1064,12 +1064,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             )}
 
             {attachedFile && (
-              <div className="bg-chat-input border border-border border-b-0 rounded-t-2xl p-3 -mb-2">
-                <div className="flex items-center justify-between bg-muted p-2 rounded-lg">
+              <div className="bg-gray-50 border border-gray-200 border-b-0 rounded-t-2xl p-3 -mb-2">
+                <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
                   <div className="flex items-center gap-2 text-sm overflow-hidden">
-                    <FileIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    <span className="font-medium truncate">{attachedFile.name}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                    <FileIcon className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                    <span className="font-medium truncate text-gray-900">{attachedFile.name}</span>
+                    <span className="text-xs text-gray-500 flex-shrink-0">
                       ({(attachedFile.size / 1024).toFixed(2)} KB)
                     </span>
                   </div>
@@ -1086,7 +1086,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             )}
 
-            <div className={`flex items-center gap-2 bg-chat-input dark:bg-[#303030] border border-border p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
+            <div className={`flex items-center gap-2 bg-gray-50 border border-gray-200 p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
               <div className="relative w-full">
                 <Input
                   value={message}
@@ -1099,7 +1099,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                   }
-                  className="flex-1 border-0 bg-[#F8FAFC] dark:bg-[#303030] placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base dark:text-white"
+                  className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base text-gray-900"
                   disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                 />
                 <input
