@@ -868,8 +868,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                     <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                       msg.type === 'user'
-                        ? 'bg-[#ff773d] dark:bg-[#303030] text-[#eeeeee] dark:text-[#FFFFFF] ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-apple active:shadow-sm'
-                        : 'bg-transparent border-none shadow-none p-0'
+                        ? 'bg-chat-bubble-user dark:bg-[#303030] text-gray-800 dark:text-[#FFFFFF] ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm active:shadow-sm'
+                        : 'bg-chat-bubble-assistant dark:bg-[#303030] text-gray-800 dark:text-white rounded-2xl p-3 sm:p-4 shadow-sm'
                     }`}>
                       {msg.file ? (
                         <div className="flex flex-col gap-2">

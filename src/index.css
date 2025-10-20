@@ -44,12 +44,12 @@ All colors MUST be HSL.
     --radius: 12px;
 
     /* Chat specific colors */
-    --chat-background: 0 0% 98%;
-    --chat-sidebar: 0 0% 100%;
-    --chat-sidebar-hover: 18 100% 97%;
+    --chat-background: 25 45% 94%; /* Bege/pêssego claro para o fundo */
+    --chat-sidebar: 210 30% 18%; /* Azul escuro para sidebar */
+    --chat-sidebar-hover: 210 30% 22%;
     --chat-input: 0 0% 100%;
-    --chat-bubble-user: 18 100% 62%;
-    --chat-bubble-assistant: 0 0% 100%;
+    --chat-bubble-user: 35 75% 78%; /* Bege/amarelo claro para mensagens do usuário */
+    --chat-bubble-assistant: 0 0% 97%; /* Branco/cinza muito claro para assistente */
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(18 100% 62%), hsl(25 100% 58%));

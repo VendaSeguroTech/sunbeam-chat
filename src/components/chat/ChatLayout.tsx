@@ -95,16 +95,18 @@ const ChatLayout: React.FC = () => {
 
 
       {/* Chat principal */}
-      <div className="flex-1 min-w-0 relative"> {/* Added relative here for positioning */}
-        <div className="absolute top-4 left-20 md:left-4 z-10 animated-gradient-border-wrap rounded-md"> {/* Positioned ModelSelector */}
-          <ModelSelector onValueChange={handleModelChange} defaultValue={selectedModel} />
+      <div className="flex-1 min-w-0 flex flex-col h-full">
+        <div className="flex items-center justify-start p-4 md:p-6">
+          <div className="animated-gradient-border-wrap rounded-md">
+            <ModelSelector onValueChange={handleModelChange} defaultValue={selectedModel} />
+          </div>
         </div>
         <ChatInterface
           key={chatKey}
           selectedConversation={selectedConversation}
           selectedSessionId={selectedSessionId}
           onNewChatStarted={handleNewChatStarted}
-          selectedModel={selectedModel} // Pass the selected model to ChatInterface
+          selectedModel={selectedModel}
         />
       </div>
     </div>
