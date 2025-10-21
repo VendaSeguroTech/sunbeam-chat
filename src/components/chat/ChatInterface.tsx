@@ -1023,11 +1023,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           className="
             pointer-events-none absolute inset-x-0 bottom-0
             h-32 sm:h-36 md:h-40
-            bg-gradient-to-t from-white/50 via-white/30 to-transparent
+            bg-gradient-to-t from-white/95 via-white/85 to-white/20
             backdrop-blur-md
             z-10
           "
         />
+
         {/* conteúdo da barra (fica por cima do overlay) */}
         <div
           className="
