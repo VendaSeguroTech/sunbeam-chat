@@ -1018,22 +1018,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* ===== BARRA INFERIOR COM OVERLAY TRANSLÚCIDO ===== */}
       <div className="sticky bottom-0 z-30 relative">
-        {/* overlay que cobre as mensagens atrás */}
+        {/* overlay gradiente suave que permite ver as mensagens passando */}
         <div
           className="
             pointer-events-none absolute inset-x-0 bottom-0
-            h-28 sm:h-32 md:h-36
-            bg-gradient-to-t from-white/90 via-white/70 to-transparent
-            backdrop-blur-sm
-            shadow-[0_-12px_24px_rgba(0,0,0,0.08)]
+            h-32 sm:h-36 md:h-40
+            bg-gradient-to-t from-white/50 via-white/30 to-transparent
+            backdrop-blur-md
             z-10
           "
         />
         {/* conteúdo da barra (fica por cima do overlay) */}
         <div
           className="
-            relative z-20 border-t border-border
-            bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70
+            relative z-20
+            bg-transparent
             p-3 sm:p-4 md:p-6
             pb-[max(env(safe-area-inset-bottom),12px)]
           "
@@ -1043,7 +1042,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
               {/* Chips de sugestões acima do input */}
               {questionSuggestions.length > 0 && (
-                <div className="bg-chat-input border border-border rounded-2xl p-2.5 sm:p-3 mb-2 sm:mb-3">
+                <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl p-2.5 sm:p-3 mb-2 sm:mb-3 shadow-sm">
                   <p className="text-xs text-muted-foreground mb-2">
                     Não encontrei uma resposta adequada para essa pergunta, quer tentar:
                   </p>
@@ -1053,7 +1052,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         key={i}
                         variant="outline"
                         size="sm"
-                        className="rounded-full hover:bg-primary/5"
+                        className="rounded-full hover:bg-primary/5 bg-white/90"
                         disabled={isLoading}
                         onClick={() => handleSendSuggestion(q)}
                       >
@@ -1063,7 +1062,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="rounded-full text-muted-foreground"
+                      className="rounded-full text-muted-foreground bg-white/90"
                       onClick={() => setQuestionSuggestions([])}
                       disabled={isLoading}
                     >
@@ -1074,8 +1073,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               )}
 
               {attachedFile && (
-                <div className="bg-gray-50 border border-gray-200 border-b-0 rounded-t-2xl p-3 -mb-2">
-                  <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+                <div className="bg-white/80 backdrop-blur-md border border-gray-200 border-b-0 rounded-t-2xl p-3 -mb-2 shadow-sm">
+                  <div className="flex items-center justify-between bg-white/90 p-2 rounded-lg">
                     <div className="flex items-center gap-2 text-sm overflow-hidden">
                       <FileIcon className="w-5 h-5 text-gray-600 flex-shrink-0" />
                       <span className="font-medium truncate text-gray-900">{attachedFile.name}</span>
@@ -1096,7 +1095,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
               )}
 
-              <div className={`flex items-center gap-2 bg-gray-50 border border-gray-200 p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
+              <div className={`flex items-center gap-2 bg-white/70 backdrop-blur-md border border-gray-200 p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
                 <div className="relative w-full">
                   <Input
                     value={message}
