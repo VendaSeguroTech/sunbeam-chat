@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -8,8 +8,7 @@ import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
 import { useTokens } from "@/hooks/useTokens";
 import { supabase } from "@/supabase/client";
 import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
-import logoExpertaLight from "@/assets/logo-experta.png";
-import logoExpertaDark from "@/assets/logo-experta-reduzida.png";
+import expertaAvatarLogo from "@/assets/experta-avatar-logo.png";
 
 interface ChatInterfaceProps {
   selectedConversation?: ConversationHistory | null;
@@ -828,7 +827,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="flex-1 flex flex-col h-[100svh] relative">
       {messages.length > 0 ? (
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-24 sm:pb-28 md:pb-32">
           <div className="max-w-4xl w-full mx-auto space-y-4 sm:space-y-5 md:space-y-6 px-0">
             {(isNewChat && messages.length > 0) || selectedSessionId ? (
               <div className="text-center py-2">
@@ -850,8 +849,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   {msg.type === 'assistant' && (
                     showAvatar ? (
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <img src={logoExpertaLight} alt="AI" className="w-8 h-8 rounded-full block dark:hidden" />
-                        <img src={logoExpertaDark} alt="AI" className="w-8 h-8 rounded-full hidden dark:block" />
+                        <img src={expertaAvatarLogo} alt="AI" className="w-8 h-8 rounded-full" />
                       </div>
                     ) : (
                       <div className="w-8 h-8 flex-shrink-0" />
@@ -969,8 +967,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div className="flex items-start gap-4 justify-start">
                 <div className="animated-gradient-border-wrap rounded-full">
                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <img src={logoExpertaLight} alt="AI" className="w-8 h-8 rounded-full block dark:hidden" />
-                    <img src={logoExpertaDark} alt="AI" className="w-8 h-8 rounded-full hidden dark:block" />
+                    <img src={expertaAvatarLogo} alt="AI" className="w-8 h-8 rounded-full" />
                   </div>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
@@ -997,14 +994,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       ) : (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
-            {/* <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
-              <img
-                src={sunbeamLogo}
-                alt="Experta"
-                className="w-full h-full object-contain"
-              />
-            </div> */}
-
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
               {userName ? (
                 <>
@@ -1027,177 +1016,189 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
       )}
 
-      <div className="sticky bottom-0 border-t border-border bg-chat-background/95 backdrop-blur supports-[backdrop-filter]:bg-chat-background/80 p-3 sm:p-4 md:p-6 pb-[max(env(safe-area-inset-bottom),12px)]">
-        <div className="max-w-4xl w-full mx-auto">
-          <div className="relative">
+      {/* ===== BARRA INFERIOR COM OVERLAY TRANSLÚCIDO ===== */}
+      <div className="sticky bottom-0 z-30 relative">
+        {/* overlay que cobre as mensagens atrás */}
+        <div
+          className="
+            pointer-events-none absolute inset-x-0 bottom-0
+            h-28 sm:h-32 md:h-36
+            bg-gradient-to-t from-white/90 via-white/70 to-transparent
+            backdrop-blur-sm
+            shadow-[0_-12px_24px_rgba(0,0,0,0.08)]
+            z-10
+          "
+        />
+        {/* conteúdo da barra (fica por cima do overlay) */}
+        <div
+          className="
+            relative z-20 border-t border-border
+            bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70
+            p-3 sm:p-4 md:p-6
+            pb-[max(env(safe-area-inset-bottom),12px)]
+          "
+        >
+          <div className="max-w-4xl w-full mx-auto">
+            <div className="relative">
 
-            {/* Chips de sugestões acima do input */}
-            {questionSuggestions.length > 0 && (
-              <div className="bg-chat-input border border-border rounded-2xl p-2.5 sm:p-3 mb-2 sm:mb-3">
-                <p className="text-xs text-muted-foreground mb-2">
-                  Não encontrei uma resposta adequada para essa pergunta, quer tentar:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {questionSuggestions.map((q, i) => (
+              {/* Chips de sugestões acima do input */}
+              {questionSuggestions.length > 0 && (
+                <div className="bg-chat-input border border-border rounded-2xl p-2.5 sm:p-3 mb-2 sm:mb-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Não encontrei uma resposta adequada para essa pergunta, quer tentar:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {questionSuggestions.map((q, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full hover:bg-primary/5"
+                        disabled={isLoading}
+                        onClick={() => handleSendSuggestion(q)}
+                      >
+                        {q}
+                      </Button>
+                    ))}
                     <Button
-                      key={i}
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="rounded-full hover:bg-primary/5"
+                      className="rounded-full text-muted-foreground"
+                      onClick={() => setQuestionSuggestions([])}
                       disabled={isLoading}
-                      onClick={() => handleSendSuggestion(q)}
                     >
-                      {q}
+                      Ocultar
                     </Button>
-                  ))}
+                  </div>
+                </div>
+              )}
+
+              {attachedFile && (
+                <div className="bg-gray-50 border border-gray-200 border-b-0 rounded-t-2xl p-3 -mb-2">
+                  <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm overflow-hidden">
+                      <FileIcon className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                      <span className="font-medium truncate text-gray-900">{attachedFile.name}</span>
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        ({(attachedFile.size / 1024).toFixed(2)} KB)
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 rounded-full flex-shrink-0"
+                      onClick={() => setAttachedFile(null)}
+                      disabled={isLoading}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className={`flex items-center gap-2 bg-gray-50 border border-gray-200 p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
+                <div className="relative w-full">
+                  <Input
+                    value={message}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={
+                      !canSendMessage
+                        ? "Sem tokens disponíveis. Contate um administrador."
+                        : messages.length >= MESSAGE_LIMIT
+                        ? "Limite de mensagens atingido."
+                        : "Pergunte alguma coisa"
+                    }
+                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base text-gray-900"
+                    disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif, application/pdf"
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif, application/pdf"
+                  />
+                  {showSuggestions && (
+                    <ul className="absolute bottom-full mb-1 left-0 w-full max-h-48 sm:max-h-56 overflow-auto bg-white border border-gray-300 rounded shadow z-10 text-sm">
+                      {filteredCommands.map((cmd, index) => (
+                        <li
+                          key={cmd}
+                          className={`px-3 py-1 cursor-pointer hover:bg-gray-200 ${index === selectedSuggestionIndex ? 'bg-gray-300' : ''}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            selectSuggestion(cmd);
+                          }}
+                        >
+                          {cmd}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-full text-muted-foreground"
-                    onClick={() => setQuestionSuggestions([])}
-                    disabled={isLoading}
+                    className="h-10 w-10 sm:h-8 sm:w-8 p-0 hover:bg-muted rounded-full"
+                    onClick={handlePaperclipClick}
+                    disabled={isLoading || messages.length >= MESSAGE_LIMIT}
                   >
-                    Ocultar
+                    <Paperclip className="w-4 h-4 text-muted-foreground" />
                   </Button>
-                </div>
-              </div>
-            )}
 
-            {attachedFile && (
-              <div className="bg-gray-50 border border-gray-200 border-b-0 rounded-t-2xl p-3 -mb-2">
-                <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
-                  <div className="flex items-center gap-2 text-sm overflow-hidden">
-                    <FileIcon className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <span className="font-medium truncate text-gray-900">{attachedFile.name}</span>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
-                      ({(attachedFile.size / 1024).toFixed(2)} KB)
-                    </span>
-                  </div>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full flex-shrink-0"
-                    onClick={() => setAttachedFile(null)}
-                    disabled={isLoading}
+                    size="sm"
+                    onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)}
+                    className={`h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-full hover:bg-muted ${
+                      isAdvancedCreativity ? 'bg-primary/10 text-primary' : 'text-muted-foreground'
+                    }`}>
+                    <Wand2 className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={(!message.trim() && !attachedFile) || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
+                    size="sm"
+                    className="h-10 w-10 sm:h-8 sm:w-8 p-0 bg-novo-chat hover:bg-novo-chat/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
                   >
-                    <X className="w-4 h-4" />
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Send className="w-4 h-4 text-primary-foreground" />
+                    )}
                   </Button>
                 </div>
               </div>
-            )}
 
-            <div className={`flex items-center gap-2 bg-gray-50 border border-gray-200 p-1.5 sm:p-2 shadow-lg transition-shadow ${attachedFile ? 'rounded-b-2xl' : 'rounded-full'}`}>
-              <div className="relative w-full">
-                <Input
-                  value={message}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder={
-                    !canSendMessage
-                      ? "Sem tokens disponíveis. Contate um administrador."
-                      : messages.length >= MESSAGE_LIMIT
-                      ? "Limite de mensagens atingido."
-                      : "Pergunte alguma coisa"
+              {messages.length >= MESSAGE_WARNING_THRESHOLD && (
+                <p className="text-[11px] sm:text-xs text-muted-foreground text-center mt-2">
+                  {messages.length >= MESSAGE_LIMIT
+                    ? "Você atingiu o limite de mensagens. Por favor, inicie um novo chat."
+                    : `${MESSAGE_LIMIT - messages.length} mensagens restantes neste chat.`
                   }
-                  className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base text-gray-900"
-                  disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
-                />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/gif, application/pdf"
-                />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/gif, application/pdf"
-                />
-                {showSuggestions && (
-                  <ul className="absolute bottom-full mb-1 left-0 w-full max-h-48 sm:max-h-56 overflow-auto bg-white border border-gray-300 rounded shadow z-10 text-sm">
-                    {filteredCommands.map((cmd, index) => (
-                      <li
-                        key={cmd}
-                        className={`px-3 py-1 cursor-pointer hover:bg-gray-200 ${index === selectedSuggestionIndex ? 'bg-gray-300' : ''}`}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          selectSuggestion(cmd);
-                        }}
-                      >
-                        {cmd}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 hover:bg-muted rounded-full"
-                  onClick={handlePaperclipClick}
-                  disabled={isLoading || messages.length >= MESSAGE_LIMIT}
-                >
-                  <Paperclip className="w-4 h-4 text-muted-foreground" />
-                </Button>
-
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={(!message.trim() && !attachedFile) || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
-                  size="sm"
-                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Send className="w-4 h-4 text-primary-foreground" />
-                  )}
-                </Button>
-              </div>
+                </p>
+              )}
             </div>
 
-            {messages.length >= MESSAGE_WARNING_THRESHOLD && (
-              <p className="text-[11px] sm:text-xs text-muted-foreground text-center mt-2">
-                {messages.length >= MESSAGE_LIMIT
-                  ? "Você atingiu o limite de mensagens. Por favor, inicie um novo chat."
-                  : `${MESSAGE_LIMIT - messages.length} mensagens restantes neste chat.`
-                }
-              </p>
-            )}
-
-            <div className="flex flex-wrap justify-center gap-2 mt-3 sm:mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)}
-                className={`rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary bg-[#F8FAFC] dark:bg-[#303030] dark:text-white transition-all ${
-                  isAdvancedCreativity ? 'bg-primary/10 border-primary' : ''
-                } ${!isAdvancedCreativity ? 'glow-button' : ''}`}              >
-                <Sparkles className={`w-4 h-4 mr-2 ${isAdvancedCreativity ? 'fill-current' : ''}`} />
-                Criatividade Avançada
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-primary/20 hover:border-neutral-300 hover:bg-primary/5 text-primary cursor-not-allowed bg-[#F8FAFC] dark:bg-[#303030] dark:text-white"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                Pesquisar
-              </Button>
-            </div>
+            <p className="text-[11px] sm:text-xs text-muted-foreground text-center mt-3 sm:mt-4">
+              A IA pode cometer erros. Considere verificar informações importantes.
+            </p>
           </div>
-
-          <p className="text-[11px] sm:text-xs text-muted-foreground text-center mt-3 sm:mt-4">
-            A IA pode cometer erros. Considere verificar informações importantes.
-          </p>
         </div>
       </div>
     </div>
   );
+
 };
 
 export default ChatInterface;

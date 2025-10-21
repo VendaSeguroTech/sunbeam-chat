@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
 import ChatInterface from "./ChatInterface";
 import { ConversationHistory } from "@/hooks/useConversationHistory";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ModelSelector from "./ModelSelector"; // Import the new component
 
 const ChatLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(!isMobile);
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat

@@ -88,7 +88,11 @@ export default {
 					input: 'hsl(var(--chat-input))',
 					'bubble-user': 'hsl(var(--chat-bubble-user))',
 					'bubble-assistant': 'hsl(var(--chat-bubble-assistant))'
-				}
+				},
+                'novo-chat': {
+                    DEFAULT: '#1F4E78',
+                    foreground: 'hsl(var(--primary-foreground))'
+                }
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
