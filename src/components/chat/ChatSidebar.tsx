@@ -10,6 +10,7 @@ import {
   Settings,
   Pencil,
 } from "lucide-react";
+import expertaLogo from "@/assets/experta-logo.png";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -221,11 +222,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         `}
       >
         {/* Header */}
-        <div className="px-3 md:px-4 h-[60px] md:h-[69px] flex items-center justify-between">
+        <div className="px-3 md:px-4 h-[60px] md:h-[69px] flex items-center justify-between mt-4">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-xl text-gray-900">
-              Experta
-            </span>
+            <img
+              src={expertaLogo}
+              alt="Experta"
+              className="h-8 w-auto object-contain"
+            />
           </div>
           <div className="flex items-center gap-1">
             <Tooltip>
@@ -234,7 +237,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   onClick={handleLogout}
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 md:h-8 md:w-8 hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors rounded-full"
+                  className="h-9 w-9 md:h-8 md:w-8 bg-black hover:bg-slate-600 hover:bg-opacity-80 text-white hover:text-gray-900 transition-colors rounded-full"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -250,7 +253,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     onClick={() => navigate("/admin")}
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 md:h-8 md:w-8 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors rounded-full"
+                    className="h-9 w-9 md:h-8 md:w-8 bg-black hover:bg-slate-600 hover:bg-opacity-80 text-white hover:text-gray-900 transition-colors rounded-full"
                   >
                     <Shield className="h-4 w-4" />
                   </Button>
@@ -266,7 +269,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   onClick={() => setIsSettingsOpen(true)}
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 md:h-8 md:w-8 hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors rounded-full"
+                  className="h-9 w-9 md:h-8 md:w-8 bg-black hover:bg-slate-600 hover:bg-opacity-80 text-white hover:text-gray-900 transition-colors rounded-full"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -323,7 +326,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <MessageSquare className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                            <h3 className="text-xs font-medium truncate text-gray-900">
+                            <h3 className="text-xs font-medium truncate text-zinc-600">
                               {session.title}
                             </h3>
                           </div>

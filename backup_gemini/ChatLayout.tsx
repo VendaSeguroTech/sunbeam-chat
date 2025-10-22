@@ -110,15 +110,8 @@ const ChatLayout: React.FC = () => {
       )}
 
       {/* Chat principal com container branco */}
-      <div className="flex-1 min-w-0 flex flex-col h-full p-4 md:p-6 relative">
-        {/* Container com gradiente - APENAS header e messages */}
-        <div
-          className="flex-1 flex flex-col bg-white/95 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm"
-          style={{
-            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-          }}
-        >
+      <div className="flex-1 min-w-0 flex flex-col h-full p-4 md:p-6">
+        <div className="flex-1 flex flex-col bg-white/95 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm">
           <div className="flex items-center justify-start p-4 md:p-6 border-b border-gray-100">
             <ModelSelector onValueChange={handleModelChange} defaultValue={selectedModel} />
           </div>
@@ -130,19 +123,7 @@ const ChatLayout: React.FC = () => {
             selectedModel={selectedModel}
           />
         </div>
-
-        {/* Input renderizado FORA do container mascarado - sempre visível */}
-        <div
-          className="absolute bottom-6 left-4 right-4 pointer-events-auto"
-          style={{
-            zIndex: 100
-          }}
-        >
-          {/* Este div será preenchido pelo portal do ChatInterface */}
-          <div id="chat-input-portal-target" />
-        </div>
       </div>
-
     </div>
   );
 };

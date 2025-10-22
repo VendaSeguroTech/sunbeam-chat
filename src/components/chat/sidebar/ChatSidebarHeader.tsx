@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, Settings } from "lucide-react";
 import sunbeamLogo from "@/assets/logo2.png";
+import expertaLogo from "@/assets/experta-logo.png";
 import { useNavigate } from "react-router-dom";
 
 interface ChatSidebarHeaderProps {
@@ -23,11 +24,11 @@ const ChatSidebarHeader: React.FC<ChatSidebarHeaderProps> = ({
         {isOpen ? (
           <>
           <div className="flex items-center gap-2">
-            <span 
-              className="font-semibold text-2xl text-gray-900"
-            >
-              Experta
-            </span>
+            <img
+              src={expertaLogo}
+              alt="Experta"
+              className="h-8 w-auto object-contain"
+            />
           </div>
             {isAdmin && (
               <Button
