@@ -11,6 +11,8 @@ import {
   Pencil,
 } from "lucide-react";
 import expertaLogo from "@/assets/experta-logo.png";
+import flechaEsqIcon from "@/assets/icones-hub-flechaesq.png";
+import turnoffIcon from "@/assets/turnoff.png";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,11 +51,15 @@ import UserSettingsForm from "@/components/user/UserSettingsForm";
 interface ChatSidebarProps {
   onConversationSelect?: (conversation: ConversationHistory | null) => void;
   onSessionSelect?: (sessionId: string | null) => void;
+  isOpen?: boolean;
+  toggleSidebar?: () => void;
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onConversationSelect,
   onSessionSelect,
+  isOpen,
+  toggleSidebar,
 }) => {
   const { toast } = useToast();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -85,7 +91,19 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const { isAdmin } = useUserRole();
   const navigate = useNavigate();
 
+  // Hook para detectar mobile
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -96,6 +114,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+
+      // Redirecionar para a tela de login
+      navigate("/login");
     } catch (error) {
       console.error("Erro no logout:", error);
       toast({
@@ -106,21 +127,40 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     }
   };
 
+  const handleRedirectToHub = () => {
+    window.location.href = "https://hub.vendaseguro.com.br/";
+  };
+
   const handleNewConversation = () => {
     loadConversations();
     refetchSessions();
     startNewConversation();
     onConversationSelect?.(null);
     onSessionSelect?.(null);
+
+    // Fechar sidebar no mobile
+    if (isMobile && toggleSidebar) {
+      toggleSidebar();
+    }
   };
 
   const handleConversationClick = (conversation: ConversationHistory) => {
     setCurrentConversation(conversation);
     onConversationSelect?.(conversation);
+
+    // Fechar sidebar no mobile
+    if (isMobile && toggleSidebar) {
+      toggleSidebar();
+    }
   };
 
   const handleSessionClick = (sessionId: string) => {
     onSessionSelect?.(sessionId);
+
+    // Fechar sidebar no mobile
+    if (isMobile && toggleSidebar) {
+      toggleSidebar();
+    }
   };
 
   // Aceita evento opcional p/ funcionar com onSelect do Dropdown
@@ -217,9 +257,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         className={`
           md:w-72 w-[80vw]
           transition-all duration-300 ease-in-out
-          flex flex-col h-[100svh] bg-transparent 
+          flex flex-col h-[100svh]
+          bg-white md:bg-transparent
           md:rounded-none rounded-r-2xl
+          shadow-xl md:shadow-none
         `}
+        style={{ zIndex: 9999 }}
       >
         {/* Header */}
         <div className="px-3 md:px-4 h-[60px] md:h-[69px] flex items-center justify-between mt-4">
@@ -237,45 +280,36 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   onClick={handleLogout}
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 md:h-8 md:w-8 bg-black hover:bg-slate-600 hover:bg-opacity-80 text-white hover:text-gray-900 transition-colors rounded-full"
+                  className="h-9 w-9 md:h-8 md:w-8 p-0 hover:bg-transparent"
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <img
+                    src={flechaEsqIcon}
+                    alt="Voltar para Login"
+                    className="h-7 w-7 object-contain"
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Sair</p>
+                <p>Voltar para Login</p>
               </TooltipContent>
             </Tooltip>
-            {isAdmin && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => navigate("/admin")}
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 md:h-8 md:w-8 bg-black hover:bg-slate-600 hover:bg-opacity-80 text-white hover:text-gray-900 transition-colors rounded-full"
-                  >
-                    <Shield className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Painel Admin</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => setIsSettingsOpen(true)}
+                  onClick={handleRedirectToHub}
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 md:h-8 md:w-8 bg-black hover:bg-slate-600 hover:bg-opacity-80 text-white hover:text-gray-900 transition-colors rounded-full"
+                  className="h-9 w-9 md:h-8 md:w-8 p-0 hover:bg-transparent"
                 >
-                  <Settings className="h-4 w-4" />
+                  <img
+                    src={turnoffIcon}
+                    alt="Ir para Hub"
+                    className="h-7 w-7 object-contain"
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Configurações</p>
+                <p>Ir para Hub VendaSeguro</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -286,10 +320,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           <Button
             onClick={handleNewConversation}
             variant="default"
-            className="w-full justify-start gap-2 px-3 bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground shadow-glow transition-all duration-200 shadow-sm rounded-full"
+            className="w-full justify-start gap-2 px-3 h-9 bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground shadow-glow transition-all duration-200 shadow-sm rounded-full"
           >
             <Plus className="w-4 h-4 flex-shrink-0" />
-            <span className="animate-fade-in">Novo Chat</span>
+            <span className="animate-fade-in text-sm font-light">Novo Chat</span>
           </Button>
         </div>
 
@@ -314,8 +348,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               <div className="space-y-4 animate-fade-in">
                 {sessions.length > 0 && (
                   <div className="space-y-2">
-                    <div className="text-xs text-gray-500 font-medium">
-                      Conversas Recentes (beta - testes)
+                    <div className="text-xs text-gray-500 font-normal">
+                      Conversas Recentes
                     </div>
                     {sessions.map((session) => (
                       <div
@@ -347,7 +381,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                               <MoreHorizontal className="w-3 h-3" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="shadow-lg">
+                          <DropdownMenuContent align="end" className="shadow-lg z-[10000]">
                             <DropdownMenuItem
                               onSelect={(e) => {
                                 e.preventDefault(); // impede o dropdown de fechar antes
@@ -413,7 +447,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                               <MoreHorizontal className="w-3 h-3" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="shadow-lg">
+                          <DropdownMenuContent align="end" className="shadow-lg z-[10000]">
                             <DropdownMenuItem
                               onSelect={(e) =>
                                 handleDeleteConversation(conversation.id, e)
@@ -436,8 +470,44 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
         {/* Footer */}
         <div className="border-t border-gray-200 px-3 py-3 md:p-4">
-          <div className="text-xs text-gray-500 text-center">
-            Experta v1.0.7 (beta)
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-gray-500">
+              Experta v1.0.7 (beta)
+            </div>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setIsSettingsOpen(true)}
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 bg-transparent hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors rounded-full"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Configurações</p>
+                </TooltipContent>
+              </Tooltip>
+              {isAdmin && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => navigate("/admin")}
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 bg-transparent hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors rounded-full"
+                    >
+                      <Shield className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Painel Admin</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
         </div>
       </div>

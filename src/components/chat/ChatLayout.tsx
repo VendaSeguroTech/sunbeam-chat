@@ -1,19 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
 import ChatInterface from "./ChatInterface";
 import { ConversationHistory } from "@/hooks/useConversationHistory";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIdleTimer } from "@/hooks/useIdleTimer";
+import { supabase } from "@/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import ModelSelector from "./ModelSelector"; // Import the new component
 
 const ChatLayout: React.FC = () => {
   const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(!isMobile);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    // Inicializar baseado no tamanho da janela para evitar flash
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
   const [selectedModel, setSelectedModel] = useState<string>("global"); // Novo estado para o modelo selecionado
+
+  // Logout automático após 30 minutos de inatividade
+  const handleIdleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+
+      toast({
+        title: "Sessão expirada",
+        description: "Você foi desconectado por inatividade.",
+        variant: "destructive",
+      });
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout por inatividade:", error);
+    }
+  };
+
+  // Hook de inatividade - 30 minutos (1800000 ms)
+  useIdleTimer({
+    timeout: 30 * 60 * 1000, // 30 minutos
+    onIdle: handleIdleLogout,
+  });
+
+  // Fechar sidebar automaticamente quando mudar para mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
 
   const toggleSidebar = (): void => {
     setSidebarOpen(!sidebarOpen);
@@ -68,10 +111,11 @@ const ChatLayout: React.FC = () => {
       <div
         className={`
           md:relative md:translate-x-0 md:z-0
-          fixed inset-y-0 left-0 z-40
+          fixed inset-y-0 left-0
           transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
+        style={{ zIndex: 9999 }}
       >
         <ChatSidebar
           isOpen={sidebarOpen}
@@ -82,16 +126,17 @@ const ChatLayout: React.FC = () => {
       </div>
 
       {/* Backdrop no mobile quando aberta */}
-      {sidebarOpen && (
+      {sidebarOpen && isMobile && (
         <div
           onClick={toggleSidebar}
-          className="fixed inset-0 bg-black/40 md:hidden z-30"
+          className="fixed inset-0 bg-black/40 md:hidden"
+          style={{ zIndex: 9998 }}
           aria-hidden="true"
         />
       )}
 
       {/* Botão flutuante para abrir o menu no mobile quando estiver fechado */}
-      {!sidebarOpen && (
+      {!sidebarOpen && isMobile && (
         <Button
           onClick={toggleSidebar}
           variant="default"
@@ -99,7 +144,7 @@ const ChatLayout: React.FC = () => {
           className="
             md:hidden fixed top-4 left-4 z-50
             h-10 w-10 rounded-full shadow-lg
-            bg-primary text-primary-foreground
+            bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground
           "
           aria-label="Abrir menu"
           aria-controls="app-sidebar"

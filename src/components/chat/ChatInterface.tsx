@@ -711,7 +711,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* ===== CONTEÚDO PRINCIPAL (dentro do container com mask) ===== */}
       <div className="flex-1 flex flex-col h-[100svh] relative">
         {messages.length > 0 ? (
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
+          <div
+            className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
+            style={{
+              boxShadow: 'inset 0 8px 12px -8px rgba(0, 0, 0, 0.08)'
+            }}
+          >
             <div className="max-w-4xl w-full mx-auto space-y-4 sm:space-y-5 md:space-y-6 px-0">
               {(isNewChat && messages.length > 0) || selectedSessionId ? (
                 <div className="text-center py-2">
@@ -741,7 +746,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                       <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                         msg.type === "user"
-                          ? "bg-[#F5D5A8] text-gray-900 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
+                          ? "bg-[#F5D5A8] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
                           : "bg-white text-gray-900 border border-gray-200 rounded-2xl p-3 sm:p-4 shadow-sm"
                       }`}>
                         {msg.file ? (
@@ -750,10 +755,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               <img src={msg.file.url} alt={msg.file.name} className="max-w-full sm:max-w-xs h-auto rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, "_blank")} />
                             ) : (
                               <a href={msg.file.url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-3 p-3 rounded-lg ${msg.type === "user" ? "bg-black/10 hover:bg-black/20" : "bg-primary/10 hover:bg-primary/20"}`}>
-                                <FileIcon className={`w-6 h-6 flex-shrink-0 ${msg.type === "user" ? "text-primary-foreground" : "text-primary"}`} />
+                                <FileIcon className={`w-6 h-6 flex-shrink-0 ${msg.type === "user" ? "text-gray-700" : "text-primary"}`} />
                                 <div className="flex flex-col overflow-hidden">
-                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>Anexo</span>
-                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-primary-foreground" : "text-primary"}`}>{msg.file.name}</span>
+                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-gray-700/80" : "text-muted-foreground"}`}>Anexo</span>
+                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-gray-800" : "text-primary"}`}>{msg.file.name}</span>
                                 </div>
                               </a>
                             )}
@@ -829,7 +834,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
                 {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : "Olá, sou Experta."}
               </h1>
-              <p className="text-base sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
+              <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
               {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-50">SessionID: {sessionId.slice(-8)}</p>}
             </div>
           </div>
@@ -931,7 +936,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
 
               {/* Aviso abaixo do input */}
-              <p className="text-[11px] sm:text-xs text-zinc-400 text-center mt-3 sm:mt-4 font-medium">
+              <p className="text-[11px] sm:text-xs text-zinc-400 text-center mt-3 sm:mt-4 font-light">
                 A IA pode cometer erros. Considere verificar informações importantes.
               </p>
             </div>

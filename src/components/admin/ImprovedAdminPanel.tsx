@@ -390,7 +390,7 @@ const ImprovedAdminPanel: React.FC = () => {
                   size="sm"
                   onClick={fetchUsers}
                   disabled={loading}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto bg-novo-chat text-white hover:bg-novo-chat/90 hover:text-primary-foreground"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   Atualizar
@@ -398,7 +398,7 @@ const ImprovedAdminPanel: React.FC = () => {
                 <Button
                   size="sm"
                   onClick={() => setShowCreateDialog(true)}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Novo Usuário
@@ -497,7 +497,7 @@ const ImprovedAdminPanel: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Coins className="h-4 w-4 text-yellow-600" />
+                      <Coins className="h-4 w-4 text-novo-chat" />
                       <span className="font-medium">
                         {(user.role === 'admin' || user.unlimited_tokens) ? '∞' : (user.tokens || 0)}
                       </span>
@@ -600,7 +600,7 @@ const ImprovedAdminPanel: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="flex-1 sm:flex-none"
+                  className="flex-1 sm:flex-none hover:bg-novo-chat hover:text-primary-foreground"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
@@ -610,7 +610,7 @@ const ImprovedAdminPanel: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="flex-1 sm:flex-none"
+                  className="flex-1 sm:flex-none hover:bg-novo-chat hover:text-primary-foreground"
                 >
                   Próxima
                   <ChevronRight className="h-4 w-4 ml-1" />

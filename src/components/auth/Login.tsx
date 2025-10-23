@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/supabase/client";
 import { Mail, Lock, LogIn } from "lucide-react";
-import sunbeamLogo from "@/assets/logo2.png";
+import expertaLogo from "@/assets/experta-avatar-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useMaintenance } from "@/contexts/MaintenanceContext";
 
@@ -67,12 +67,12 @@ const Login: React.FC = () => {
     <div className="flex items-center justify-center h-screen bg-chat-background">
       <div className="max-w-md w-full mx-auto p-8 bg-chat-input border border-border rounded-2xl shadow-md">
         {/* Logo */}
-        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center p-2 bg-muted shadow-glow dark:bg-transparent dark:shadow-none">
-          <img src={sunbeamLogo} alt="Experta" className="w-full h-full object-contain" />
+        <div className="w-full max-w-xs mx-auto mb-6 flex items-center justify-center">
+          <img src={expertaLogo} alt="Experta" className="w-20 h-auto object-contain" />
         </div>
 
         {/* Título */}
-        <h1 className="text-2xl font-bold text-foreground text-center mb-6">Bem-vindo à Experta 🦊</h1>
+        <h1 className="text-2xl font-bold text-foreground text-center mb-6">Bem-vindo à Experta AI</h1>
 
         {/* Formulário */}
         <div className="space-y-4">
@@ -99,7 +99,7 @@ const Login: React.FC = () => {
           <Button
             onClick={handleLogin}
             disabled={isLoading || !email || !password}
-            className="w-full bg-primary hover:bg-primary-hover"
+            className="w-full bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>

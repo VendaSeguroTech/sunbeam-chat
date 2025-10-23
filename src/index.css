@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,7 +10,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Light theme with orange primary */
+    /* Light theme with blue primary (#1F4E78) */
     --background: 0 0% 98%;
     --foreground: 20 14.3% 4.1%;
 
@@ -20,10 +20,10 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 20 14.3% 4.1%;
 
-    /* Orange primary color #FF6F3C */
-    --primary: 18 100% 62%;
+    /* Blue primary color #1F4E78 */
+    --primary: 210 59% 30%;
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 18 100% 58%;
+    --primary-hover: 210 59% 26%;
 
     --secondary: 20 5.9% 90%;
     --secondary-foreground: 20 14.3% 4.1%;
@@ -31,15 +31,15 @@ All colors MUST be HSL.
     --muted: 20 5.9% 95%;
     --muted-foreground: 20 5.9% 45%;
 
-    --accent: 18 100% 95%;
-    --accent-foreground: 18 100% 35%;
+    --accent: 210 59% 95%;
+    --accent-foreground: 210 59% 35%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 20 5.9% 90%;
     --input: 20 5.9% 96%;
-    --ring: 18 100% 62%;
+    --ring: 210 59% 30%;
 
     --radius: 12px;
 
@@ -52,23 +52,23 @@ All colors MUST be HSL.
     --chat-bubble-assistant: 0 0% 97%; /* Branco/cinza muito claro para assistente */
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(18 100% 62%), hsl(25 100% 58%));
-    --gradient-orange-glow: linear-gradient(180deg, hsl(18 100% 97%) 0%, hsl(0 0% 98%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(210 59% 30%), hsl(210 59% 26%));
+    --gradient-orange-glow: linear-gradient(180deg, hsl(210 59% 97%) 0%, hsl(0 0% 98%) 100%);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(18 100% 62% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(18 100% 62% / 0.1), 0 2px 4px -1px hsl(18 100% 62% / 0.06);
-    --shadow-glow: 0 0 0 1px hsl(18 100% 62% / 0.05), 0 1px 3px 0 hsl(18 100% 62% / 0.1);
+    --shadow-sm: 0 1px 2px 0 hsl(210 59% 30% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(210 59% 30% / 0.1), 0 2px 4px -1px hsl(210 59% 30% / 0.06);
+    --shadow-glow: 0 0 0 1px hsl(210 59% 30% / 0.05), 0 1px 3px 0 hsl(210 59% 30% / 0.1);
     --shadow-apple: 0 3px 6px hsl(0 0% 0% / 0.1), 0 8px 24px hsl(0 0% 0% / 0.08);
 
     --sidebar-background: hsl(var(--chat-sidebar));
     --sidebar-foreground: 20 5.9% 25%;
-    --sidebar-primary: 18 100% 62%;
+    --sidebar-primary: 210 59% 30%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 18 100% 97%;
+    --sidebar-accent: 210 59% 97%;
     --sidebar-accent-foreground: 20 14.3% 4.1%;
     --sidebar-border: 20 5.9% 90%;
-    --sidebar-ring: 18 100% 62%;
+    --sidebar-ring: 210 59% 30%;
   }
 
   .dark {
@@ -219,7 +219,7 @@ All colors MUST be HSL.
 }
 
   .glow-button {
-    --glow-color: rgba(255, 111, 60, 0.7); /* Orange for light mode */
+    --glow-color: rgba(31, 78, 120, 0.5); /* Blue for light mode */
     animation: glow-pulse 3s ease-in-out infinite;
   }
   .dark .glow-button {

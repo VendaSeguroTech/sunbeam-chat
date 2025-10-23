@@ -212,8 +212,8 @@ const AdminPanel: React.FC = () => {
         <section>
           <h2 className="text-lg font-semibold mb-2">Gerenciamento de usuário</h2>
           <div className="flex gap-2 mb-4">
-            <Button onClick={() => setShowCreateUserForm(!showCreateUserForm)}>{showCreateUserForm ? 'Fechar' : 'Criar Usuário'}</Button>
-            <Button onClick={handleListUsers}>{showUserList ? 'Fechar Lista' : 'Listar Usuários'}</Button>
+            <Button onClick={() => setShowCreateUserForm(!showCreateUserForm)} className="bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground">{showCreateUserForm ? 'Fechar' : 'Criar Usuário'}</Button>
+            <Button onClick={handleListUsers} className="bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground">{showUserList ? 'Fechar Lista' : 'Listar Usuários'}</Button>
           </div>
           {showCreateUserForm && (
             <form onSubmit={handleCreateUser} className="bg-white dark:bg-gray-800 p-6 rounded shadow-md">
@@ -250,7 +250,7 @@ const AdminPanel: React.FC = () => {
                   <p className="text-xs text-gray-500 mt-1">A senha deve ter pelo menos 6 caracteres</p>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="flex-1">
+                  <Button type="submit" className="flex-1 bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground">
                     Criar Usuário
                   </Button>
                   <Button
@@ -284,7 +284,7 @@ const AdminPanel: React.FC = () => {
                             <Button variant="ghost" onClick={() => handleSetRole(user.id, 'admin')} disabled={user.role === 'admin'}>Tornar Admin</Button>
                             <Button variant="ghost" onClick={() => handleSetRole(user.id, 'default')} disabled={user.role === 'default'}>Remover Admin</Button>
                             <hr className="my-1" />
-                            <Button variant="ghost" className="text-red-600 hover:text-red-700" onClick={() => confirmDeleteUser(user)}>Deletar</Button>
+                            <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => confirmDeleteUser(user)}>Deletar</Button>
                           </div>
                         </PopoverContent>
                       )}
