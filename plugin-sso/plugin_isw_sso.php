@@ -441,6 +441,7 @@ function isw_enqueue_script()
         var TOKENS = {
             melhor_produto: <?php echo json_encode($payloadSessao); ?>,
             pontos:         <?php echo json_encode($payloadSessao); ?>,
+            experta:        <?php echo json_encode($payloadSessao); ?>,
             portal_de_conteudo: <?php echo json_encode($token_member_kit_1); ?>,
             dossie:             <?php echo json_encode($token_member_kit_2); ?>,
             estaquevende:       <?php echo json_encode($token_member_kit_3); ?>,
@@ -451,6 +452,7 @@ function isw_enqueue_script()
         var SELECTORS = [
             'melhor_produto',
             'pontos',
+            'experta',
             'portal_de_conteudo',
             'dossie',
             'instaquevende',

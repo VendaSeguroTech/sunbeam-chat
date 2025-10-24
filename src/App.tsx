@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Login from "@/components/auth/Login";
+import SSORedirect from "@/components/auth/SSORedirect";
 import ChatLayout from "@/components/chat/ChatLayout";
 import AdminPage from '@/pages/Admin';
 import AdminRoute from '@/components/auth/AdminRoute';
@@ -46,6 +47,9 @@ const App: React.FC = () => {
   return (
     <PresenceProvider>
       <Router>
+        {/* Componente global para detectar token SSO na URL */}
+        <SSORedirect />
+
         <Routes>
           {/* The maintenance page is a standalone route, accessible to all */}
           <Route path="/maintenance" element={<MaintenancePage />} />

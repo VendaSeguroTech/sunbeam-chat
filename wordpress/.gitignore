@@ -1,0 +1,15 @@
+# Chaves criptográficas privadas (NUNCA commitar!)
+isw-sso-private.pem
+*-private.pem
+*.key
+
+# Chaves públicas podem ser commitadas
+# isw-sso-public.pem ← OK commitar
+
+# Backup files
+*.bak
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
