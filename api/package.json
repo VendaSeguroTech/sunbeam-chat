@@ -1,0 +1,24 @@
+{
+  "name": "sso-validation-api",
+  "version": "1.0.0",
+  "description": "API Node.js para validação de tokens SSO do Hub VendaSeguro",
+  "main": "validate-token.js",
+  "scripts": {
+    "start": "node validate-token.js",
+    "start:sso": "node sso-server.js",
+    "dev": "node validate-token.js",
+    "dev:sso": "node sso-server.js",
+    "test": "node test-api.js"
+  },
+  "keywords": [
+    "sso",
+    "authentication",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^17.2.3"
+  }
+}
