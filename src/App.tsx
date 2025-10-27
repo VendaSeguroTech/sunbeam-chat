@@ -1,56 +1,51 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate, useSearchParams } from "react-router-dom";
 import Login from "@/components/auth/Login";
 import SSORedirect from "@/components/auth/SSORedirect";
 import ChatLayout from "@/components/chat/ChatLayout";
 import AdminPage from '@/pages/Admin';
 import AdminRoute from '@/components/auth/AdminRoute';
 import { PresenceProvider } from '@/contexts/PresenceContext';
-import { usePresence } from '@/hooks/usePresence';
-import { supabase } from "./supabase/client";
 import MaintenancePage from "@/pages/maintenance";
 import RouteGuard from "@/components/auth/RouteGuard";
+import ProtectedRouteSSO from "@/components/auth/ProtectedRoute SSO";
+import { useAuth } from "./hooks/useAuth";
 
-// A simple component to handle route protection
-const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const [session, setSession] = React.useState<unknown>(null);
-  const [loading, setLoading] = React.useState(true);
+// Componente para decidir a rota inicial
+const Root: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const sso = searchParams.get('sso');
+  const token = searchParams.get('token');
 
-  // Atualizar last_seen a cada 30 segundos quando o usuário está logado
-  usePresence(30000);
-
-  React.useEffect(() => {
-    const fetchSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (!error) {
-        setSession(data.session);
-      }
-      setLoading(false);
-    };
-    fetchSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return null; // Or a loading spinner
+  // Se os parâmetros de SSO estiverem presentes, redireciona para a rota de SSO
+  if (sso && token) {
+    // Mantém os parâmetros na URL para o SSORedirect poder processá-los
+    return <Navigate to={`/sso/redirect${window.location.search}`} replace />;
   }
 
-  return session ? children : <Navigate to="/login" />;
+  // Caso contrário, vai para a rota de chat padrão
+  return <Navigate to="/chat" replace />;
+};
+
+// Componente de proteção de rota que usa o hook de autenticação SSO
+const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div>Verificando autenticação...</div>; // Ou um spinner
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 const App: React.FC = () => {
   return (
     <PresenceProvider>
       <Router>
-        {/* Componente global para detectar token SSO na URL */}
-        <SSORedirect />
-
         <Routes>
+          {/* Rota de SSO dedicada */}
+          <Route path="/sso/redirect" element={<SSORedirect />} />
+
           {/* The maintenance page is a standalone route, accessible to all */}
           <Route path="/maintenance" element={<MaintenancePage />} />
 
@@ -59,12 +54,13 @@ const App: React.FC = () => {
             <Route path="/login" element={<Login />} />
             <Route
               path="/chat"
-              element={<ProtectedRoute><ChatLayout /></ProtectedRoute>}
+              element={<ProtectedRouteSSO><ChatLayout /></ProtectedRouteSSO>}
             />
             <Route element={<ProtectedRoute><AdminRoute /></ProtectedRoute>}>
                 <Route path="/admin" element={<AdminPage />} />
             </Route>
-            <Route path="/" element={<Navigate to="/chat" />} />
+            {/* A rota raiz agora usa o componente Root para decidir o destino */}
+            <Route path="/" element={<Root />} />
           </Route>
         </Routes>
       </Router>

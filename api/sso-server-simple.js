@@ -264,48 +264,37 @@ function verifySessionJWT(token, secret) {
 // ============================================================================
 
 /**
- * Criar ou buscar usuário no Supabase
+ * Buscar usuário no Supabase. Não cria se não existir.
  */
-async function ensureUserExists(email, userId, nickname) {
+async function findUserByEmail(email) {
     if (!supabase) {
-        console.warn('[SUPABASE] ⚠️  Pulando criação de usuário (Supabase não configurado)');
-        return { id: userId, email, nickname };
+        console.warn('[SUPABASE] ⚠️  Supabase não configurado, não é possível buscar usuário.');
+        return null;
     }
 
     try {
-        // Buscar usuário por email
-        const { data: existingUser, error: searchError } = await supabase
+        // Buscar usuário por email na tabela de perfis
+        const { data: existingUser, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('email', email)
             .single();
 
-        if (existingUser) {
-            console.log('[SUPABASE] ✅ Usuário já existe:', email);
-            return existingUser;
-        }
-
-        // Criar usuário
-        console.log('[SUPABASE] Criando novo usuário:', email);
-
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email: email,
-            email_confirm: true,
-            user_metadata: {
-                nickname: nickname
-            }
-        });
-
-        if (createError) {
-            console.error('[SUPABASE] ❌ Erro ao criar usuário:', createError.message);
+        if (error && error.code !== 'PGRST116') { // PGRST116 = 'exact one row not found'
+            console.error('[SUPABASE] ❌ Erro ao buscar usuário:', error.message);
             return null;
         }
 
-        console.log('[SUPABASE] ✅ Usuário criado:', email);
-        return newUser.user;
+        if (existingUser) {
+            console.log('[SUPABASE] ✅ Usuário encontrado:', email);
+            return existingUser;
+        }
+
+        console.log('[SUPABASE] ⚠️  Usuário não encontrado na IA:', email);
+        return null;
 
     } catch (error) {
-        console.error('[SUPABASE] ❌ Erro:', error.message);
+        console.error('[SUPABASE] ❌ Erro inesperado ao buscar usuário:', error.message);
         return null;
     }
 }
@@ -376,15 +365,75 @@ async function handleSSOCallback(req, res, queryParams) {
     console.log('  - User ID:', userId);
     console.log('  - Email/Nickname:', emailOrNickname);
 
-    // 3. Criar/buscar usuário no Supabase
-    console.log('[SSO] Verificando usuário no Supabase...');
+    // 3. Buscar usuário no Supabase (sem criar)
+    console.log('[SSO] Verificando se o usuário existe na IA...');
 
-    const user = await ensureUserExists(emailOrNickname, userId, emailOrNickname);
+    const user = await findUserByEmail(emailOrNickname);
 
     if (!user) {
-        console.error('[SSO] ❌ Falha ao criar/buscar usuário');
-        res.writeHead(500, { 'Content-Type': 'text/html' });
-        res.end('<h1>500 Internal Server Error</h1><p>Failed to create user</p>');
+        console.error('[SSO] ❌ Usuário não cadastrado na IA:', emailOrNickname);
+        res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+        const htmlErrorPage = `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Acesso Negado</title>
+                <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+                        background-color: #f1f5f9; /* slate-100 */
+                        color: #1e293b; /* slate-800 */
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                        text-align: center;
+                    }
+                    .container {
+                        background-color: #ffffff;
+                        padding: 40px;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                        max-width: 480px;
+                        width: 90%;
+                    }
+                    h1 {
+                        font-size: 24px;
+                        font-weight: 600;
+                        color: #dc2626; /* red-600 */
+                        margin-bottom: 16px;
+                    }
+                    p {
+                        font-size: 16px;
+                        line-height: 1.5;
+                        margin-bottom: 24px;
+                    }
+                    .support-info {
+                        font-size: 14px;
+                        color: #64748b; /* slate-500 */
+                    }
+                    .logo {
+                        font-weight: 700;
+                        font-size: 20px;
+                        color: #475569; /* slate-600 */
+                        margin-bottom: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="logo">Experta AI</div>
+                    <h1>Acesso Negado</h1>
+                    <p>O seu usuário do Hub VendaSeguro não tem permissão para acessar esta aplicação.</p>
+                    <p class="support-info">Se você acredita que isso é um erro, por favor, contate o suporte técnico.</p>
+                </div>
+            </body>
+            </html>
+        `;
+        res.end(htmlErrorPage);
         return;
     }
 
