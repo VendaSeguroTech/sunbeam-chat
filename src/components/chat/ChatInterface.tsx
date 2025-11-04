@@ -173,12 +173,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const suggestions = extractQuestionSuggestions(messageObj);
 
         // Detectar informações de arquivo anexado
-        const hasFile = messageObj.file || messageObj.fileName || messageObj.filename || messageObj.attachment;
+        const hasFile = messageObj.hasFile === 'true' || messageObj.hasFile === true ||
+                        messageObj.file || messageObj.fileName || messageObj.filename || messageObj.attachment;
         if (hasFile) {
           fileInfo = {
             url: '#', // Não temos URL do arquivo no histórico
-            type: (messageObj.fileType as string) || (messageObj.mimeType as string) || 'application/pdf',
-            name: (messageObj.fileName as string) || (messageObj.filename as string) || 'Arquivo anexado'
+            type: (messageObj.fileType as string) || (messageObj.mimeType as string) || (messageObj.type as string) || 'application/pdf',
+            name: (messageObj.fileName as string) || (messageObj.filename as string) || (messageObj.name as string) || 'Arquivo anexado'
           };
         }
 
@@ -538,6 +539,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('type', fileToSend.type);
         formData.append('message', userMessageContent || `Arquivo enviado: ${fileToSend.name}`);
         formData.append('model', selectedModel || 'basic');
+        formData.append('fileName', fileToSend.name); // Nome do arquivo
+        formData.append('fileType', fileToSend.type); // Tipo MIME
+        formData.append('hasFile', 'true'); // Marcador de arquivo anexado
         formData.append('advancedCreativity', isAdvancedCreativity
           ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
           : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.'
