@@ -26,7 +26,7 @@ const ChatLayout: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
-  const [selectedModel, setSelectedModel] = useState<string>("pro"); // Novo estado para o modelo selecionado
+  const [selectedModel, setSelectedModel] = useState<string>("global"); // Novo estado para o modelo selecionado
 
   // Logout automático após 30 minutos de inatividade
   const handleIdleLogout = async () => {
@@ -165,7 +165,7 @@ const ChatLayout: React.FC = () => {
           }}
         >
           <div className="flex items-center justify-start p-4 md:p-6 border-b border-gray-100">
-            <ModelSelector onValueChange={handleModelChange} value={selectedModel} />
+            <ModelSelector onValueChange={handleModelChange} defaultValue={selectedModel} />
           </div>
           <ChatInterface
             key={chatKey}

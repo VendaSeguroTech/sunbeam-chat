@@ -1,0 +1,26 @@
+config:
+  target: "https://webhook.vendaseguro.tech"
+  phases:
+    - duration: 60        # duração total (segundos)
+      arrivalRate: 20     # 20 requisições por segundo
+      name: rps-estavel   # nome da fase
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  plugins:
+    metrics-by-endpoint: {}
+
+scenarios:
+  - name: mensagens de texto
+    flow:
+      - post:
+          url: "/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7"
+          json:
+            message: "O que é o rc profissional?"
+            timestamp: "{{ $timestamp }}"
+            messageId: "{{ $randomNumber(100000,999999) }}"
+            sessionId: "session_{{ $timestamp }}_{{ $randomString(6) }}"
+            userId: "{{ $uuid }}"
+            type: "text"
+            model: "pro"
+            advancedCreativity: "Resposta objetiva e direta"

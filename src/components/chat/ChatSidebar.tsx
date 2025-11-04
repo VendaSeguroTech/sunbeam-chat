@@ -285,7 +285,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <img
                     src={flechaEsqIcon}
                     alt="Voltar para Login"
-                    className="h-7 w-7 object-contain"
+                    className="h-6 w-6 object-contain"
                   />
                 </Button>
               </TooltipTrigger>
@@ -304,7 +304,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <img
                     src={turnoffIcon}
                     alt="Ir para Hub"
-                    className="h-7 w-7 object-contain"
+                    className="h-6 w-6 object-contain"
                   />
                 </Button>
               </TooltipTrigger>
@@ -320,7 +320,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           <Button
             onClick={handleNewConversation}
             variant="default"
-            className="w-full justify-start gap-2 px-3 h-9 bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground shadow-glow transition-all duration-200 shadow-sm rounded-full"
+            className="w-full justify-start gap-2 px-3 h-9 bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground transition-all duration-200 shadow-sm hover:shadow-black hover:shadow-md rounded-full"
           >
             <Plus className="w-4 h-4 flex-shrink-0" />
             <span className="animate-fade-in text-sm font-light">Novo Chat</span>
@@ -348,7 +348,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               <div className="space-y-4 animate-fade-in">
                 {sessions.length > 0 && (
                   <div className="space-y-2">
-                    <div className="text-xs text-gray-500 font-normal">
+                    <div className="text-xs text-gray-500 hover:text-black font-normal">
                       Conversas Recentes
                     </div>
                     {sessions.map((session) => (
@@ -471,7 +471,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         {/* Footer */}
         <div className="border-t border-gray-200 px-3 py-3 md:p-4">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-400">
               Experta v1.0.7 (beta)
             </div>
             <div className="flex items-center gap-1">

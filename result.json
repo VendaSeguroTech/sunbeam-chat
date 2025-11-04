@@ -1,0 +1,183 @@
+{
+  "aggregate": {
+    "counters": {
+      "vusers.created_by_name.mensagens de texto": 1200,
+      "vusers.created": 1200,
+      "http.requests": 1200,
+      "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 1200,
+      "errors.ETIMEDOUT": 1200,
+      "vusers.failed": 1200
+    },
+    "rates": {
+      "http.request_rate": 20
+    },
+    "firstCounterAt": 1761929816124,
+    "lastCounterAt": 1761929886255,
+    "firstMetricAt": 1761929816124,
+    "lastMetricAt": 1761929886255,
+    "period": 1761929880000,
+    "summaries": {},
+    "histograms": {}
+  },
+  "intermediate": [
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 76,
+        "vusers.created": 76,
+        "http.requests": 76
+      },
+      "rates": {
+        "http.request_rate": 22
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929816124,
+      "lastCounterAt": 1761929819995,
+      "firstMetricAt": 1761929816124,
+      "lastMetricAt": 1761929819995,
+      "period": "1761929810000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 200,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 76,
+        "errors.ETIMEDOUT": 76,
+        "vusers.failed": 76
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929820052,
+      "lastCounterAt": 1761929829997,
+      "firstMetricAt": 1761929820052,
+      "lastMetricAt": 1761929829997,
+      "period": "1761929820000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 200,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 200,
+        "errors.ETIMEDOUT": 200,
+        "vusers.failed": 200
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929830052,
+      "lastCounterAt": 1761929839995,
+      "firstMetricAt": 1761929830052,
+      "lastMetricAt": 1761929839995,
+      "period": "1761929830000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 200,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 200,
+        "errors.ETIMEDOUT": 200,
+        "vusers.failed": 200
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929840052,
+      "lastCounterAt": 1761929849994,
+      "firstMetricAt": 1761929840052,
+      "lastMetricAt": 1761929849994,
+      "period": "1761929840000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 200,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 200,
+        "errors.ETIMEDOUT": 200,
+        "vusers.failed": 200
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929850052,
+      "lastCounterAt": 1761929859995,
+      "firstMetricAt": 1761929850052,
+      "lastMetricAt": 1761929859995,
+      "period": "1761929850000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 200,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 200,
+        "errors.ETIMEDOUT": 200,
+        "vusers.failed": 200
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929860052,
+      "lastCounterAt": 1761929869996,
+      "firstMetricAt": 1761929860052,
+      "lastMetricAt": 1761929869996,
+      "period": "1761929860000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.mensagens de texto": 124,
+        "vusers.created": 124,
+        "http.requests": 124,
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 200,
+        "errors.ETIMEDOUT": 200,
+        "vusers.failed": 200
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1761929870052,
+      "lastCounterAt": 1761929879995,
+      "firstMetricAt": 1761929870052,
+      "lastMetricAt": 1761929879995,
+      "period": "1761929870000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./webhook/0fc3496c-5dfa-4772-8661-da71da6353c7.errors.ETIMEDOUT": 124,
+        "errors.ETIMEDOUT": 124,
+        "vusers.failed": 124
+      },
+      "rates": {},
+      "firstCounterAt": 1761929880060,
+      "lastCounterAt": 1761929886255,
+      "firstMetricAt": 1761929880060,
+      "lastMetricAt": 1761929886255,
+      "period": "1761929880000",
+      "summaries": {},
+      "histograms": {}
+    }
+  ]
+}

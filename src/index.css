@@ -192,6 +192,18 @@ All colors MUST be HSL.
     100% { background-position: 100% 50%; }
   }
 
+  .pro-gradient-text {
+    background-image: linear-gradient(
+      90deg,
+      #8FC5ED, #FFDBB5, #FF9A8A, #D989AF, #8FC5ED
+    );
+    background-size: 300% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: animate-gradient 3s linear infinite alternate;
+  }
+
   .animated-gradient-border-wrap {
     padding: 1px;
     background: linear-gradient(
@@ -216,12 +228,47 @@ All colors MUST be HSL.
       background-position: 100% 50%;
     }
   }
-}
+
+  @keyframes realistic-bounce {
+    0%, 60%, 100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .loading-dot {
+    animation: realistic-bounce 1.4s infinite ease-in-out;
+    animation-delay: 0s; /* Atraso para pulo */
+  }
+
+  .loading-dot-2 {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dot-3 {
+    animation-delay: 0.4s;
+  }
+
+  .fade-out-bottom::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 15%;
+    background: linear-gradient(to top, hsl(var(--background)), transparent);
+    pointer-events: none;
+    border-bottom-left-radius: 1.5rem; /* Corresponds to rounded-3xl */
+    border-bottom-right-radius: 1.5rem; /* Corresponds to rounded-3xl */
+  }
 
   .glow-button {
     --glow-color: rgba(31, 78, 120, 0.5); /* Blue for light mode */
     animation: glow-pulse 3s ease-in-out infinite;
   }
+
   .dark .glow-button {
     --glow-color: #0057c99e; /* Blue for dark mode */
   }
@@ -234,3 +281,4 @@ All colors MUST be HSL.
       box-shadow: 0 0 15px var(--glow-color);
     }
   }
+}

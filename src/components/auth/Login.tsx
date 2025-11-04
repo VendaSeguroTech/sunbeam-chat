@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/supabase/client";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import expertaLogo from "@/assets/experta-avatar-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useMaintenance } from "@/contexts/MaintenanceContext";
@@ -12,6 +12,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isMaintenanceMode } = useMaintenance();
@@ -65,14 +66,16 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center h-screen bg-chat-background">
-      <div className="max-w-md w-full mx-auto p-8 bg-chat-input border border-border rounded-2xl shadow-md">
+      <div className="max-w-sm w-full mx-auto p-8 bg-chat-input border border-border rounded-[20px] shadow-md">
         {/* Logo */}
         <div className="w-full max-w-xs mx-auto mb-6 flex items-center justify-center">
           <img src={expertaLogo} alt="Experta" className="w-20 h-auto object-contain" />
         </div>
 
         {/* Título */}
-        <h1 className="text-2xl font-bold text-foreground text-center mb-6">Bem-vindo à Experta AI</h1>
+        <h1 className="text-2xl font-bold text-foreground text-center mb-6">
+          Bem-vindo à <span className="animated-gradient-text font-bold">Experta AI</span>
+        </h1>
 
         {/* Formulário */}
         <div className="space-y-4">
@@ -89,12 +92,24 @@ const Login: React.FC = () => {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Sua senha"
-              className="pl-10 bg-transparent border-border"
+              className="pl-10 pr-10 bg-transparent border-border"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
           </div>
           <Button
             onClick={handleLogin}
