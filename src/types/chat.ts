@@ -13,6 +13,9 @@ export interface N8nChatMessage {
   user_id: string;
   created_at?: string; // Opcional para compatibilidade
   model?: string; // Modelo de IA usado (d&o, rc-profissional, rc-geral, global)
+  file_url?: string | null; // URL do arquivo anexado
+  file_name?: string | null; // Nome do arquivo anexado
+  file_type?: string | null; // Tipo MIME do arquivo
 }
 
 export interface ChatSession {

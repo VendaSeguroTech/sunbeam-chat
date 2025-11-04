@@ -71,7 +71,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { fetchSessionMessages } = useN8nChatHistory();
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
 
-  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -165,6 +166,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       let type: 'user' | 'assistant' = 'assistant';
       let fileInfo: { url: string; type: string; name: string } | undefined = undefined;
 
+      // Primeiro: verificar se o arquivo está nas colunas do banco (file_url, file_name, file_type)
+      if (record.file_name || record.file_type || record.file_url) {
+        fileInfo = {
+          url: record.file_url || '#',
+          type: record.file_type || 'application/pdf',
+          name: record.file_name || 'Arquivo anexado'
+        };
+      }
+
       if (typeof message === 'string') {
         content = message;
         type = index % 2 === 0 ? 'user' : 'assistant';
@@ -172,15 +182,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const messageObj = message as MessageContent;
         const suggestions = extractQuestionSuggestions(messageObj);
 
-        // Detectar informações de arquivo anexado
-        const hasFile = messageObj.hasFile === 'true' || messageObj.hasFile === true ||
-                        messageObj.file || messageObj.fileName || messageObj.filename || messageObj.attachment;
-        if (hasFile) {
-          fileInfo = {
-            url: '#', // Não temos URL do arquivo no histórico
-            type: (messageObj.fileType as string) || (messageObj.mimeType as string) || (messageObj.type as string) || 'application/pdf',
-            name: (messageObj.fileName as string) || (messageObj.filename as string) || (messageObj.name as string) || 'Arquivo anexado'
-          };
+        // Segundo: detectar informações de arquivo dentro do objeto message (fallback)
+        if (!fileInfo) {
+          const hasFile = messageObj.hasFile === 'true' || messageObj.hasFile === true ||
+                          messageObj.file || messageObj.fileName || messageObj.filename || messageObj.attachment;
+          if (hasFile) {
+            fileInfo = {
+              url: '#', // Não temos URL do arquivo no histórico
+              type: (messageObj.fileType as string) || (messageObj.mimeType as string) || (messageObj.type as string) || 'application/pdf',
+              name: (messageObj.fileName as string) || (messageObj.filename as string) || (messageObj.name as string) || 'Arquivo anexado'
+            };
+          }
         }
 
         if (suggestions && suggestions.length > 0) {
