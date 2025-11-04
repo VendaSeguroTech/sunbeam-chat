@@ -3,6 +3,12 @@ import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp,
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { createPortal } from "react-dom";
 import { useConversationHistory, ConversationHistory } from "@/hooks/useConversationHistory";
 import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
@@ -66,8 +72,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
 
   const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
-
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -145,7 +149,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       hasShownLowTokensWarning.current = true;
       toast({
         title: "⚠️ Poucos tokens restantes!",
-        description: `Você tem apenas ${tokens} tokens disponíveis. Entre em contato com um administrador para recarregar.`,
+        description: `Você tem apenas ${tokens} tokens disponíveis. Entre em contato com um administrador para recarregar.`, 
         variant: "default",
         duration: 6000,
       });
@@ -159,19 +163,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       const message = record.message;
       let content = 'Mensagem sem conteúdo';
       let type: 'user' | 'assistant' = 'assistant';
+      let fileInfo: { url: string; type: string; name: string } | undefined = undefined;
 
       if (typeof message === 'string') {
         content = message;
         type = index % 2 === 0 ? 'user' : 'assistant';
       } else if (message && typeof message === 'object') {
         const messageObj = message as MessageContent;
-        if (typeof messageObj.content === 'string') content = messageObj.content;
-        else if (typeof messageObj.message === 'string') content = messageObj.message;
-        else if (typeof messageObj.text === 'string') content = messageObj.text;
-        else content = JSON.stringify(messageObj, null, 2);
+        const suggestions = extractQuestionSuggestions(messageObj);
 
-        if (messageObj.type) type = messageObj.type;
-        else type = index % 2 === 0 ? 'user' : 'assistant';
+        // Detectar informações de arquivo anexado
+        const hasFile = messageObj.file || messageObj.fileName || messageObj.filename || messageObj.attachment;
+        if (hasFile) {
+          fileInfo = {
+            url: '#', // Não temos URL do arquivo no histórico
+            type: (messageObj.fileType as string) || (messageObj.mimeType as string) || 'application/pdf',
+            name: (messageObj.fileName as string) || (messageObj.filename as string) || 'Arquivo anexado'
+          };
+        }
+
+        if (suggestions && suggestions.length > 0) {
+          const suggestionText = suggestions
+            .map(q => `- ${q.replace(/^Pergunta \d+:\s*/, '')}`)
+            .join('\n');
+          content = `O assistente sugeriu as seguintes perguntas:\n${suggestionText}`;
+          type = 'assistant';
+        } else {
+          content = extractResponseText(messageObj as WebhookResponse);
+        }
+
+        if (messageObj.type) {
+          type = messageObj.type;
+        } else {
+          type = index % 2 === 0 ? 'user' : 'assistant';
+        }
+
       } else {
         content = 'Mensagem vazia';
         type = index % 2 === 0 ? 'user' : 'assistant';
@@ -185,7 +211,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             content: chunk.trim(),
             type,
             timestamp: new Date(record.created_at || new Date().toISOString()),
-            model: record.model
+            model: record.model,
+            ...(fileInfo && chunkIndex === 0 ? { file: fileInfo } : {})
           });
         });
       } else {
@@ -194,7 +221,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           content: content.trim(),
           type,
           timestamp: new Date(record.created_at || new Date().toISOString()),
-          model: record.model
+          model: record.model,
+          ...(fileInfo ? { file: fileInfo } : {})
         });
       }
     });
@@ -652,7 +680,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         model: selectedModel,
         advancedCreativity: isAdvancedCreativity
           ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
-          : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos.  Seja conciso e direto ao ponto.',
+          : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.',
       };
 
       const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -698,12 +726,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const renderWithEmphasis = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    const parts = text.split(/(\**.*?\**|\*.*?\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>;
       if (part.startsWith('*') && part.endsWith('*')) return <em key={index}>{part.slice(1, -1)}</em>;
       return part;
     });
+  };
+
+  const renderAssistantMessage = (text: string) => {
+    // Separa a primeira linha do resto do texto
+    const firstLineBreak = text.indexOf('\n');
+
+    if (firstLineBreak === -1) {
+      // Se não há quebra de linha, toda mensagem é a primeira linha
+      return <strong className="font-semibold">{renderWithEmphasis(text)}</strong>;
+    }
+
+    const firstLine = text.substring(0, firstLineBreak).trim();
+    const restOfText = text.substring(firstLineBreak + 1).trim();
+
+    return (
+      <>
+        {firstLine && <strong className="font-semibold block mb-1">{renderWithEmphasis(firstLine)}</strong>}
+        {restOfText && <span>{renderWithEmphasis(restOfText)}</span>}
+      </>
+    );
   };
 
   const formatModelName = (model?: string): string => {
@@ -713,7 +761,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <>
+    <TooltipProvider>
       {/* ANCHOR centralizado (segue as mesmas larguras do chat) */}
       <div ref={anchorRef} className="max-w-4xl w-full mx-auto px-4 sm:px-6 md:px-8 h-0" aria-hidden />
 
@@ -721,7 +769,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="flex-1 flex flex-col h-[100svh] relative">
         {messages.length > 0 ? (
           <div
-            className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
+            className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
             style={{
               maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
@@ -751,19 +799,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                     <div className={`flex-1 flex flex-col ${msg.type === "user" ? "items-end" : "items-start"}`}>
                       {showModel && (
-                        <div className="text-[10px] text-muted-foreground mb-1 px-2 opacity-60">Modelo: {formatModelName(msg.model)}</div>
+                        <div className="text-[10px] text-muted-foreground mb-0.5 px-2 opacity-60">Modelo: {formatModelName(msg.model)}</div>
                       )}
 
                       <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                         msg.type === "user"
-                          ? "bg-[#F5D5A8] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
-                          : "bg-white text-gray-900 border border-none rounded-2xl p-3 sm:p-4 shadow-sm"
+                          ? "bg-[#F5D5A8] text-gray-900 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
+                          : "bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-sm"
                       }`}>
                         {msg.file ? (
                           <div className="flex flex-col gap-2">
-                            {msg.file.type.startsWith("image/") ? (
+                            {msg.file.type.startsWith("image/") && msg.file.url !== '#' ? (
                               <img src={msg.file.url} alt={msg.file.name} className="max-w-full sm:max-w-xs h-auto rounded-lg cursor-pointer" onClick={() => window.open(msg.file.url, "_blank")} />
-                            ) : (
+                            ) : msg.file.url !== '#' ? (
                               <a href={msg.file.url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-3 p-3 rounded-lg ${msg.type === "user" ? "bg-black/10 hover:bg-black/20" : "bg-primary/10 hover:bg-primary/20"}`}>
                                 <FileIcon className={`w-6 h-6 flex-shrink-0 ${msg.type === "user" ? "text-gray-700" : "text-primary"}`} />
                                 <div className="flex flex-col overflow-hidden">
@@ -771,27 +819,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                   <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-gray-800" : "text-primary"}`}>{msg.file.name}</span>
                                 </div>
                               </a>
+                            ) : (
+                              <div className={`flex items-center gap-3 p-3 rounded-lg ${msg.type === "user" ? "bg-black/10" : "bg-primary/10"}`}>
+                                <FileIcon className={`w-6 h-6 flex-shrink-0 ${msg.type === "user" ? "text-gray-700" : "text-primary"}`} />
+                                <div className="flex flex-col overflow-hidden">
+                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-gray-700/80" : "text-muted-foreground"}`}>Anexo</span>
+                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-gray-800" : "text-primary"}`}>{msg.file.name}</span>
+                                </div>
+                              </div>
                             )}
-                            {msg.content && <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap pt-2">{renderWithEmphasis(msg.content)}</p>}
+                            {msg.content && <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
                           </div>
                         ) : (
-                          <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{renderWithEmphasis(msg.content)}</p>
+                          <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
                         )}
 
                         {msg.type === "user" && (
-                          <p className="text-[10px] sm:text-xs mt-2 opacity-70 text-gray-700">
+                          <p className="text-[10px] sm:text-xs mt-1 opacity-70 text-gray-700">
                             {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         )}
                         {msg.type === "assistant" && (
-                          <p className="text-[10px] sm:text-xs mt-2 opacity-60 text-muted-foreground">
+                          <p className="text-[10px] sm:text-xs mt-1 opacity-60 text-muted-foreground">
                             {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         )}
                       </div>
 
                       {msg.type === "assistant" && msg.content && (
-                        <div className="flex items-center gap-1 mt-2 pl-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="flex items-center gap-1 mt-1 pl-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <Button variant="ghost" size="icon" className={`h-7 w-7 rounded-full ${msg.feedback === "positive" ? "text-green-500 bg-green-500/10" : "text-muted-foreground hover:bg-muted"}`}
                             onClick={() => { const userQuestion = messages.slice(0, index).reverse().find(m => m.type === "user"); handleFeedback(msg, userQuestion, "positive"); }}
                             disabled={!!msg.feedback}>
@@ -822,14 +878,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       <img src={expertaAvatarLogo} alt="AI" className="w-8 h-8 rounded-full" />
                     </div>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
+                  <div className="bg-white rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12 shadow-sm">
                     <div className="flex flex-col">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full loading-dot" />
+                        <div className="w-2 h-2 bg-primary/50 rounded-full loading-dot" />
                         <div className="w-2 h-2 bg-primary rounded-full loading-dot loading-dot-2" />
-                        <div className="w-2 h-2 bg-primary rounded-full loading-dot loading-dot-3" />
+                        <div className="w-2 h-2 bg-primary/70 rounded-full loading-dot loading-dot-3" />
                       </div>
-                      {loadingBlurb && <div className="mt-2 text-xs italic text-muted-foreground/80 font-light">{loadingBlurb}</div>}
+                      {loadingBlurb && (
+                        <div className="mt-3 flex flex-col items-center">
+                          <div className="text-xs italic text-muted-foreground/80 font-light">{loadingBlurb}</div>
+                          <div className="w-24 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-1.5" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -842,7 +903,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div className="flex-1 flex items-center justify-center pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
             <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : "Olá, sou a Experta."}
+                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : "Olá, sou Experta."}
               </h1>
               <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
               {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-50">SessionID: {sessionId.slice(-8)}</p>}
@@ -930,9 +991,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <Paperclip className="w-4 h-4 text-muted-foreground" />
                   </Button>
 
-                  <Button variant="ghost" size="sm" onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)} className={`h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-full hover:bg-muted ${isAdvancedCreativity ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
-                    <Wand2 className="w-4 h-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)} className={`h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-full hover:bg-muted ${isAdvancedCreativity ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
+                        <Wand2 className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-gradient-to-r from-[#8FC5ED] via-[#FFDBB5] to-[#FF9A8A] border-0 text-white font-medium shadow-lg">
+                      <p>Modo Experta</p>
+                    </TooltipContent>
+                  </Tooltip>
 
                   <Button
                     onClick={handleSendMessage}
@@ -954,7 +1022,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>,
         portalEl
       )}
-    </>
+    </TooltipProvider>
   );
 };
 
