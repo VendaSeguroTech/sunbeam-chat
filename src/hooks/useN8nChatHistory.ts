@@ -186,6 +186,9 @@ export const useN8nChatHistory = () => {
         user_id: record.user_id,
         created_at: record.created_at || new Date().toISOString(),
         model: record.model,
+        file_url: record.file_url || null,
+        file_name: record.file_name || null,
+        file_type: record.file_type || null,
       }));
 
       return formattedData;
