@@ -10,18 +10,54 @@ interface PopupModoExpertaProps {
 
 const PopupModoExperta: React.FC<PopupModoExpertaProps> = ({ isOpen, onClose }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const slides = [popupImage1, popupImage2];
+
+  // Pré-carregar todas as imagens antes de exibir o popup
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = slides.map((src) => {
+        return new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => reject();
+          img.src = src;
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+        setImagesLoaded(true);
+      } catch (error) {
+        console.error('Erro ao carregar imagens do popup:', error);
+        setImagesLoaded(true); // Mostrar mesmo assim em caso de erro
+      }
+    };
+
+    preloadImages();
+  }, []);
 
   // Rotação automática a cada 3 segundos
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !imagesLoaded) return;
 
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isOpen, slides.length]);
+  }, [isOpen, imagesLoaded, slides.length]);
+
+  // Fechar automaticamente após 8 segundos
+  useEffect(() => {
+    if (!isOpen || !imagesLoaded) return;
+
+    const timeout = setTimeout(() => {
+      onClose();
+    }, 8000);
+
+    return () => clearTimeout(timeout);
+  }, [isOpen, imagesLoaded, onClose]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -35,7 +71,7 @@ const PopupModoExperta: React.FC<PopupModoExpertaProps> = ({ isOpen, onClose }) 
     setCurrentSlide(index);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !imagesLoaded) return null;
 
   return (
     <>
@@ -54,7 +90,7 @@ const PopupModoExperta: React.FC<PopupModoExpertaProps> = ({ isOpen, onClose }) 
           {/* Botão de fechar no canto superior direito */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-white/50 backdrop-blur-sm hover:bg-white/75 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 flex items-center justify-center group"
+            className="absolute top-4 right-4 w-6 h-6 bg-white/50 backdrop-blur-sm hover:bg-white/75 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 flex items-center justify-center group"
             aria-label="Fechar popup"
           >
             {/* Ícone 'X' para fechar */}
@@ -66,19 +102,19 @@ const PopupModoExperta: React.FC<PopupModoExpertaProps> = ({ isOpen, onClose }) 
           {/* Seta Esquerda */}
           <button
             onClick={prevSlide}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/70 backdrop-blur-sm hover:bg-white/90 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 flex items-center justify-center group"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-white/70 backdrop-blur-sm hover:bg-white/90 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 flex items-center justify-center group"
             aria-label="Slide anterior"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800 group-hover:text-black transition-colors" />
+            <ChevronLeft className="w-3 h-3 text-gray-800 group-hover:text-black transition-colors" />
           </button>
 
           {/* Seta Direita */}
           <button
             onClick={nextSlide}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/70 backdrop-blur-sm hover:bg-white/90 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 flex items-center justify-center group"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-white/70 backdrop-blur-sm hover:bg-white/90 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 flex items-center justify-center group"
             aria-label="Próximo slide"
           >
-            <ChevronRight className="w-6 h-6 text-gray-800 group-hover:text-black transition-colors" />
+            <ChevronRight className="w-3 h-3 text-gray-800 group-hover:text-black transition-colors" />
           </button>
 
           {/* Imagem do popup com transição */}
@@ -91,6 +127,10 @@ const PopupModoExperta: React.FC<PopupModoExpertaProps> = ({ isOpen, onClose }) 
                 className={`w-full h-auto rounded-2xl transition-opacity duration-500 ${
                   index === currentSlide ? 'opacity-100' : 'opacity-0 absolute inset-0'
                 }`}
+                loading="eager"
+                decoding="sync"
+                fetchPriority="high"
+                style={{ imageRendering: 'high-quality' }}
               />
             ))}
           </div>

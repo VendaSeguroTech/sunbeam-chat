@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins, Wand2 } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins, Wand2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -71,8 +71,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { fetchSessionMessages } = useN8nChatHistory();
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
 
-  //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -433,6 +433,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       toast({ title: "Feedback enviado", description: "Obrigado pela sua avaliação!" });
     } catch {
       toast({ title: "Erro", description: "Não foi possível enviar seu feedback. Tente novamente.", variant: "destructive" });
+    }
+  };
+
+  const handleCopy = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({ title: "Copiado!", description: "Conteúdo copiado para a área de transferência." });
+    } catch {
+      toast({ title: "Erro", description: "Não foi possível copiar o conteúdo.", variant: "destructive" });
     }
   };
 
@@ -831,16 +840,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               <a href={msg.file.url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-3 p-3 rounded-lg ${msg.type === "user" ? "bg-black/10 hover:bg-black/20" : "bg-primary/10 hover:bg-primary/20"}`}>
                                 <FileIcon className={`w-6 h-6 flex-shrink-0 ${msg.type === "user" ? "text-gray-700" : "text-primary"}`} />
                                 <div className="flex flex-col overflow-hidden">
-                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-gray-700/80" : "text-muted-foreground"}`}>Anexo</span>
-                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-gray-800" : "text-primary"}`}>{msg.file.name}</span>
+                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-black" : "text-muted-foreground"}`}>Anexo</span>
+                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-black" : "text-primary"}`}>{msg.file.name}</span>
                                 </div>
                               </a>
                             ) : (
                               <div className={`flex items-center gap-3 p-3 rounded-lg ${msg.type === "user" ? "bg-black/10" : "bg-primary/10"}`}>
                                 <FileIcon className={`w-6 h-6 flex-shrink-0 ${msg.type === "user" ? "text-gray-700" : "text-primary"}`} />
                                 <div className="flex flex-col overflow-hidden">
-                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-gray-700/80" : "text-muted-foreground"}`}>Anexo</span>
-                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-gray-800" : "text-primary"}`}>{msg.file.name}</span>
+                                  <span className={`text-xs font-bold ${msg.type === "user" ? "text-black" : "text-muted-foreground"}`}>Anexo</span>
+                                  <span className={`text-sm font-medium truncate ${msg.type === "user" ? "text-black" : "text-primary"}`}>{msg.file.name}</span>
                                 </div>
                               </div>
                             )}
@@ -864,6 +873,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                       {msg.type === "assistant" && msg.content && (
                         <div className="flex items-center gap-1 mt-1 pl-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:bg-muted"
+                            onClick={() => handleCopy(msg.content)}>
+                            <Copy className="w-4 h-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" className={`h-7 w-7 rounded-full ${msg.feedback === "positive" ? "text-green-500 bg-green-500/10" : "text-muted-foreground hover:bg-muted"}`}
                             onClick={() => { const userQuestion = messages.slice(0, index).reverse().find(m => m.type === "user"); handleFeedback(msg, userQuestion, "positive"); }}
                             disabled={!!msg.feedback}>
@@ -919,7 +932,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div className="flex-1 flex items-center justify-center pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
             <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : "Olá, sou Experta."}
+                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : <>Olá, sou a <span className="animated-gradient-text font-semibold">Experta.</span></>}
               </h1>
               <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
               {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-50">SessionID: {sessionId.slice(-8)}</p>}
@@ -982,7 +995,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       : messages.length >= MESSAGE_LIMIT ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                     }
-                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base text-gray-900"
+                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-base text-gray-900"
                     disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                   />
                   <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/png, image/jpeg, image/gif, application/pdf" />
@@ -1007,7 +1020,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <Paperclip className="w-4 h-4 text-muted-foreground" />
                   </Button>
 
-                  <Tooltip>
+                  <Tooltip delayDuration={100}>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="sm" onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)} className={`h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-full hover:bg-muted ${isAdvancedCreativity ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                         <Wand2 className="w-4 h-4" />
