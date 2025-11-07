@@ -124,10 +124,13 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
           type="button"
           variant="outline"
           onClick={() => setIsReportBugOpen(true)}
-          className="gap-2"
+          className="gap-2 relative overflow-hidden group"
         >
           <AlertCircle className="h-4 w-4" />
           Relatar Problema
+          <span
+            className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#8FC5ED] via-[#FFDBB5] to-[#FF9A8A] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"
+          />
         </Button>
       </div>
 
