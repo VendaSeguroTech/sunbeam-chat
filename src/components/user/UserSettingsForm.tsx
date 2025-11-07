@@ -124,7 +124,7 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
           type="button"
           variant="outline"
           onClick={() => setIsReportBugOpen(true)}
-          className="gap-2 relative overflow-hidden group"
+          className="gap-2 relative overflow-hidden group border-red-200 hover:border-red-300"
         >
           <AlertCircle className="h-4 w-4 animate-pulse-subtle" />
           Relatar um Problema
