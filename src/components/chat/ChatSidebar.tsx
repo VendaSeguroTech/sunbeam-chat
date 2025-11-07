@@ -360,7 +360,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <MessageSquare className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                            <h3 className="text-xs font-medium truncate text-zinc-600">
+                            <h3 className="text-xs font-medium truncate text-gray-700">
                               {session.title}
                             </h3>
                           </div>
@@ -472,7 +472,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         <div className="border-t border-gray-200 px-3 py-3 md:p-4">
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-400">
-              Experta v1.0.7 (beta)
+              Experta v1.0.8 (beta)
             </div>
             <div className="flex items-center gap-1">
               <Tooltip>
