@@ -351,11 +351,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     <div className="text-xs text-gray-500 hover:text-black font-normal">
                       Conversas Recentes
                     </div>
-                    {sessions.map((session) => (
+                    {sessions.map((session, index) => (
                       <div
                         key={session.session_id}
                         onClick={() => handleSessionClick(session.session_id)}
-                        className="group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100"
+                        className="group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 animate-slide-in-left"
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -412,17 +413,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         Conversas Antigas
                       </div>
                     )}
-                    {conversations.map((conversation) => (
+                    {conversations.map((conversation, index) => (
                       <div
                         key={conversation.id}
                         onClick={() =>
                           handleConversationClick(conversation)
                         }
-                        className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 ${
+                        className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 animate-slide-in-left ${
                           currentConversation?.id === conversation.id
                             ? "bg-gray-100 border border-gray-300"
                             : ""
                         }`}
+                        style={{ animationDelay: `${(sessions.length + index) * 50}ms` }}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
