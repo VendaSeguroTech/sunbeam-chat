@@ -1,6 +1,7 @@
 import React from 'react';
 import ImprovedAdminPanel from '@/components/admin/ImprovedAdminPanel';
 import UserActivityCard from '@/components/admin/UserActivityCard';
+import BugReportsPanel from '@/components/admin/BugReportsPanel';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut } from 'lucide-react';
@@ -53,6 +54,9 @@ const AdminPage: React.FC = () => {
 
           {/* Atividade dos Usuários */}
           <UserActivityCard />
+
+          {/* Reports de Problemas */}
+          <BugReportsPanel />
         </main>
       </div>
     </div>

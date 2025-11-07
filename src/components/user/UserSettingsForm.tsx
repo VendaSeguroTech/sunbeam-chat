@@ -6,8 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/supabase/client';
 import { useTokens } from '@/hooks/useTokens';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Coins } from 'lucide-react';
+import { Coins, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import ReportBugDialog from './ReportBugDialog';
 
 interface UserSettingsFormProps {
   onSave?: () => void;
@@ -17,6 +18,7 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
   const { toast } = useToast();
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isReportBugOpen, setIsReportBugOpen] = useState(false);
   const { tokens, hasUnlimitedTokens, isLoading: tokensLoading } = useTokens();
   const { userRole } = useUserRole();
 
@@ -114,9 +116,26 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
           disabled={loading}
         />
       </div>
-      <Button type="submit" disabled={loading}>
-        {loading ? 'Salvando...' : 'Salvar'}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={loading} className="flex-1">
+          {loading ? 'Salvando...' : 'Salvar'}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsReportBugOpen(true)}
+          className="gap-2"
+        >
+          <AlertCircle className="h-4 w-4" />
+          Relatar Problema
+        </Button>
+      </div>
+
+      {/* Report Bug Dialog */}
+      <ReportBugDialog
+        isOpen={isReportBugOpen}
+        onClose={() => setIsReportBugOpen(false)}
+      />
     </form>
   );
 };
