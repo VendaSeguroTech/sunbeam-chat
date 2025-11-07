@@ -46,6 +46,9 @@ const AdminPage: React.FC = () => {
           </div>
         </header>
         <main className="space-y-4 sm:space-y-6">
+          {/* Reports de Problemas */}
+          <BugReportsPanel />
+
           {/* Modo Manutenção */}
           <MaintenanceToggle />
 
@@ -54,9 +57,6 @@ const AdminPage: React.FC = () => {
 
           {/* Atividade dos Usuários */}
           <UserActivityCard />
-
-          {/* Reports de Problemas */}
-          <BugReportsPanel />
         </main>
       </div>
     </div>
