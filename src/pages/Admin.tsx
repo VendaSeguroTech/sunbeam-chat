@@ -2,6 +2,7 @@ import React from 'react';
 import ImprovedAdminPanel from '@/components/admin/ImprovedAdminPanel';
 import UserActivityCard from '@/components/admin/UserActivityCard';
 import BugReportsPanel from '@/components/admin/BugReportsPanel';
+import ModelManagement from '@/components/admin/ModelManagement';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogOut } from 'lucide-react';
@@ -51,6 +52,9 @@ const AdminPage: React.FC = () => {
 
           {/* Modo Manutenção */}
           <MaintenanceToggle />
+
+          {/* Gerenciamento de Modelos */}
+          <ModelManagement />
 
           {/* Painel de Usuários Melhorado */}
           <ImprovedAdminPanel />
