@@ -1,43 +1,43 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este arquivo fornece orientações para o Claude Code (claude.ai/code) ao trabalhar com código neste repositório.
 
-## Development Commands
+## Comandos de Desenvolvimento
 
 ```bash
-# Development server (runs on port 8080)
+# Servidor de desenvolvimento (roda na porta 8080)
 npm run dev
 
-# Production build
+# Build de produção
 npm run build
 
-# Development build (with dev mode enabled)
+# Build de desenvolvimento (com modo dev ativado)
 npm run build:dev
 
 # Linting
 npm run lint
 
-# Preview production build
+# Preview do build de produção
 npm run preview
 ```
 
-## Core Architecture
+## Arquitetura Principal
 
-This is a React + TypeScript chat application built on a **three-tier architecture**:
+Esta é uma aplicação de chat React + TypeScript construída em uma **arquitetura de três camadas**:
 
-1. **Frontend (React/Vite)** - The UI layer with real-time chat interface
-2. **N8N Orchestration Layer** - Workflow automation that processes chat messages, calls AI models, and implements RAG
-3. **Supabase Backend** - Authentication, PostgreSQL database, vector storage for RAG, and realtime subscriptions
+1. **Frontend (React/Vite)** - Camada de UI com interface de chat em tempo real
+2. **Camada de Orquestração N8N** - Automação de workflow que processa mensagens do chat, chama modelos de IA e implementa RAG
+3. **Backend Supabase** - Autenticação, banco PostgreSQL, armazenamento de vetores para RAG e assinaturas realtime
 
-### Critical Webhook Integration
+### Integração Crítica do Webhook
 
-All chat messages flow through a single N8N webhook endpoint defined in `src/components/chat/ChatInterface.tsx:63`:
+Todas as mensagens do chat fluem através de um único endpoint webhook N8N definido em `src/components/chat/ChatInterface.tsx:63`:
 
 ```typescript
 const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 ```
 
-**Payload structure for text messages:**
+**Estrutura do payload para mensagens de texto:**
 ```typescript
 {
   message: string,
@@ -46,11 +46,11 @@ const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-477
   sessionId: string,
   userId: string,
   type: 'text',
-  model: string  // Model selector value (e.g., 'basic', 'advanced')
+  model: string  // Valor do seletor de modelo (ex: 'basic', 'advanced')
 }
 ```
 
-**Payload structure for file uploads:**
+**Estrutura do payload para upload de arquivos:**
 ```typescript
 FormData {
   file: File,
@@ -62,42 +62,42 @@ FormData {
 }
 ```
 
-The N8N workflow handles all AI orchestration, RAG lookups in the vector database, and persistence to `n8n_chat_histories` table.
+O workflow do N8N lida com toda orquestração de IA, buscas RAG no banco de vetores e persistência na tabela `n8n_chat_histories`.
 
-## Chat Message Flow
+## Fluxo de Mensagens do Chat
 
-1. User sends message via `ChatInterface.tsx`
-2. Frontend POSTs to N8N webhook with `sessionId`, `userId`, `message`, and optional `model`
-3. N8N workflow:
-   - Performs RAG lookup in Supabase `documents` table (vector similarity search)
-   - Calls LLM with context from RAG results
-   - Saves both user message and AI response to `n8n_chat_histories` table
-   - Returns AI response in webhook response body
-4. Frontend receives response, streams it character-by-character with typing effect (`streamResponseAsSeparateMessages`)
-5. Messages auto-save to local Supabase history (`conversation_history` table) on second message
+1. Usuário envia mensagem via `ChatInterface.tsx`
+2. Frontend faz POST para webhook N8N com `sessionId`, `userId`, `message` e `model` opcional
+3. Workflow N8N:
+   - Realiza busca RAG na tabela `documents` do Supabase (busca por similaridade de vetores)
+   - Chama LLM com contexto dos resultados RAG
+   - Salva tanto mensagem do usuário quanto resposta da IA na tabela `n8n_chat_histories`
+   - Retorna resposta da IA no corpo da resposta do webhook
+4. Frontend recebe resposta, faz streaming caractere por caractere com efeito de digitação (`streamResponseAsSeparateMessages`)
+5. Mensagens são auto-salvas no histórico local do Supabase (tabela `conversation_history`) na segunda mensagem
 
-## Dual History System
+## Sistema Duplo de Histórico
 
-The app maintains **two separate conversation history systems**:
+A aplicação mantém **dois sistemas separados de histórico de conversas**:
 
-### 1. N8N-persisted history (`n8n_chat_histories` table)
-- **Source**: Written by N8N workflow after each exchange
-- **Structure**: Each row is one message (user or assistant)
-- **Hook**: `useN8nChatHistory` - fetches and groups by `session_id`
-- **Purpose**: Source of truth for conversations managed by N8N
-- **Display**: Shows in sidebar as conversation sessions
+### 1. Histórico persistido pelo N8N (tabela `n8n_chat_histories`)
+- **Fonte**: Escrito pelo workflow N8N após cada troca
+- **Estrutura**: Cada linha é uma mensagem (usuário ou assistente)
+- **Hook**: `useN8nChatHistory` - busca e agrupa por `session_id`
+- **Propósito**: Fonte da verdade para conversas gerenciadas pelo N8N
+- **Exibição**: Mostra na sidebar como sessões de conversa
 
-### 2. Frontend-persisted history (`conversation_history` table)
-- **Source**: Written by frontend (`useConversationHistory` hook)
-- **Structure**: Each row is a full conversation with messages as JSON array
-- **Purpose**: Backup/alternative history system for frontend-only persistence
-- **Note**: Less actively used, N8N history is primary
+### 2. Histórico persistido pelo frontend (tabela `conversation_history`)
+- **Fonte**: Escrito pelo frontend (hook `useConversationHistory`)
+- **Estrutura**: Cada linha é uma conversa completa com mensagens como array JSON
+- **Propósito**: Sistema de histórico backup/alternativo para persistência apenas do frontend
+- **Nota**: Menos ativamente usado, histórico N8N é primário
 
-When loading a conversation from sidebar, the app uses `fetchSessionMessages` to pull all messages for that `session_id` from `n8n_chat_histories`.
+Ao carregar uma conversa da sidebar, a aplicação usa `fetchSessionMessages` para puxar todas as mensagens daquele `session_id` da `n8n_chat_histories`.
 
-## Session ID Generation
+## Geração de Session ID
 
-Session IDs are generated client-side on component mount:
+Session IDs são gerados no lado do cliente na montagem do componente:
 
 ```typescript
 // ChatInterface.tsx:71
@@ -106,214 +106,214 @@ const generateSessionId = (): string => {
 };
 ```
 
-This ID is used throughout the conversation lifecycle to group messages in the N8N workflow and database.
+Este ID é usado durante todo o ciclo de vida da conversa para agrupar mensagens no workflow N8N e no banco de dados.
 
-## Authentication & Authorization
+## Autenticação e Autorização
 
-- **Auth Provider**: Supabase Auth
-- **User Profiles**: Stored in `profiles` table with `role` field (`admin` | `default`)
-- **Route Protection**:
-  - `RouteGuard.tsx` - Checks maintenance mode and redirects if active
-  - `AdminRoute.tsx` - Verifies user has `role = 'admin'` via `useUserRole` hook
-  - `ProtectedRoute` component - Checks for authenticated session
+- **Provedor de Auth**: Supabase Auth
+- **Perfis de Usuário**: Armazenados na tabela `profiles` com campo `role` (`admin` | `default`)
+- **Proteção de Rotas**:
+  - `RouteGuard.tsx` - Verifica modo de manutenção e redireciona se ativo
+  - `AdminRoute.tsx` - Verifica se usuário tem `role = 'admin'` via hook `useUserRole`
+  - Componente `ProtectedRoute` - Verifica sessão autenticada
 
-### Admin Features
-- Access to `/admin` route
-- Can toggle maintenance mode via `MaintenanceContext`
-- View online users via `usePresence` system
+### Funcionalidades de Admin
+- Acesso à rota `/admin`
+- Pode alternar modo de manutenção via `MaintenanceContext`
+- Ver usuários online via sistema `usePresence`
 
-## Key Contexts & Hooks
+## Contextos e Hooks Principais
 
 ### MaintenanceContext
-- Manages global maintenance mode state
-- Reads from `maintenance` table (single row with `is_active` boolean)
-- Uses Supabase realtime subscription to sync state across all clients
-- When active, `RouteGuard` redirects non-admin users to `/maintenance` page
+- Gerencia estado global do modo de manutenção
+- Lê da tabela `maintenance` (linha única com boolean `is_active`)
+- Usa assinatura realtime do Supabase para sincronizar estado entre todos os clientes
+- Quando ativo, `RouteGuard` redireciona usuários não-admin para página `/maintenance`
 
 ### PresenceContext
-- Tracks online users via `usePresence` hook
-- Updates `profiles.last_seen` timestamp every 30 seconds
-- Used in admin panel to show active users
+- Rastreia usuários online via hook `usePresence`
+- Atualiza timestamp `profiles.last_seen` a cada 30 segundos
+- Usado no painel admin para mostrar usuários ativos
 
 ### useN8nChatHistory
-- Primary hook for chat history
-- Groups messages by `session_id` from `n8n_chat_histories` table
-- `fetchSessionMessages(sessionId)` returns all messages for a conversation
-- `deleteSession(sessionId)` removes all messages for that session
+- Hook primário para histórico do chat
+- Agrupa mensagens por `session_id` da tabela `n8n_chat_histories`
+- `fetchSessionMessages(sessionId)` retorna todas mensagens de uma conversa
+- `deleteSession(sessionId)` remove todas mensagens daquela sessão
 
 ### useConversationHistory
-- Alternative history system (less actively used)
-- Stores conversations as JSON arrays in `conversation_history` table
-- Auto-generates conversation titles from first message
+- Sistema de histórico alternativo (menos ativamente usado)
+- Armazena conversas como arrays JSON na tabela `conversation_history`
+- Auto-gera títulos de conversa a partir da primeira mensagem
 
-## Important Implementation Details
+## Detalhes Importantes de Implementação
 
-### Message Limits
-- Hard limit: 50 messages per conversation (`MESSAGE_LIMIT = 50`)
-- Warning threshold: 45 messages (`MESSAGE_WARNING_THRESHOLD = 45`)
-- When limit reached, user must start new conversation
+### Limites de Mensagens
+- Limite rígido: 50 mensagens por conversa (`MESSAGE_LIMIT = 50`)
+- Limite de aviso: 45 mensagens (`MESSAGE_WARNING_THRESHOLD = 45`)
+- Quando limite é atingido, usuário deve iniciar nova conversa
 
-### Typing Effect
-Messages from AI are split by `\n\n` and streamed character-by-character:
-- Each `\n\n` separated chunk becomes a separate message bubble
-- Typing speed: 20ms per character, capped at 3000ms total per chunk
-- See `streamResponseAsSeparateMessages()` in `ChatInterface.tsx:321`
+### Efeito de Digitação
+Mensagens da IA são divididas por `\n\n` e transmitidas caractere por caractere:
+- Cada pedaço separado por `\n\n` se torna uma bolha de mensagem separada
+- Velocidade de digitação: 20ms por caractere, limitado a 3000ms total por pedaço
+- Ver `streamResponseAsSeparateMessages()` em `ChatInterface.tsx:321`
 
-### Model Selection
-- User can select AI model via `ModelSelector` component
-- Selected model is passed to N8N webhook in `model` field
-- N8N workflow uses this to route to appropriate LLM
+### Seleção de Modelo
+- Usuário pode selecionar modelo de IA via componente `ModelSelector`
+- Modelo selecionado é passado para webhook N8N no campo `model`
+- Workflow N8N usa isso para rotear para o LLM apropriado
 
-### Feedback System
-- Users can thumbs up/down AI responses
-- Feedback sent to same webhook with payload containing question, answer, rating
-- Used for monitoring and improving AI responses
+### Sistema de Feedback
+- Usuários podem dar thumbs up/down nas respostas da IA
+- Feedback enviado para o mesmo webhook com payload contendo pergunta, resposta, avaliação
+- Usado para monitorar e melhorar respostas da IA
 
-### Loading States
-- Dynamic loading messages rotate every 3s while waiting for AI response
-- Phrases: "pensando...", "realizando busca", "Já sei", "hmmm", "Estruturando a resposta..."
-- Special phrase "o que a Thabata responderia?" shown once per loading cycle
+### Estados de Carregamento
+- Mensagens de carregamento dinâmicas rotacionam a cada 3s enquanto aguarda resposta da IA
+- Frases: "pensando...", "realizando busca", "Já sei", "hmmm", "Estruturando a resposta..."
+- Frase especial "o que a Thabata responderia?" mostrada uma vez por ciclo de carregamento
 
-### File Upload Support
-- Accepts: PNG, JPEG, GIF, PDF
-- Max size: 10MB
-- Files sent as FormData to webhook
-- N8N extracts content, generates embeddings, performs RAG lookup
+### Suporte a Upload de Arquivos
+- Aceita: PNG, JPEG, GIF, PDF
+- Tamanho máximo: 10MB
+- Arquivos enviados como FormData para webhook
+- N8N extrai conteúdo, gera embeddings, realiza busca RAG
 
-## Database Schema (Key Tables)
+## Schema do Banco de Dados (Tabelas Principais)
 
 ### `profiles`
-- `id` (FK to auth.users)
+- `id` (FK para auth.users)
 - `email`, `name`
 - `role` ('admin' | 'default')
-- `last_seen` (for presence tracking)
-- `tokens` (integer - token count for non-admin users)
-- `unlimited_tokens` (boolean - unlimited tokens flag)
+- `last_seen` (para rastreamento de presença)
+- `tokens` (integer - contagem de tokens para usuários não-admin)
+- `unlimited_tokens` (boolean - flag de tokens ilimitados)
 
 ### `models`
-- `id` (UUID, primary key)
-- `name` (TEXT, unique - technical identifier sent to N8N)
-- `display_name` (TEXT - user-facing name)
-- `description` (TEXT, nullable - model description)
-- `is_public` (BOOLEAN - visibility control)
+- `id` (UUID, chave primária)
+- `name` (TEXT, único - identificador técnico enviado ao N8N)
+- `display_name` (TEXT - nome voltado ao usuário)
+- `description` (TEXT, nullable - descrição do modelo)
+- `is_public` (BOOLEAN - controle de visibilidade)
 - `created_at`, `updated_at` (TIMESTAMPTZ)
-- **RLS enabled**: Public models visible to all, private models only to admins
+- **RLS habilitado**: Modelos públicos visíveis para todos, modelos privados apenas para admins
 
 ### `n8n_chat_histories`
 - `id`, `session_id`
-- `message` (JSONB - can be string or object with content/type)
+- `message` (JSONB - pode ser string ou objeto com content/type)
 - `user_id`
 - `created_at`
 
 ### `documents`
 - `content` (text)
 - `metadata` (JSONB)
-- `embedding` (vector - for RAG similarity search)
+- `embedding` (vector - para busca de similaridade RAG)
 
 ### `maintenance`
 - `id`, `is_active` (boolean)
 
-## Supabase Configuration
+## Configuração do Supabase
 
-The Supabase client is initialized in `src/supabase/client.ts` with environment variables:
+O cliente Supabase é inicializado em `src/supabase/client.ts` com variáveis de ambiente:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-**NOTE**: The current `client.ts` contains hardcoded credentials. For production deployments, these should be moved to environment variables.
+**NOTA**: O `client.ts` atual contém credenciais hardcoded. Para deploys de produção, estas devem ser movidas para variáveis de ambiente.
 
-## Path Alias
+## Alias de Caminho
 
-The project uses `@` as an alias for `src/`:
+O projeto usa `@` como alias para `src/`:
 ```typescript
 import { Component } from "@/components/Component"
 ```
 
-Configured in `vite.config.ts` and `tsconfig.json`.
+Configurado em `vite.config.ts` e `tsconfig.json`.
 
-## Model Selection System
+## Sistema de Seleção de Modelos
 
-### Overview
-The application uses a **dynamic model management system** where each model represents a **knowledge base** (base de conhecimento). Models are stored in the database and can be managed through the admin panel with visibility controls based on user roles.
+### Visão Geral
+A aplicação usa um **sistema dinâmico de gerenciamento de modelos** onde cada modelo representa uma **base de conhecimento** (knowledge base). Modelos são armazenados no banco de dados e podem ser gerenciados através do painel admin com controles de visibilidade baseados nas roles dos usuários.
 
-**Important Concept**: Each model in the system corresponds to a specific set of documents/content stored in the database. When a user selects a model and asks a question, the system performs RAG (Retrieval Augmented Generation) lookup ONLY in that model's knowledge base. This allows you to segregate company information by context, product, department, or any other criteria.
+**Conceito Importante**: Cada modelo no sistema corresponde a um conjunto específico de documentos/conteúdo armazenado no banco de dados. Quando um usuário seleciona um modelo e faz uma pergunta, o sistema realiza busca RAG (Retrieval Augmented Generation) APENAS naquela base de conhecimento do modelo. Isso permite segregar informações da empresa por contexto, produto, departamento ou qualquer outro critério.
 
-### Database Structure
+### Estrutura do Banco de Dados
 
-#### `models` Table
+#### Tabela `models`
 ```sql
-- id: UUID (primary key)
-- name: TEXT (unique, technical identifier used in N8N)
-- display_name: TEXT (user-facing name shown in UI)
-- description: TEXT (optional description)
-- is_public: BOOLEAN (visibility control)
+- id: UUID (chave primária)
+- name: TEXT (único, identificador técnico usado no N8N)
+- display_name: TEXT (nome voltado ao usuário mostrado na UI)
+- description: TEXT (descrição opcional)
+- is_public: BOOLEAN (controle de visibilidade)
 - created_at, updated_at: TIMESTAMPTZ
 ```
 
-**Row Level Security (RLS) Policies:**
-- **Public models** (`is_public = true`): Visible to all users
-- **Private models** (`is_public = false`): Visible only to admins
-- Only admins can insert, update, or delete models
+**Políticas de Row Level Security (RLS):**
+- **Modelos públicos** (`is_public = true`): Visíveis para todos os usuários
+- **Modelos privados** (`is_public = false`): Visíveis apenas para admins
+- Apenas admins podem inserir, atualizar ou deletar modelos
 
-### Components
+### Componentes
 
-#### ModelSelector Component (`src/components/chat/ModelSelector.tsx`)
-- Dynamically fetches models from database via `useModels` hook
-- Filters models automatically based on user role (via RLS)
-- Displays badge "private" next to private models (admin-only view)
-- Auto-selects first available model if current selection becomes unavailable
-- State managed in `ChatLayout.tsx` and passed down to `ChatInterface`
-- Model `name` field is sent with every message to N8N webhook
+#### Componente ModelSelector (`src/components/chat/ModelSelector.tsx`)
+- Busca modelos do banco dinamicamente via hook `useModels`
+- Filtra modelos automaticamente baseado na role do usuário (via RLS)
+- Exibe badge "private" ao lado de modelos privados (visão apenas para admin)
+- Auto-seleciona primeiro modelo disponível se seleção atual se tornar indisponível
+- Estado gerenciado em `ChatLayout.tsx` e passado para `ChatInterface`
+- Campo `name` do modelo é enviado com cada mensagem para webhook N8N
 
-#### ModelManagement Component (`src/components/admin/ModelManagement.tsx`)
-Admin panel component for managing AI models:
-- View all models in a table
-- Toggle model visibility (public/private) with switch
-- Create new models with form dialog
-- Delete existing models
-- Badge indicators: green "Público" or gray "Privado"
+#### Componente ModelManagement (`src/components/admin/ModelManagement.tsx`)
+Componente do painel admin para gerenciar modelos de IA:
+- Visualizar todos os modelos em uma tabela
+- Alternar visibilidade do modelo (público/privado) com switch
+- Criar novos modelos com diálogo de formulário
+- Deletar modelos existentes
+- Indicadores de badge: verde "Público" ou cinza "Privado"
 
-#### useModels Hook (`src/hooks/useModels.ts`)
-Custom hook for model operations:
-- `models`: Array of available models (filtered by RLS)
-- `loading`: Loading state
-- `toggleModelVisibility(modelId, isPublic)`: Change visibility
-- `addModel(name, displayName, description, isPublic)`: Create new model
-- `deleteModel(modelId)`: Remove model
-- `refreshModels()`: Reload model list
+#### Hook useModels (`src/hooks/useModels.ts`)
+Hook customizado para operações de modelo:
+- `models`: Array de modelos disponíveis (filtrados por RLS)
+- `loading`: Estado de carregamento
+- `toggleModelVisibility(modelId, isPublic)`: Mudar visibilidade
+- `addModel(name, displayName, description, isPublic)`: Criar novo modelo
+- `deleteModel(modelId)`: Remover modelo
+- `refreshModels()`: Recarregar lista de modelos
 
-### Model Flow (Knowledge Base Selection + RAG)
-1. User selects model in `ModelSelector` → triggers `onValueChange`
-2. `ChatLayout` updates `selectedModel` state via `handleModelChange`
-3. State passed as prop to `ChatInterface`
-4. User submits a question
-5. Model `name` field included in webhook payload at three points:
-   - Text messages (`ChatInterface.tsx:551`)
-   - File uploads (`ChatInterface.tsx:508`)
-   - Question suggestions (`ChatInterface.tsx:649`)
-6. **N8N workflow receives the model name as a TAG**:
-   - Uses `model` field to identify which knowledge base to query
-   - Performs RAG lookup in the corresponding document table/collection
-   - Example: `model: "basic"` → queries documents in "basic" knowledge base
-   - Example: `model: "pro"` → queries documents in "pro" knowledge base
-7. N8N retrieves relevant documents from the selected knowledge base
-8. LLM generates response based ONLY on documents from that specific model's knowledge base
-9. Response sent back to frontend and displayed to user
+### Fluxo do Modelo (Seleção de Base de Conhecimento + RAG)
+1. Usuário seleciona modelo no `ModelSelector` → dispara `onValueChange`
+2. `ChatLayout` atualiza estado `selectedModel` via `handleModelChange`
+3. Estado passado como prop para `ChatInterface`
+4. Usuário submete uma pergunta
+5. Campo `name` do modelo incluído no payload do webhook em três pontos:
+   - Mensagens de texto (`ChatInterface.tsx:551`)
+   - Uploads de arquivos (`ChatInterface.tsx:508`)
+   - Sugestões de perguntas (`ChatInterface.tsx:649`)
+6. **Workflow N8N recebe o nome do modelo como uma TAG**:
+   - Usa campo `model` para identificar qual base de conhecimento consultar
+   - Realiza busca RAG na tabela/coleção de documentos correspondente
+   - Exemplo: `model: "basic"` → consulta documentos na base de conhecimento "basic"
+   - Exemplo: `model: "pro"` → consulta documentos na base de conhecimento "pro"
+7. N8N recupera documentos relevantes da base de conhecimento selecionada
+8. LLM gera resposta baseada APENAS em documentos daquela base de conhecimento específica do modelo
+9. Resposta enviada de volta ao frontend e exibida ao usuário
 
-**Critical Understanding**: The `model` field acts as a **filter/tag** for the RAG system, ensuring users only get answers from the specific knowledge base they selected.
+**Compreensão Crítica**: O campo `model` atua como um **filtro/tag** para o sistema RAG, garantindo que usuários apenas obtenham respostas da base de conhecimento específica que selecionaram.
 
-### Adding New Models (Knowledge Bases)
+### Adicionando Novos Modelos (Bases de Conhecimento)
 
-**IMPORTANT**: Before registering a new model, ensure you have already populated its knowledge base with content. Each model needs documents/data in the database that the RAG system can query.
+**IMPORTANTE**: Antes de registrar um novo modelo, certifique-se de que você já populou sua base de conhecimento com conteúdo. Cada modelo precisa de documentos/dados no banco de dados que o sistema RAG possa consultar.
 
-#### Complete Workflow to Add a New Model:
+#### Workflow Completo para Adicionar um Novo Modelo:
 
-**Step 1: Prepare the Knowledge Base Content**
+**Passo 1: Preparar o Conteúdo da Base de Conhecimento**
 
-First, populate your database with the documents/content for this knowledge base. This can be done in several ways depending on your setup:
+Primeiro, popule seu banco de dados com os documentos/conteúdo para esta base de conhecimento. Isso pode ser feito de várias maneiras dependendo da sua configuração:
 
-**Option A** - Separate table per model:
+**Opção A** - Tabela separada por modelo:
 ```sql
--- Create a new table for the model's documents
+-- Criar uma nova tabela para os documentos do modelo
 CREATE TABLE documents_pro_v2 (
   id UUID PRIMARY KEY,
   content TEXT,
@@ -321,447 +321,447 @@ CREATE TABLE documents_pro_v2 (
   metadata JSONB
 );
 
--- Insert documents
+-- Inserir documentos
 INSERT INTO documents_pro_v2 (content, metadata) VALUES
   ('Conteúdo específico do Pro-v2...', '{"source": "manual.pdf"}'),
   ('Mais informações sobre Pro-v2...', '{"source": "faq.txt"}');
 ```
 
-**Option B** - Single documents table with model tag in metadata:
+**Opção B** - Tabela única de documents com tag do modelo em metadata:
 ```sql
--- Use existing 'documents' table with model identifier in metadata
+-- Usar tabela 'documents' existente com identificador do modelo em metadata
 INSERT INTO documents (content, metadata, embedding) VALUES
   ('Conteúdo do Pro-v2...', '{"model": "pro-v2", "source": "manual"}', embedding_vector),
   ('Informações Pro-v2...', '{"model": "pro-v2", "source": "faq"}', embedding_vector);
 ```
 
-**Step 2: Configure N8N to Query the Correct Knowledge Base**
+**Passo 2: Configurar N8N para Consultar a Base de Conhecimento Correta**
 
-In your N8N workflow, add logic to route queries based on the `model` field:
+No seu workflow N8N, adicione lógica para rotear consultas baseadas no campo `model`:
 
 ```javascript
-// Example: N8N Switch node or code
-const model = $input.json.model; // Receives "pro-v2"
+// Exemplo: Nó Switch do N8N ou código
+const model = $input.json.model; // Recebe "pro-v2"
 
-// Query the correct table/filter
+// Consultar a tabela/filtro correto
 if (model === 'pro-v2') {
-  // Query documents_pro_v2 table
-  // OR filter documents WHERE metadata->>'model' = 'pro-v2'
+  // Consultar tabela documents_pro_v2
+  // OU filtrar documents WHERE metadata->>'model' = 'pro-v2'
 }
 ```
 
-**Step 3: Register Model in the System**
+**Passo 3: Registrar Modelo no Sistema**
 
-**Option A - Via Admin Interface (Recommended)**:
-1. Navigate to `/admin` as administrator
-2. Scroll to **"Gerenciamento de Modelos"** section
-3. Click **"Novo Modelo"** button
-4. Fill in the form:
-   - **Nome Técnico**: `pro-v2` (must match what N8N expects as TAG)
-     - This EXACT value will be sent to N8N in the webhook
-     - Must be unique, no spaces, lowercase recommended
-   - **Nome de Exibição**: `Pro-v2` (user-friendly name)
+**Opção A - Via Interface Admin (Recomendado)**:
+1. Navegue para `/admin` como administrador
+2. Role até a seção **"Gerenciamento de Modelos"**
+3. Clique no botão **"Novo Modelo"**
+4. Preencha o formulário:
+   - **Nome Técnico**: `pro-v2` (deve corresponder ao que N8N espera como TAG)
+     - Este valor EXATO será enviado ao N8N no webhook
+     - Deve ser único, sem espaços, minúsculas recomendadas
+   - **Nome de Exibição**: `Pro-v2` (nome amigável ao usuário)
    - **Descrição**: "Modelo Pro versão 2 - Base de conhecimento avançada"
-   - **Visibilidade Pública**: Toggle ON if all users should access this knowledge base
-5. Click **"Criar Modelo"**
-6. Model appears immediately in `ModelSelector` for authorized users
+   - **Visibilidade Pública**: Ative se todos os usuários devem acessar esta base de conhecimento
+5. Clique em **"Criar Modelo"**
+6. Modelo aparece imediatamente no `ModelSelector` para usuários autorizados
 
-**Option B - Via SQL (Direct Database)**:
+**Opção B - Via SQL (Banco de Dados Direto)**:
 ```sql
 INSERT INTO public.models (name, display_name, description, is_public)
 VALUES ('pro-v2', 'Pro-v2', 'Base de conhecimento Pro versão 2', true);
 ```
 
-**Step 4: Test the Integration**
-1. Login to the chat interface
-2. Select the new model in `ModelSelector`
-3. Ask a question related to the content you added
-4. Verify that N8N queries the correct knowledge base and returns relevant results
+**Passo 4: Testar a Integração**
+1. Faça login na interface do chat
+2. Selecione o novo modelo no `ModelSelector`
+3. Faça uma pergunta relacionada ao conteúdo que você adicionou
+4. Verifique que o N8N consulta a base de conhecimento correta e retorna resultados relevantes
 
-**Field Guidelines:**
-- `name`: **CRITICAL** - Must match exactly what N8N uses to identify the knowledge base
-  - This is the TAG sent in the webhook payload
-  - Must match your N8N routing logic
-- `display_name`: User-friendly name displayed in dropdown
-- `description`: Explain what kind of information this knowledge base contains
+**Diretrizes de Campos:**
+- `name`: **CRÍTICO** - Deve corresponder exatamente ao que N8N usa para identificar a base de conhecimento
+  - Esta é a TAG enviada no payload do webhook
+  - Deve corresponder à sua lógica de roteamento do N8N
+- `display_name`: Nome amigável ao usuário exibido no dropdown
+- `description`: Explique que tipo de informação esta base de conhecimento contém
 - `is_public`:
-  - `true` = All users can query this knowledge base
-  - `false` = Only admins can query this knowledge base
+  - `true` = Todos os usuários podem consultar esta base de conhecimento
+  - `false` = Apenas admins podem consultar esta base de conhecimento
 
-### Managing Model Visibility
+### Gerenciando Visibilidade de Modelos
 
-**To make a model private (admin-only):**
-1. Go to `/admin` → "Gerenciamento de Modelos"
-2. Find the model in the table
-3. Toggle the **switch** to OFF (or click dropdown → "Tornar Privado")
-4. Model becomes invisible to non-admin users immediately
+**Para tornar um modelo privado (apenas admin):**
+1. Vá para `/admin` → "Gerenciamento de Modelos"
+2. Encontre o modelo na tabela
+3. Alterne o **switch** para OFF (ou clique dropdown → "Tornar Privado")
+4. Modelo se torna invisível para usuários não-admin imediatamente
 
-**To make a model public (visible to all):**
-1. Go to `/admin` → "Gerenciamento de Modelos"
-2. Find the model in the table
-3. Toggle the **switch** to ON (or click dropdown → "Tornar Público")
-4. Model becomes visible to all users immediately
+**Para tornar um modelo público (visível para todos):**
+1. Vá para `/admin` → "Gerenciamento de Modelos"
+2. Encontre o modelo na tabela
+3. Alterne o **switch** para ON (ou clique dropdown → "Tornar Público")
+4. Modelo se torna visível para todos os usuários imediatamente
 
-**Visual Indicators:**
-- Admins see a **"private"** badge next to private models in `ModelSelector`
-- Regular users don't see private models at all
-- In admin panel: green "Público" badge or gray "Privado" badge
+**Indicadores Visuais:**
+- Admins veem um badge **"private"** ao lado de modelos privados no `ModelSelector`
+- Usuários regulares não veem modelos privados de forma alguma
+- No painel admin: badge verde "Público" ou badge cinza "Privado"
 
-### Important Notes
+### Notas Importantes
 
-- **Models = Knowledge Bases**: Each model represents a separate knowledge base with its own documents/content in the database
-- **RAG Segregation**: The RAG system uses the model name as a filter/tag to query only the corresponding knowledge base
-- **N8N Configuration Required**: You must configure N8N to recognize the model name and route queries to the correct document collection
-- **Content First, Registration Second**: Always populate the knowledge base with content BEFORE registering the model in the admin panel
-- **Name Field is Critical**: The `name` field is sent to N8N as-is and must match exactly what your workflow expects
-- **No Code Changes Required**: Models are fully dynamic, no frontend code updates needed
-- **Automatic Filtering**: RLS policies ensure users only see authorized knowledge bases
-- **Fallback Handling**: If a user's selected model becomes unavailable (deleted or made private), the system auto-selects the first available model
-- **Real-time Updates**: Changes in admin panel reflect immediately in user sessions (may require page refresh)
-- **Use Cases**: Segregate content by product, department, access level, version, or any business criteria
+- **Modelos = Bases de Conhecimento**: Cada modelo representa uma base de conhecimento separada com seus próprios documentos/conteúdo no banco de dados
+- **Segregação RAG**: O sistema RAG usa o nome do modelo como um filtro/tag para consultar apenas a base de conhecimento correspondente
+- **Configuração N8N Necessária**: Você deve configurar o N8N para reconhecer o nome do modelo e rotear consultas para a coleção de documentos correta
+- **Conteúdo Primeiro, Registro Depois**: Sempre popule a base de conhecimento com conteúdo ANTES de registrar o modelo no painel admin
+- **Campo Name é Crítico**: O campo `name` é enviado ao N8N como está e deve corresponder exatamente ao que seu workflow espera
+- **Nenhuma Mudança de Código Necessária**: Modelos são totalmente dinâmicos, não são necessárias atualizações de código do frontend
+- **Filtragem Automática**: Políticas RLS garantem que usuários vejam apenas bases de conhecimento autorizadas
+- **Tratamento de Fallback**: Se o modelo selecionado de um usuário se tornar indisponível (deletado ou tornado privado), o sistema auto-seleciona o primeiro modelo disponível
+- **Atualizações em Tempo Real**: Mudanças no painel admin refletem imediatamente em sessões de usuários (pode requerer atualização de página)
+- **Casos de Uso**: Segregar conteúdo por produto, departamento, nível de acesso, versão ou qualquer critério de negócio
 
-## Admin Panel
+## Painel Administrativo
 
-### Overview
-The admin panel (`/admin` route) provides comprehensive user and system management.
+### Visão Geral
+O painel administrativo (rota `/admin`) fornece gerenciamento abrangente de usuários e sistema.
 
-### Components
+### Componentes
 
 #### ImprovedAdminPanel (`src/components/admin/ImprovedAdminPanel.tsx`)
-Modern table-based interface for user management with:
-- User statistics cards (Total Users, Online Users)
-- Full user table showing: name, email, role badge, online status, last seen
-- Dropdown menu per user with actions:
-  - Toggle Admin role
-  - Delete user
-- Create new user dialog
-- Delete confirmation alerts
-- Toast notifications for all actions
+Interface moderna baseada em tabela para gerenciamento de usuários com:
+- Cards de estatísticas de usuários (Total de Usuários, Usuários Online)
+- Tabela completa de usuários mostrando: nome, email, badge de role, status online, última visualização
+- Menu dropdown por usuário com ações:
+  - Alternar role Admin
+  - Deletar usuário
+- Diálogo de criar novo usuário
+- Alertas de confirmação de exclusão
+- Notificações toast para todas as ações
 
 #### MaintenanceToggle (`src/components/admin/MaintenanceToggle.tsx`)
-- Switch to enable/disable maintenance mode
-- Updates `maintenance` table in real-time
-- When active, non-admin users are redirected to `/maintenance` page
+- Switch para habilitar/desabilitar modo de manutenção
+- Atualiza tabela `maintenance` em tempo real
+- Quando ativo, usuários não-admin são redirecionados para página `/maintenance`
 
 #### ModelManagement (`src/components/admin/ModelManagement.tsx`)
-Knowledge base management interface for controlling AI model availability:
-- View all registered knowledge bases (models) in a table
-- Create new models (knowledge base references) via dialog form
-- Toggle public/private visibility with switch controls
-- Delete models that are no longer needed
-- Visual indicators: green "Público" badge or gray "Privado" badge
-- Real-time updates reflected in user `ModelSelector` dropdowns
-- Manages the `models` table which serves as a catalog of available knowledge bases
+Interface de gerenciamento de base de conhecimento para controlar disponibilidade de modelo de IA:
+- Visualizar todas as bases de conhecimento registradas (modelos) em uma tabela
+- Criar novos modelos (referências de base de conhecimento) via formulário de diálogo
+- Alternar visibilidade público/privado com controles de switch
+- Deletar modelos que não são mais necessários
+- Indicadores visuais: badge verde "Público" ou badge cinza "Privado"
+- Atualizações em tempo real refletidas nos dropdowns `ModelSelector` do usuário
+- Gerencia a tabela `models` que serve como catálogo de bases de conhecimento disponíveis
 
 #### UserActivityCard (`src/components/admin/UserActivityCard.tsx`)
-Displays detailed user activity without requiring Realtime:
-- Last seen timestamp (formatted: "2 min ago", "3h ago")
-- Total message count per user
-- Last message timestamp
-- Auto-refreshes every 30 seconds
-- Manual refresh button
+Exibe atividade detalhada do usuário sem requerer Realtime:
+- Timestamp de última visualização (formatado: "2 min atrás", "3h atrás")
+- Contagem total de mensagens por usuário
+- Timestamp da última mensagem
+- Auto-atualiza a cada 30 segundos
+- Botão de atualização manual
 
-### User Management Features
-1. **Create Users**: Email/password form with validation
-2. **Role Management**: One-click toggle between admin/default
-3. **Delete Users**: Uses `delete_user` RPC function in database
-4. **Activity Monitoring**: Real-time activity tracking via `last_seen` field
+### Funcionalidades de Gerenciamento de Usuários
+1. **Criar Usuários**: Formulário de email/senha com validação
+2. **Gerenciamento de Role**: Alternância de um clique entre admin/default
+3. **Deletar Usuários**: Usa função RPC `delete_user` no banco de dados
+4. **Monitoramento de Atividade**: Rastreamento de atividade em tempo real via campo `last_seen`
 
-### Role Debugging
-The `RoleDebugger` component (`src/components/debug/RoleDebugger.tsx`) can be temporarily added to any page to:
-- Display auth user data
-- Show profile table data
-- Verify role assignments
-- Generate SQL fix scripts automatically
+### Debug de Role
+O componente `RoleDebugger` (`src/components/debug/RoleDebugger.tsx`) pode ser temporariamente adicionado a qualquer página para:
+- Exibir dados do usuário auth
+- Mostrar dados da tabela de perfil
+- Verificar atribuições de role
+- Gerar scripts SQL de correção automaticamente
 
-## Realtime & WebSocket Handling
+## Tratamento de Realtime e WebSocket
 
-### Known Limitation
-The Supabase Realtime service (WebSocket) is **not available** in the self-hosted setup. This affects:
-- `PresenceContext` - Online user tracking
-- `MaintenanceContext` - Real-time maintenance mode updates
+### Limitação Conhecida
+O serviço Realtime do Supabase (WebSocket) **não está disponível** na configuração self-hosted. Isso afeta:
+- `PresenceContext` - Rastreamento de usuários online
+- `MaintenanceContext` - Atualizações de modo de manutenção em tempo real
 
-### Graceful Degradation
-Both contexts have been updated to handle Realtime failures gracefully:
-- Errors are logged as warnings (not errors)
-- Failed connections don't break the application
-- Single retry attempt, then graceful fallback
-- Alternative polling-based solutions implemented where needed
+### Degradação Graciosa
+Ambos os contextos foram atualizados para lidar com falhas Realtime graciosamente:
+- Erros são registrados como avisos (não erros)
+- Conexões falhadas não quebram a aplicação
+- Tentativa única de retry, então fallback gracioso
+- Soluções alternativas baseadas em polling implementadas onde necessário
 
-**PresenceContext.tsx:78-87**: Handles CHANNEL_ERROR, TIMED_OUT, and CLOSED states
-**MaintenanceContext.tsx:49-53**: Logs warning if Realtime unavailable
+**PresenceContext.tsx:78-87**: Lida com estados CHANNEL_ERROR, TIMED_OUT e CLOSED
+**MaintenanceContext.tsx:49-53**: Registra aviso se Realtime indisponível
 
-## Docker & Networking
+## Docker e Rede
 
-### Architecture
-The application runs in a multi-container Docker setup:
-- **Supabase Stack**: Self-hosted Supabase (PostgreSQL, Auth, Storage, etc.)
-- **N8N Stack**: Workflow automation with separate containers for editor, webhook, and worker
-- Each stack has its own PostgreSQL instance
+### Arquitetura
+A aplicação roda em uma configuração Docker multi-container:
+- **Stack Supabase**: Supabase self-hosted (PostgreSQL, Auth, Storage, etc.)
+- **Stack N8N**: Automação de workflow com containers separados para editor, webhook e worker
+- Cada stack tem sua própria instância PostgreSQL
 
-### Container Details
+### Detalhes dos Containers
 
-**Supabase Containers:**
+**Containers Supabase:**
 - `supabase-db-{INSTANCE_ID}`: PostgreSQL 15.1.1.78
-  - Internal port: 5432
-  - External port: 4321 (mapped via POSTGRES_PORT_EXT)
-  - Service name in docker-compose: `db`
+  - Porta interna: 5432
+  - Porta externa: 4321 (mapeada via POSTGRES_PORT_EXT)
+  - Nome do serviço no docker-compose: `db`
 
-**N8N Containers:**
-- `n8n-n8n_editor-1`: N8N UI (port 5678)
-- `n8n-n8n_webhook-1`: Webhook handler (port 5679)
-- `n8n-n8n_worker-1`: Background worker
-- `n8n-n8n-postgres-1`: N8N's internal PostgreSQL (port 5434)
+**Containers N8N:**
+- `n8n-n8n_editor-1`: UI do N8N (porta 5678)
+- `n8n-n8n_webhook-1`: Manipulador de webhook (porta 5679)
+- `n8n-n8n_worker-1`: Worker em background
+- `n8n-n8n-postgres-1`: PostgreSQL interno do N8N (porta 5434)
 
-### Docker Network Configuration
+### Configuração de Rede Docker
 
-**Network:** `supabase-{INSTANCE_ID}_default`
+**Rede:** `supabase-{INSTANCE_ID}_default`
 
-To connect N8N to Supabase database:
+Para conectar N8N ao banco de dados Supabase:
 
 ```bash
-# Connect all N8N containers to Supabase network
+# Conectar todos os containers N8N à rede Supabase
 docker network connect supabase-1759154705_default n8n-n8n_editor-1
 docker network connect supabase-1759154705_default n8n-n8n_webhook-1
 docker network connect supabase-1759154705_default n8n-n8n_worker-1
 ```
 
-### N8N Postgres Node Configuration
+### Configuração do Nó Postgres do N8N
 
-When using the Postgres node in N8N to access Supabase, you have **two options**:
+Ao usar o nó Postgres no N8N para acessar o Supabase, você tem **duas opções**:
 
-#### Option 1: Using Docker Compose Service Name (Recommended)
+#### Opção 1: Usando Nome do Serviço Docker Compose (Recomendado)
 ```yaml
 Host: db
 Port: 5432
 Database: postgres
 User: postgres
-Password: [from POSTGRES_PASSWORD in .env]
+Password: [do POSTGRES_PASSWORD no .env]
 SSL Mode: disable
 ```
 
-#### Option 2: Using Full Container Name
+#### Opção 2: Usando Nome Completo do Container
 ```yaml
 Host: supabase-db-1759154705
 Port: 5432
 Database: postgres
 User: postgres
-Password: [from POSTGRES_PASSWORD in .env]
+Password: [do POSTGRES_PASSWORD no .env]
 SSL Mode: disable
 ```
 
-**How to find the container name:**
+**Como encontrar o nome do container:**
 ```bash
 docker ps | grep postgres
-# Look for: supabase-db-{INSTANCE_ID}
+# Procurar por: supabase-db-{INSTANCE_ID}
 ```
 
-**IMPORTANT**:
-- Use port `5432` (internal) when connecting from Docker containers
-- Use port `4321` (external) when connecting from outside Docker (DBeaver, psql, etc.)
-- Use service name `db` or full container name `supabase-db-{INSTANCE_ID}` as host
-- Never use external IP `38.242.138.127` from inside Docker
-- After connecting Docker networks (see above), either hostname will work
+**IMPORTANTE**:
+- Use porta `5432` (interna) ao conectar de containers Docker
+- Use porta `4321` (externa) ao conectar de fora do Docker (DBeaver, psql, etc.)
+- Use nome do serviço `db` ou nome completo do container `supabase-db-{INSTANCE_ID}` como host
+- Nunca use IP externo `38.242.138.127` de dentro do Docker
+- Após conectar redes Docker (veja acima), qualquer hostname funcionará
 
-### Port Reference
+### Referência de Portas
 
-| Service | Internal Port | External Port | Access From |
-|---------|--------------|---------------|-------------|
-| Supabase Postgres | 5432 | 4321 | Internal: 5432, External: 4321 |
-| N8N Postgres | 5432 | 5434 | Internal: 5432, External: 5434 |
-| N8N Editor | 5678 | 5678 | Both |
-| N8N Webhook | 5678 | 5679 | Both |
+| Serviço | Porta Interna | Porta Externa | Acesso De |
+|---------|--------------|---------------|-----------|
+| Supabase Postgres | 5432 | 4321 | Interno: 5432, Externo: 4321 |
+| N8N Postgres | 5432 | 5434 | Interno: 5432, Externo: 5434 |
+| N8N Editor | 5678 | 5678 | Ambos |
+| N8N Webhook | 5678 | 5679 | Ambos |
 
-## Troubleshooting
+## Solução de Problemas
 
-### Model Not Sending to Webhook
-- Check `ChatLayout.tsx:14` - ensure `selectedModel` state is initialized to `"global"`
-- Verify `ModelSelector.tsx:17` - ensure no hardcoded `defaultValue="global"` assignment
-- Check browser console for model value in webhook payload
+### Modelo Não Enviando para Webhook
+- Verificar `ChatLayout.tsx:14` - garantir que estado `selectedModel` está inicializado para `"global"`
+- Verificar `ModelSelector.tsx:17` - garantir que não há atribuição hardcoded `defaultValue="global"`
+- Verificar console do navegador para valor do modelo no payload do webhook
 
-### Admin Button Not Showing
-- Verify user has `role = 'admin'` in `profiles` table
-- Use `RoleDebugger` component to diagnose
-- Check browser console for logs from `useUserRole.ts`
-- Refresh page after role change
+### Botão Admin Não Aparecendo
+- Verificar que usuário tem `role = 'admin'` na tabela `profiles`
+- Usar componente `RoleDebugger` para diagnosticar
+- Verificar console do navegador para logs de `useUserRole.ts`
+- Atualizar página após mudança de role
 
-### N8N Can't Connect to Supabase
-- Verify Docker network connection (see Docker Network Configuration above)
-- Use internal port 5432 (not 4321)
-- Use service name `db` as host
-- Test with `docker exec -it n8n-n8n_webhook-1 sh` then `nc -zv db 5432`
+### N8N Não Consegue Conectar ao Supabase
+- Verificar conexão de rede Docker (ver Configuração de Rede Docker acima)
+- Usar porta interna 5432 (não 4321)
+- Usar nome do serviço `db` como host
+- Testar com `docker exec -it n8n-n8n_webhook-1 sh` então `nc -zv db 5432`
 
-### Realtime Errors
-- Expected behavior in self-hosted setup
-- Check console for warnings (not errors)
-- Presence features will be disabled but app continues working
-- Use `UserActivityCard` for user monitoring instead of Realtime presence
+### Erros de Realtime
+- Comportamento esperado na configuração self-hosted
+- Verificar console para avisos (não erros)
+- Funcionalidades de presença serão desabilitadas mas app continua funcionando
+- Usar `UserActivityCard` para monitoramento de usuários ao invés de presença Realtime
 
-## Load Testing System
+## Sistema de Testes de Carga
 
-### Overview
-The project includes a comprehensive load testing suite in the `load-tests/` directory for benchmarking system performance under various conditions.
+### Visão Geral
+O projeto inclui uma suite abrangente de testes de carga no diretório `load-tests/` para benchmarking de performance do sistema sob várias condições.
 
-### Available Test Scripts
+### Scripts de Teste Disponíveis
 
 #### 1. `message-load-test-parallel.js`
-**Purpose**: Simulates concurrent users sending messages simultaneously (stress test)
+**Propósito**: Simula usuários concorrentes enviando mensagens simultaneamente (teste de estresse)
 
-**Usage**:
+**Uso**:
 ```bash
 node load-tests/message-load-test-parallel.js [num-messages] [stagger-delay-ms]
 ```
 
-**Parameters**:
-- `num-messages`: Total number of messages to send concurrently
-- `stagger-delay-ms`: Delay in milliseconds between firing each message (prevents instant overload)
+**Parâmetros**:
+- `num-messages`: Número total de mensagens para enviar concorrentemente
+- `stagger-delay-ms`: Atraso em milissegundos entre disparar cada mensagem (previne sobrecarga instantânea)
 
-**Configuration**:
-- Webhook URL: Line 24
-- Test User IDs: Lines 43-49
-- Available Models: Line 52 (`global`, `rc-profissional`, `rc-geral`, `d&o`)
-- **Timeout**: 5 minutes (300000ms) per message (line 200)
+**Configuração**:
+- URL do Webhook: Linha 24
+- IDs de Usuários de Teste: Linhas 43-49
+- Modelos Disponíveis: Linha 52 (`global`, `rc-profissional`, `rc-geral`, `d&o`)
+- **Timeout**: 5 minutos (300000ms) por mensagem (linha 200)
 
-**Behavior**:
-- Fires all messages with small delays between them
-- Waits for ALL responses in parallel using `Promise.all()`
-- Measures individual response times and overall throughput
-- Calculates parallel processing window
-- Tests system capacity under concurrent load
+**Comportamento**:
+- Dispara todas mensagens com pequenos atrasos entre elas
+- Aguarda TODAS as respostas em paralelo usando `Promise.all()`
+- Mede tempos de resposta individuais e throughput geral
+- Calcula janela de processamento paralelo
+- Testa capacidade do sistema sob carga concorrente
 
-**Example Scenarios**:
+**Cenários de Exemplo**:
 ```bash
-# Light test (5 messages, 500ms delay)
+# Teste leve (5 mensagens, 500ms de atraso)
 node load-tests/message-load-test-parallel.js 5 500
 
-# Moderate test (10 messages, 100ms delay)
+# Teste moderado (10 mensagens, 100ms de atraso)
 node load-tests/message-load-test-parallel.js 10 100
 
-# Heavy stress test (50 messages, 50ms delay)
+# Teste de estresse pesado (50 mensagens, 50ms de atraso)
 node load-tests/message-load-test-parallel.js 50 50
 
-# Burst test (30 messages, instant)
+# Teste de rajada (30 mensagens, instantâneo)
 node load-tests/message-load-test-parallel.js 30 0
 ```
 
 #### 2. `message-load-test-with-response.js`
-**Purpose**: Tests sequential message processing with full AI response validation
+**Propósito**: Testa processamento sequencial de mensagens com validação completa de resposta IA
 
-**Usage**:
+**Uso**:
 ```bash
 node load-tests/message-load-test-with-response.js [num-messages] [interval-ms]
 ```
 
-**Parameters**:
-- `num-messages`: Total number of messages to send sequentially
-- `interval-ms`: Wait time between messages (recommended: 5000ms+)
+**Parâmetros**:
+- `num-messages`: Número total de mensagens para enviar sequencialmente
+- `interval-ms`: Tempo de espera entre mensagens (recomendado: 5000ms+)
 
-**Configuration**:
-- Webhook URL: Line 20
-- Test User IDs: Lines 39-45
-- Available Models: Line 48
-- **Timeout**: 60 seconds per message (line 188)
+**Configuração**:
+- URL do Webhook: Linha 20
+- IDs de Usuários de Teste: Linhas 39-45
+- Modelos Disponíveis: Linha 48
+- **Timeout**: 60 segundos por mensagem (linha 188)
 
-**Behavior**:
-- Sends ONE message at a time
-- Waits for complete AI response before sending next
-- Measures actual AI response time
-- Validates response quality and content
-- Tests sustained performance over time
+**Comportamento**:
+- Envia UMA mensagem por vez
+- Aguarda resposta completa da IA antes de enviar próxima
+- Mede tempo real de resposta da IA
+- Valida qualidade e conteúdo da resposta
+- Testa performance sustentada ao longo do tempo
 
-**Example Scenarios**:
+**Cenários de Exemplo**:
 ```bash
-# Basic latency test (3 messages, 15s interval)
+# Teste básico de latência (3 mensagens, intervalo de 15s)
 node load-tests/message-load-test-with-response.js 3 15000
 
-# Quality test (5 messages, 10s interval)
+# Teste de qualidade (5 mensagens, intervalo de 10s)
 node load-tests/message-load-test-with-response.js 5 10000
 
-# Stability test (10 messages, 5s interval)
+# Teste de estabilidade (10 mensagens, intervalo de 5s)
 node load-tests/message-load-test-with-response.js 10 5000
 ```
 
 #### 3. `auth-load-test.js`
-**Purpose**: Tests authentication system under concurrent login attempts
+**Propósito**: Testa sistema de autenticação sob tentativas de login concorrentes
 
-**Usage**:
+**Uso**:
 ```bash
 node load-tests/auth-load-test.js [num-users] [interval-ms]
 ```
 
-**Parameters**:
-- `num-users`: Number of concurrent login attempts
-- `interval-ms`: Delay between login attempts
+**Parâmetros**:
+- `num-users`: Número de tentativas de login concorrentes
+- `interval-ms`: Atraso entre tentativas de login
 
-**Configuration**:
-- Supabase URL: Line 17
-- Supabase Anon Key: Line 18
-- Test User Credentials: Lines 27-38 (requires pre-created users)
+**Configuração**:
+- URL do Supabase: Linha 17
+- Chave Anon do Supabase: Linha 18
+- Credenciais de Usuários de Teste: Linhas 27-38 (requer usuários pré-criados)
 
-**Behavior**:
-- Simulates multiple users logging in simultaneously
-- Tests Supabase Auth performance
-- Measures login response times
-- Validates session creation
+**Comportamento**:
+- Simula múltiplos usuários fazendo login simultaneamente
+- Testa performance do Supabase Auth
+- Mede tempos de resposta de login
+- Valida criação de sessão
 
-**Example Scenarios**:
+**Cenários de Exemplo**:
 ```bash
-# Basic auth test (5 logins, 500ms delay)
+# Teste básico de auth (5 logins, 500ms de atraso)
 node load-tests/auth-load-test.js 5 500
 
-# Moderate load (20 logins, 100ms delay)
+# Carga moderada (20 logins, 100ms de atraso)
 node load-tests/auth-load-test.js 20 100
 
-# Stress test (50 logins, 50ms delay)
+# Teste de estresse (50 logins, 50ms de atraso)
 node load-tests/auth-load-test.js 50 50
 ```
 
-### Automatic Report Generation
+### Geração Automática de Relatórios
 
-All test scripts automatically generate detailed reports using the `utils/report-generator.js` module:
+Todos os scripts de teste geram automaticamente relatórios detalhados usando o módulo `utils/report-generator.js`:
 
-#### Generated Files
+#### Arquivos Gerados
 
-1. **Individual JSON Results** (`load-tests/results/json/`)
-   - One JSON file per test execution
-   - Filename format: `{test-type}_{timestamp}.json`
-   - Contains full test configuration, statistics, errors, and sample responses
+1. **Resultados JSON Individuais** (`load-tests/results/json/`)
+   - Um arquivo JSON por execução de teste
+   - Formato de nome do arquivo: `{test-type}_{timestamp}.json`
+   - Contém configuração completa do teste, estatísticas, erros e respostas de amostra
 
-2. **Consolidated Markdown Report** (`load-tests/results/ALL_TESTS_REPORT.md`)
-   - Cumulative report of ALL test executions
-   - Never overwrites - always appends new results
-   - Includes automatic analysis with performance ratings
-   - Grouped by test type with timestamps
+2. **Relatório Markdown Consolidado** (`load-tests/results/ALL_TESTS_REPORT.md`)
+   - Relatório cumulativo de TODAS as execuções de teste
+   - Nunca sobrescreve - sempre adiciona novos resultados
+   - Inclui análise automática com classificações de performance
+   - Agrupado por tipo de teste com timestamps
 
-3. **Index Summary** (`load-tests/results/INDEX.md`)
-   - Quick reference table of all tests
-   - Shows: date, success count, total count, success rate
-   - Grouped by test type for easy comparison
+3. **Resumo de Índice** (`load-tests/results/INDEX.md`)
+   - Tabela de referência rápida de todos os testes
+   - Mostra: data, contagem de sucesso, contagem total, taxa de sucesso
+   - Agrupado por tipo de teste para fácil comparação
 
-#### Report Generator Functions
+#### Funções do Gerador de Relatórios
 
-Located in `load-tests/utils/report-generator.js`:
+Localizado em `load-tests/utils/report-generator.js`:
 
 ```javascript
-// Save individual test result as JSON
+// Salvar resultado individual de teste como JSON
 saveTestResultJSON(testType, resultObject)
 
-// Append to consolidated Markdown report
+// Adicionar ao relatório Markdown consolidado
 appendToConsolidatedReport(testType, resultObject)
 
-// Update index with all test summaries
+// Atualizar índice com todos os resumos de teste
 generateIndexReport()
 
-// Optional: Clean old results (keeps last N)
+// Opcional: Limpar resultados antigos (manter últimos N)
 cleanOldResults(keepLast = 50)
 ```
 
-#### Test Result Structure
+#### Estrutura de Resultado de Teste
 
 ```javascript
 {
   testType: 'message-parallel' | 'message-sequential' | 'auth-load',
-  timestamp: ISO string,
+  timestamp: string ISO,
   config: {
     total: number,
     interval: number,
@@ -770,106 +770,106 @@ cleanOldResults(keepLast = 50)
   total: number,
   success: number,
   failed: number,
-  successRate: percentage,
-  failureRate: percentage,
+  successRate: porcentagem,
+  failureRate: porcentagem,
   times: {
-    avg: milliseconds,
-    min: milliseconds,
-    max: milliseconds
+    avg: milissegundos,
+    min: milissegundos,
+    max: milissegundos
   },
-  duration: milliseconds,
-  throughput: requests per second,
+  duration: milissegundos,
+  throughput: requisições por segundo,
   statusCodes: { code: count },
   errors: array (max 10),
-  responses: array (max 5 samples)
+  responses: array (max 5 amostras)
 }
 ```
 
-### Performance Metrics Interpretation
+### Interpretação de Métricas de Performance
 
-#### Success Rate
-- **100%**: Perfect - no failures
-- **≥90%**: Excellent - production ready
-- **70-90%**: Good - acceptable with some failures
-- **50-70%**: Regular - needs optimization
-- **<50%**: Critical - system unstable
+#### Taxa de Sucesso
+- **100%**: Perfeito - sem falhas
+- **≥90%**: Excelente - pronto para produção
+- **70-90%**: Bom - aceitável com algumas falhas
+- **50-70%**: Regular - precisa otimização
+- **<50%**: Crítico - sistema instável
 
-#### Response Time
-- **<3s**: Fast - excellent user experience
-- **3-10s**: Normal - acceptable performance
-- **10-30s**: Slow - needs optimization
-- **>30s**: Very Slow - critical issue
+#### Tempo de Resposta
+- **<3s**: Rápido - excelente experiência do usuário
+- **3-10s**: Normal - performance aceitável
+- **10-30s**: Lento - precisa otimização
+- **>30s**: Muito Lento - problema crítico
 
 #### Throughput
-- Measured in requests/second or responses/second
-- Higher is better
-- Compare against baseline after optimizations
+- Medido em requisições/segundo ou respostas/segundo
+- Maior é melhor
+- Comparar contra baseline após otimizações
 
-### Testing Best Practices
+### Melhores Práticas de Teste
 
-1. **Progressive Testing**: Start with small loads and increase gradually
-2. **Consistent Timing**: Run tests at similar times for fair comparison
-3. **Document Changes**: Note code changes before each test run
-4. **Establish Baselines**: Define acceptable performance thresholds
-5. **Monitor Trends**: Use consolidated report to track performance over time
+1. **Teste Progressivo**: Comece com cargas pequenas e aumente gradualmente
+2. **Timing Consistente**: Execute testes em horários similares para comparação justa
+3. **Documentar Mudanças**: Anote mudanças de código antes de cada execução de teste
+4. **Estabelecer Baselines**: Defina limites de performance aceitáveis
+5. **Monitorar Tendências**: Use relatório consolidado para rastrear performance ao longo do tempo
 
-### Common Test Workflows
+### Workflows Comuns de Teste
 
-#### Daily (After Deploy)
+#### Diário (Após Deploy)
 ```bash
 node load-tests/message-load-test-parallel.js 10 100
 ```
 
-#### Weekly (Comprehensive)
+#### Semanal (Abrangente)
 ```bash
 node load-tests/auth-load-test.js 10 100
 node load-tests/message-load-test-parallel.js 20 100
 node load-tests/message-load-test-with-response.js 5 10000
 ```
 
-#### Monthly (Full Benchmark)
+#### Mensal (Benchmark Completo)
 ```bash
 node load-tests/auth-load-test.js 20 100
 node load-tests/message-load-test-parallel.js 50 100
 node load-tests/message-load-test-with-response.js 10 5000
 ```
 
-#### Pre-Release (Stress Test)
+#### Pré-Release (Teste de Estresse)
 ```bash
 node load-tests/auth-load-test.js 50 50
 node load-tests/message-load-test-parallel.js 100 50
 node load-tests/message-load-test-with-response.js 10 5000
 ```
 
-### Documentation
+### Documentação
 
-- **`load-tests/GUIA_DE_USO_BENCHMARKS.md`**: Comprehensive usage guide with all scenarios
-- **`load-tests/GUIA_RAPIDO.md`**: Quick start guide for common operations
-- **`load-tests/README.md`**: Technical documentation and script details
+- **`load-tests/GUIA_DE_USO_BENCHMARKS.md`**: Guia de uso abrangente com todos os cenários
+- **`load-tests/GUIA_RAPIDO.md`**: Guia de início rápido para operações comuns
+- **`load-tests/README.md`**: Documentação técnica e detalhes de scripts
 
-### Troubleshooting Load Tests
+### Solução de Problemas em Testes de Carga
 
 #### "Cannot find module"
-Ensure you're in the correct directory:
+Certifique-se de estar no diretório correto:
 ```bash
 cd load-tests
 node message-load-test-parallel.js 10 100
 ```
 
-#### High Timeout Rate
-- Increase interval between messages
-- Reduce total number of concurrent messages
-- Check N8N webhook capacity and AI model response times
-- Verify database connection limits
+#### Alta Taxa de Timeout
+- Aumentar intervalo entre mensagens
+- Reduzir número total de mensagens concorrentes
+- Verificar capacidade do webhook N8N e tempos de resposta do modelo IA
+- Verificar limites de conexão do banco de dados
 
-#### Low Success Rate
-- Check N8N workflow logs for errors
-- Verify webhook URL is correct and accessible
-- Check Supabase rate limits
-- Ensure test user IDs exist in database
-- Review server resources (CPU, memory, network)
+#### Baixa Taxa de Sucesso
+- Verificar logs do workflow N8N para erros
+- Verificar que URL do webhook está correta e acessível
+- Verificar limites de taxa do Supabase
+- Garantir que IDs de usuários de teste existem no banco de dados
+- Revisar recursos do servidor (CPU, memória, rede)
 
 #### Connection Refused
-- Verify N8N webhook is running and accessible
-- Test webhook manually: `curl -X POST {WEBHOOK_URL}`
-- Check firewall and network settings
+- Verificar que webhook N8N está rodando e acessível
+- Testar webhook manualmente: `curl -X POST {WEBHOOK_URL}`
+- Verificar configurações de firewall e rede
