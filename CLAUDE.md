@@ -187,6 +187,17 @@ Messages from AI are split by `\n\n` and streamed character-by-character:
 - `email`, `name`
 - `role` ('admin' | 'default')
 - `last_seen` (for presence tracking)
+- `tokens` (integer - token count for non-admin users)
+- `unlimited_tokens` (boolean - unlimited tokens flag)
+
+### `models`
+- `id` (UUID, primary key)
+- `name` (TEXT, unique - technical identifier sent to N8N)
+- `display_name` (TEXT - user-facing name)
+- `description` (TEXT, nullable - model description)
+- `is_public` (BOOLEAN - visibility control)
+- `created_at`, `updated_at` (TIMESTAMPTZ)
+- **RLS enabled**: Public models visible to all, private models only to admins
 
 ### `n8n_chat_histories`
 - `id`, `session_id`
@@ -221,22 +232,123 @@ Configured in `vite.config.ts` and `tsconfig.json`.
 
 ## Model Selection System
 
-### ModelSelector Component (`src/components/chat/ModelSelector.tsx`)
-- Dropdown selector for AI models
-- Available models: `d&o`, `rc-profissional`, `rc-geral`, `global` (default)
-- State managed in `ChatLayout.tsx` and passed down to `ChatInterface`
-- Model value is sent with every message to N8N webhook
+### Overview
+The application uses a **dynamic model management system** where AI models are stored in the database and can be managed through the admin panel. Models have visibility controls based on user roles.
 
-**IMPORTANT**: The model state is initialized to `"global"` in `ChatLayout.tsx:14` and must match the `defaultValue` prop passed to `ModelSelector`.
+### Database Structure
+
+#### `models` Table
+```sql
+- id: UUID (primary key)
+- name: TEXT (unique, technical identifier used in N8N)
+- display_name: TEXT (user-facing name shown in UI)
+- description: TEXT (optional description)
+- is_public: BOOLEAN (visibility control)
+- created_at, updated_at: TIMESTAMPTZ
+```
+
+**Row Level Security (RLS) Policies:**
+- **Public models** (`is_public = true`): Visible to all users
+- **Private models** (`is_public = false`): Visible only to admins
+- Only admins can insert, update, or delete models
+
+### Components
+
+#### ModelSelector Component (`src/components/chat/ModelSelector.tsx`)
+- Dynamically fetches models from database via `useModels` hook
+- Filters models automatically based on user role (via RLS)
+- Displays badge "private" next to private models (admin-only view)
+- Auto-selects first available model if current selection becomes unavailable
+- State managed in `ChatLayout.tsx` and passed down to `ChatInterface`
+- Model `name` field is sent with every message to N8N webhook
+
+#### ModelManagement Component (`src/components/admin/ModelManagement.tsx`)
+Admin panel component for managing AI models:
+- View all models in a table
+- Toggle model visibility (public/private) with switch
+- Create new models with form dialog
+- Delete existing models
+- Badge indicators: green "Público" or gray "Privado"
+
+#### useModels Hook (`src/hooks/useModels.ts`)
+Custom hook for model operations:
+- `models`: Array of available models (filtered by RLS)
+- `loading`: Loading state
+- `toggleModelVisibility(modelId, isPublic)`: Change visibility
+- `addModel(name, displayName, description, isPublic)`: Create new model
+- `deleteModel(modelId)`: Remove model
+- `refreshModels()`: Reload model list
 
 ### Model Flow
 1. User selects model in `ModelSelector` → triggers `onValueChange`
 2. `ChatLayout` updates `selectedModel` state via `handleModelChange`
 3. State passed as prop to `ChatInterface`
-4. Included in webhook payload at three points:
+4. Model `name` field included in webhook payload at three points:
    - Text messages (`ChatInterface.tsx:551`)
    - File uploads (`ChatInterface.tsx:508`)
    - Question suggestions (`ChatInterface.tsx:649`)
+5. N8N workflow receives model name and routes to appropriate LLM
+
+### Adding New Models
+
+#### Option 1: Via Admin Interface (Recommended)
+1. Navigate to `/admin` as administrator
+2. Scroll to **"Gerenciamento de Modelos"** section
+3. Click **"Novo Modelo"** button
+4. Fill in the form:
+   - **Nome Técnico**: Technical identifier (e.g., `gpt-4`, `claude-opus`)
+     - Used internally and sent to N8N webhook
+     - Must be unique, no spaces, lowercase recommended
+   - **Nome de Exibição**: Display name shown to users (e.g., `GPT-4`, `Claude Opus`)
+   - **Descrição**: Optional description of the model
+   - **Visibilidade Pública**: Toggle to make model visible to all users
+5. Click **"Criar Modelo"**
+6. Model appears immediately in `ModelSelector` for authorized users
+
+#### Option 2: Via SQL (Direct Database)
+Execute in Supabase SQL Editor:
+
+```sql
+INSERT INTO public.models (name, display_name, description, is_public)
+VALUES
+  ('gpt-4', 'GPT-4', 'Modelo mais avançado da OpenAI', true),
+  ('claude-opus', 'Claude Opus', 'Modelo Anthropic mais capaz', false);
+```
+
+**Field Guidelines:**
+- `name`: Must match the model identifier expected by N8N workflow
+- `display_name`: User-friendly name displayed in dropdown
+- `description`: Optional, helps users understand model capabilities
+- `is_public`:
+  - `true` = Visible to all users
+  - `false` = Visible only to admins
+
+### Managing Model Visibility
+
+**To make a model private (admin-only):**
+1. Go to `/admin` → "Gerenciamento de Modelos"
+2. Find the model in the table
+3. Toggle the **switch** to OFF (or click dropdown → "Tornar Privado")
+4. Model becomes invisible to non-admin users immediately
+
+**To make a model public (visible to all):**
+1. Go to `/admin` → "Gerenciamento de Modelos"
+2. Find the model in the table
+3. Toggle the **switch** to ON (or click dropdown → "Tornar Público")
+4. Model becomes visible to all users immediately
+
+**Visual Indicators:**
+- Admins see a **"private"** badge next to private models in `ModelSelector`
+- Regular users don't see private models at all
+- In admin panel: green "Público" badge or gray "Privado" badge
+
+### Important Notes
+
+- **N8N Integration**: The `name` field must match what your N8N workflow expects
+- **No Code Changes Required**: Models are fully dynamic, no frontend code updates needed
+- **Automatic Filtering**: RLS policies ensure users only see authorized models
+- **Fallback Handling**: If a user's selected model becomes unavailable (deleted or made private), the system auto-selects the first available model
+- **Real-time Updates**: Changes in admin panel reflect immediately in user sessions (may require page refresh)
 
 ## Admin Panel
 
