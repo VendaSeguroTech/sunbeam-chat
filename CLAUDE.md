@@ -233,7 +233,9 @@ Configured in `vite.config.ts` and `tsconfig.json`.
 ## Model Selection System
 
 ### Overview
-The application uses a **dynamic model management system** where AI models are stored in the database and can be managed through the admin panel. Models have visibility controls based on user roles.
+The application uses a **dynamic model management system** where each model represents a **knowledge base** (base de conhecimento). Models are stored in the database and can be managed through the admin panel with visibility controls based on user roles.
+
+**Important Concept**: Each model in the system corresponds to a specific set of documents/content stored in the database. When a user selects a model and asks a question, the system performs RAG (Retrieval Augmented Generation) lookup ONLY in that model's knowledge base. This allows you to segregate company information by context, product, department, or any other criteria.
 
 ### Database Structure
 
@@ -279,49 +281,112 @@ Custom hook for model operations:
 - `deleteModel(modelId)`: Remove model
 - `refreshModels()`: Reload model list
 
-### Model Flow
+### Model Flow (Knowledge Base Selection + RAG)
 1. User selects model in `ModelSelector` → triggers `onValueChange`
 2. `ChatLayout` updates `selectedModel` state via `handleModelChange`
 3. State passed as prop to `ChatInterface`
-4. Model `name` field included in webhook payload at three points:
+4. User submits a question
+5. Model `name` field included in webhook payload at three points:
    - Text messages (`ChatInterface.tsx:551`)
    - File uploads (`ChatInterface.tsx:508`)
    - Question suggestions (`ChatInterface.tsx:649`)
-5. N8N workflow receives model name and routes to appropriate LLM
+6. **N8N workflow receives the model name as a TAG**:
+   - Uses `model` field to identify which knowledge base to query
+   - Performs RAG lookup in the corresponding document table/collection
+   - Example: `model: "basic"` → queries documents in "basic" knowledge base
+   - Example: `model: "pro"` → queries documents in "pro" knowledge base
+7. N8N retrieves relevant documents from the selected knowledge base
+8. LLM generates response based ONLY on documents from that specific model's knowledge base
+9. Response sent back to frontend and displayed to user
 
-### Adding New Models
+**Critical Understanding**: The `model` field acts as a **filter/tag** for the RAG system, ensuring users only get answers from the specific knowledge base they selected.
 
-#### Option 1: Via Admin Interface (Recommended)
+### Adding New Models (Knowledge Bases)
+
+**IMPORTANT**: Before registering a new model, ensure you have already populated its knowledge base with content. Each model needs documents/data in the database that the RAG system can query.
+
+#### Complete Workflow to Add a New Model:
+
+**Step 1: Prepare the Knowledge Base Content**
+
+First, populate your database with the documents/content for this knowledge base. This can be done in several ways depending on your setup:
+
+**Option A** - Separate table per model:
+```sql
+-- Create a new table for the model's documents
+CREATE TABLE documents_pro_v2 (
+  id UUID PRIMARY KEY,
+  content TEXT,
+  embedding VECTOR(1536),
+  metadata JSONB
+);
+
+-- Insert documents
+INSERT INTO documents_pro_v2 (content, metadata) VALUES
+  ('Conteúdo específico do Pro-v2...', '{"source": "manual.pdf"}'),
+  ('Mais informações sobre Pro-v2...', '{"source": "faq.txt"}');
+```
+
+**Option B** - Single documents table with model tag in metadata:
+```sql
+-- Use existing 'documents' table with model identifier in metadata
+INSERT INTO documents (content, metadata, embedding) VALUES
+  ('Conteúdo do Pro-v2...', '{"model": "pro-v2", "source": "manual"}', embedding_vector),
+  ('Informações Pro-v2...', '{"model": "pro-v2", "source": "faq"}', embedding_vector);
+```
+
+**Step 2: Configure N8N to Query the Correct Knowledge Base**
+
+In your N8N workflow, add logic to route queries based on the `model` field:
+
+```javascript
+// Example: N8N Switch node or code
+const model = $input.json.model; // Receives "pro-v2"
+
+// Query the correct table/filter
+if (model === 'pro-v2') {
+  // Query documents_pro_v2 table
+  // OR filter documents WHERE metadata->>'model' = 'pro-v2'
+}
+```
+
+**Step 3: Register Model in the System**
+
+**Option A - Via Admin Interface (Recommended)**:
 1. Navigate to `/admin` as administrator
 2. Scroll to **"Gerenciamento de Modelos"** section
 3. Click **"Novo Modelo"** button
 4. Fill in the form:
-   - **Nome Técnico**: Technical identifier (e.g., `gpt-4`, `claude-opus`)
-     - Used internally and sent to N8N webhook
+   - **Nome Técnico**: `pro-v2` (must match what N8N expects as TAG)
+     - This EXACT value will be sent to N8N in the webhook
      - Must be unique, no spaces, lowercase recommended
-   - **Nome de Exibição**: Display name shown to users (e.g., `GPT-4`, `Claude Opus`)
-   - **Descrição**: Optional description of the model
-   - **Visibilidade Pública**: Toggle to make model visible to all users
+   - **Nome de Exibição**: `Pro-v2` (user-friendly name)
+   - **Descrição**: "Modelo Pro versão 2 - Base de conhecimento avançada"
+   - **Visibilidade Pública**: Toggle ON if all users should access this knowledge base
 5. Click **"Criar Modelo"**
 6. Model appears immediately in `ModelSelector` for authorized users
 
-#### Option 2: Via SQL (Direct Database)
-Execute in Supabase SQL Editor:
-
+**Option B - Via SQL (Direct Database)**:
 ```sql
 INSERT INTO public.models (name, display_name, description, is_public)
-VALUES
-  ('gpt-4', 'GPT-4', 'Modelo mais avançado da OpenAI', true),
-  ('claude-opus', 'Claude Opus', 'Modelo Anthropic mais capaz', false);
+VALUES ('pro-v2', 'Pro-v2', 'Base de conhecimento Pro versão 2', true);
 ```
 
+**Step 4: Test the Integration**
+1. Login to the chat interface
+2. Select the new model in `ModelSelector`
+3. Ask a question related to the content you added
+4. Verify that N8N queries the correct knowledge base and returns relevant results
+
 **Field Guidelines:**
-- `name`: Must match the model identifier expected by N8N workflow
+- `name`: **CRITICAL** - Must match exactly what N8N uses to identify the knowledge base
+  - This is the TAG sent in the webhook payload
+  - Must match your N8N routing logic
 - `display_name`: User-friendly name displayed in dropdown
-- `description`: Optional, helps users understand model capabilities
+- `description`: Explain what kind of information this knowledge base contains
 - `is_public`:
-  - `true` = Visible to all users
-  - `false` = Visible only to admins
+  - `true` = All users can query this knowledge base
+  - `false` = Only admins can query this knowledge base
 
 ### Managing Model Visibility
 
@@ -344,11 +409,16 @@ VALUES
 
 ### Important Notes
 
-- **N8N Integration**: The `name` field must match what your N8N workflow expects
+- **Models = Knowledge Bases**: Each model represents a separate knowledge base with its own documents/content in the database
+- **RAG Segregation**: The RAG system uses the model name as a filter/tag to query only the corresponding knowledge base
+- **N8N Configuration Required**: You must configure N8N to recognize the model name and route queries to the correct document collection
+- **Content First, Registration Second**: Always populate the knowledge base with content BEFORE registering the model in the admin panel
+- **Name Field is Critical**: The `name` field is sent to N8N as-is and must match exactly what your workflow expects
 - **No Code Changes Required**: Models are fully dynamic, no frontend code updates needed
-- **Automatic Filtering**: RLS policies ensure users only see authorized models
+- **Automatic Filtering**: RLS policies ensure users only see authorized knowledge bases
 - **Fallback Handling**: If a user's selected model becomes unavailable (deleted or made private), the system auto-selects the first available model
 - **Real-time Updates**: Changes in admin panel reflect immediately in user sessions (may require page refresh)
+- **Use Cases**: Segregate content by product, department, access level, version, or any business criteria
 
 ## Admin Panel
 
@@ -372,6 +442,16 @@ Modern table-based interface for user management with:
 - Switch to enable/disable maintenance mode
 - Updates `maintenance` table in real-time
 - When active, non-admin users are redirected to `/maintenance` page
+
+#### ModelManagement (`src/components/admin/ModelManagement.tsx`)
+Knowledge base management interface for controlling AI model availability:
+- View all registered knowledge bases (models) in a table
+- Create new models (knowledge base references) via dialog form
+- Toggle public/private visibility with switch controls
+- Delete models that are no longer needed
+- Visual indicators: green "Público" badge or gray "Privado" badge
+- Real-time updates reflected in user `ModelSelector` dropdowns
+- Manages the `models` table which serves as a catalog of available knowledge bases
 
 #### UserActivityCard (`src/components/admin/UserActivityCard.tsx`)
 Displays detailed user activity without requiring Realtime:
