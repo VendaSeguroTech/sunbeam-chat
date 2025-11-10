@@ -66,11 +66,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
 
   const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const MESSAGE_LIMIT = 50;
+  const MESSAGE_LIMIT = 40;
 
   const generateSessionId = (): string => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -330,7 +332,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const streamResponseAsSeparateMessages = async (fullText: string, model?: string) => {
-    const chunks = fullText.split('\n\n').filter(c => c.trim() !== '');
+    let chunks = fullText.split('\n\n').filter(c => c.trim() !== '');
+
+    // Se o primeiro bloco for curto (provavelmente um título), junte-o com o segundo.
+    if (chunks.length > 1 && chunks[0].length < 80) {
+      chunks[1] = chunks[0] + '\n\n' + chunks[1];
+      chunks.shift(); // Remove o primeiro elemento (título)
+    }
+
     for (const chunk of chunks) {
       const messageId = (Date.now() + Math.random()).toString();
       const assistantMessage: Message = {
@@ -503,7 +512,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('model', selectedModel || 'basic');
         formData.append('advancedCreativity', isAdvancedCreativity
           ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
-          : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Não retorne listas, bullet points ou enumerações. Seja conciso e direto ao ponto.'
+          : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.'
         );
 
         response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
@@ -549,7 +558,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           model: selectedModel,
           advancedCreativity: isAdvancedCreativity
             ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
-            : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Não retorne listas, bullet points ou enumerações. Seja conciso e direto ao ponto.',
+            : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.',
         };
 
         response = await fetch(WEBHOOK_URL, {
@@ -643,7 +652,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         model: selectedModel,
         advancedCreativity: isAdvancedCreativity
           ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
-          : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Não retorne listas, bullet points ou enumerações. Seja conciso e direto ao ponto.',
+          : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos.  Seja conciso e direto ao ponto.',
       };
 
       const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -714,10 +723,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div
             className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
             style={{
-              boxShadow: 'inset 0 8px 12px -8px rgba(0, 0, 0, 0.08)'
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
             }}
           >
-            <div className="max-w-4xl w-full mx-auto space-y-4 sm:space-y-5 md:space-y-6 px-0">
+            <div className="max-w-4xl w-full mx-auto space-y-1 sm:space-y-2 md:space-y-3 px-0">
               {(isNewChat && messages.length > 0) || selectedSessionId ? (
                 <div className="text-center py-2">
                   <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
@@ -747,7 +757,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                         msg.type === "user"
                           ? "bg-[#F5D5A8] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
-                          : "bg-white text-gray-900 border border-gray-200 rounded-2xl p-3 sm:p-4 shadow-sm"
+                          : "bg-white text-gray-900 border border-none rounded-2xl p-3 sm:p-4 shadow-sm"
                       }`}>
                         {msg.file ? (
                           <div className="flex flex-col gap-2">
@@ -815,9 +825,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 mr-4 sm:mr-8 md:mr-12">
                     <div className="flex flex-col">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: "0.2s" }} />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: "0.4s" }} />
+                        <div className="w-2 h-2 bg-primary rounded-full loading-dot" />
+                        <div className="w-2 h-2 bg-primary rounded-full loading-dot loading-dot-2" />
+                        <div className="w-2 h-2 bg-primary rounded-full loading-dot loading-dot-3" />
                       </div>
                       {loadingBlurb && <div className="mt-2 text-xs italic text-muted-foreground/80 font-light">{loadingBlurb}</div>}
                     </div>
@@ -832,7 +842,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div className="flex-1 flex items-center justify-center pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
             <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : "Olá, sou Experta."}
+                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : "Olá, sou a Experta."}
               </h1>
               <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
               {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-50">SessionID: {sessionId.slice(-8)}</p>}

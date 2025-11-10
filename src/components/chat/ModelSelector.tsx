@@ -18,10 +18,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Selecione o modelo" />
       </SelectTrigger>
-      <SelectContent className="shadow-lg">
-        <SelectItem value="pro" className="text-gray-900 font-semibold" >Pro-1</SelectItem>
-        <SelectItem value="inter" className="text-gray-900 font-semibold" >Pro-2</SelectItem>
-        <SelectItem value="basic" className="text-gray-900 font-semibold" >Pro-3</SelectItem>
+      <SelectContent className="shadow-lg z-[10000]" position="popper" sideOffset={5}>
+        <SelectItem value="pro" className="text-gray-900 font-semibold cursor-pointer" >Pro-v1</SelectItem>
+        <SelectItem value="inter" className="text-gray-900 font-semibold cursor-pointer" >Pro-v2</SelectItem>
+        <SelectItem value="basic" className="text-gray-900 font-semibold cursor-pointer" >Basic</SelectItem>
         {/* <SelectItem value="d&o" className="cursor-pointer">D&O</SelectItem>
         <SelectItem value="rc-profissional" className="cursor-pointer">RC Profissional</SelectItem>
         <SelectItem value="rc-geral" className="cursor-pointer">RC Geral</SelectItem>

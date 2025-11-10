@@ -141,7 +141,7 @@ const UserChatHistoryDialog: React.FC<UserChatHistoryDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
@@ -173,7 +173,7 @@ const UserChatHistoryDialog: React.FC<UserChatHistoryDialogProps> = ({
           </div>
         )}
 
-        <ScrollArea className="h-[500px] pr-4">
+        <ScrollArea className="h-[60vh] pr-4">
           {loading && sessions.length === 0 ? (
             <div className="flex items-center justify-center py-8 text-muted-foreground">
               <RefreshCw className="h-5 w-5 animate-spin mr-2" />
@@ -187,8 +187,8 @@ const UserChatHistoryDialog: React.FC<UserChatHistoryDialogProps> = ({
           ) : (
             <div className="space-y-6">
               {sessions.map((session) => (
-                <Card key={session.session_id} className="border-2">
-                  <CardContent className="pt-4">
+                <Card key={session.session_id} className="border-2 overflow-hidden">
+                  <CardContent className="pt-4 overflow-hidden">
                     <div className="flex items-center justify-between mb-3 pb-3 border-b">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -204,7 +204,7 @@ const UserChatHistoryDialog: React.FC<UserChatHistoryDialogProps> = ({
                       </span>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {session.messages.map((msg, index) => {
                         const isUser = isUserMessage(index);
                         const messageContent = getMessageContent(msg.message);
@@ -233,13 +233,13 @@ const UserChatHistoryDialog: React.FC<UserChatHistoryDialogProps> = ({
                                 )}
                               </div>
                               <div
-                                className={`rounded-lg px-4 py-2 ${
+                                className={`rounded-lg px-4 py-2 overflow-hidden ${
                                   isUser
                                     ? 'bg-blue-50 text-blue-900'
                                     : 'bg-purple-50 text-purple-900'
                                 }`}
                               >
-                                <p className="text-sm whitespace-pre-wrap break-words">
+                                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                   {messageContent}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">

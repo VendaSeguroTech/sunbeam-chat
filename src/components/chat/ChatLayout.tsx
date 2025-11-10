@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
@@ -10,6 +10,8 @@ import { supabase } from "@/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import ModelSelector from "./ModelSelector"; // Import the new component
+import RacingBorder from "./RacingBorder";
+import PopupModoExperta from "./PopupModoExperta";
 
 const ChatLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -27,6 +29,47 @@ const ChatLayout: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
   const [selectedModel, setSelectedModel] = useState<string>("pro"); // Novo estado para o modelo selecionado
+  const [showBorderRace, setShowBorderRace] = useState<boolean>(false); // Estado para animação de primeira visita
+  const [showPopup, setShowPopup] = useState<boolean>(false); // Estado para popup Modo Experta
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Rastrear posição do mouse para efeito no background (otimizado com CSS variables)
+  useEffect(() => {
+    let rafId: number;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+
+      rafId = requestAnimationFrame(() => {
+        if (overlayRef.current) {
+          const x = e.clientX;
+          const y = e.clientY;
+          const isLeftSide = x < window.innerWidth / 2;
+
+          overlayRef.current.style.setProperty('--mouse-x', `${x}px`);
+          overlayRef.current.style.setProperty('--mouse-y', `${y}px`);
+          overlayRef.current.style.setProperty('--glow-color-1',
+            isLeftSide ? 'rgba(74, 144, 226, 0.38)' : 'rgba(245, 166, 35, 0.38)');
+          overlayRef.current.style.setProperty('--glow-color-2',
+            isLeftSide ? 'rgba(74, 144, 226, 0.28)' : 'rgba(245, 166, 35, 0.28)');
+
+          if (!overlayRef.current.classList.contains('active')) {
+            overlayRef.current.classList.add('active');
+          }
+        }
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
 
   // Logout automático após 30 minutos de inatividade
   const handleIdleLogout = async () => {
@@ -50,6 +93,37 @@ const ChatLayout: React.FC = () => {
     timeout: 30 * 60 * 1000, // 30 minutos
     onIdle: handleIdleLogout,
   });
+
+  // Detectar primeira visita e ativar animação de borda + popup
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('hasVisitedChat');
+    const hasSeenPopup = localStorage.getItem('hasSeenModoExpertaPopup');
+    const timers: NodeJS.Timeout[] = [];
+
+    if (!hasVisited) {
+      setShowBorderRace(true);
+      localStorage.setItem('hasVisitedChat', 'true');
+
+      // Remover a classe após a animação terminar (5s)
+      const timer = setTimeout(() => {
+        setShowBorderRace(false);
+      }, 5000);
+      timers.push(timer);
+    }
+
+    // Mostrar popup apenas uma vez
+    if (!hasSeenPopup) {
+      // Delay de 1s para dar tempo da página carregar
+      const popupTimer = setTimeout(() => {
+        setShowPopup(true);
+      }, 1000);
+      timers.push(popupTimer);
+    }
+
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   // Fechar sidebar automaticamente quando mudar para mobile
   useEffect(() => {
@@ -91,8 +165,13 @@ const ChatLayout: React.FC = () => {
     setSelectedModel(value);
   };
 
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    localStorage.setItem('hasSeenModoExpertaPopup', 'true');
+  };
+
   return (
-    <div 
+    <div
       className="relative flex h-[100svh] w-full overflow-hidden"
       style={{
         backgroundImage: `
@@ -107,6 +186,27 @@ const ChatLayout: React.FC = () => {
         backgroundColor: '#ffffff'
       }}
     >
+      {/* Overlay interativo que segue o cursor */}
+      <div
+        ref={overlayRef}
+        className="cursor-glow-overlay"
+        style={{
+          ['--mouse-x' as string]: '0px',
+          ['--mouse-y' as string]: '0px',
+          ['--glow-color-1' as string]: 'rgba(74, 144, 226, 0.38)',
+          ['--glow-color-2' as string]: 'rgba(74, 144, 226, 0.28)',
+          background: `
+            radial-gradient(720px circle at var(--mouse-x) var(--mouse-y),
+              var(--glow-color-1),
+              transparent 58%),
+            radial-gradient(380px circle at var(--mouse-x) var(--mouse-y),
+              var(--glow-color-2),
+              transparent 68%)
+          `,
+          mixBlendMode: 'soft-light',
+          filter: 'blur(42px)',
+        }}
+      />
       {/* Sidebar: vira drawer no mobile */}
       <div
         className={`
@@ -158,12 +258,15 @@ const ChatLayout: React.FC = () => {
       <div className="flex-1 min-w-0 flex flex-col h-full p-4 md:p-6 relative">
         {/* Container com gradiente - APENAS header e messages */}
         <div
-          className="flex-1 flex flex-col bg-white/95 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm"
+          className={`flex-1 flex flex-col bg-white/95 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm ${showBorderRace ? 'racing-border-snake' : ''}`}
           style={{
             maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
             WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
           }}
         >
+          {/* Traços adicionais da borda animada */}
+          <RacingBorder isActive={showBorderRace} />
+
           <div className="flex items-center justify-start p-4 md:p-6 border-b border-gray-100">
             <ModelSelector onValueChange={handleModelChange} value={selectedModel} />
           </div>
@@ -187,6 +290,9 @@ const ChatLayout: React.FC = () => {
           <div id="chat-input-portal-target" />
         </div>
       </div>
+
+      {/* Popup Modo Experta - aparece apenas uma vez */}
+      <PopupModoExperta isOpen={showPopup} onClose={handleClosePopup} />
 
     </div>
   );
