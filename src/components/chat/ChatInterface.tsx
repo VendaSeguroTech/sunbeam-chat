@@ -856,7 +856,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                             {msg.content && <p className="text-[11px] md:text-lg font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
                           </div>
                         ) : (
-                          <p className="text-[11px] md:text-lg font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
+                          <p className="text-[11px] md:text-sm font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
                         )}
 
                         {msg.type === "user" && (
@@ -995,7 +995,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       : messages.length >= MESSAGE_LIMIT ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                     }
-                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-base text-gray-900"
+                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm md:text-base text-gray-900"
                     disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                   />
                   <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/png, image/jpeg, image/gif, application/pdf" />
