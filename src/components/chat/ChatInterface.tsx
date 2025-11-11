@@ -796,8 +796,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div
             className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
             style={{
-              maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
+              maskImage: 'linear-gradient(to bottom, black 99%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 99%, transparent 100%)'
             }}
           >
             <div className="max-w-4xl w-full mx-auto space-y-1 sm:space-y-2 md:space-y-3 px-0">
@@ -829,7 +829,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                       <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                         msg.type === "user"
-                          ? "bg-[#F5D5A8] text-gray-900 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
+                          ? "bg-[#F5D5A8] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
                           : "bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-sm"
                       }`}>
                         {msg.file ? (
@@ -853,10 +853,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 </div>
                               </div>
                             )}
-                            {msg.content && <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
+                            {msg.content && <p className="text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
                           </div>
                         ) : (
-                          <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
+                          <p className="text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
                         )}
 
                         {msg.type === "user" && (
@@ -931,11 +931,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ) : (
           <div className="flex-1 flex items-center justify-center pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
             <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {userName ? <>Olá <span className="animated-gradient-text font-semibold">{userName}</span></> : <>Olá, sou a <span className="animated-gradient-text font-semibold">Experta.</span></>}
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground ">
+                {userName ? <>Olá <span className="animated-gradient-text font-semibold ">{userName}</span></> : <>Olá, sou a <span className="animated-gradient-text font-semibold ">Experta.</span></>}
               </h1>
               <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
-              {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-50">SessionID: {sessionId.slice(-8)}</p>}
+              {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-30">ID da sessão: {sessionId.slice(-8)}</p>}
             </div>
           </div>
         )}
