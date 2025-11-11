@@ -796,8 +796,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div
             className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
             style={{
-              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+              maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
             }}
           >
             <div className="max-w-4xl w-full mx-auto space-y-1 sm:space-y-2 md:space-y-3 px-0">
