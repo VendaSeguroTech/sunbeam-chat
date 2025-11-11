@@ -853,10 +853,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 </div>
                               </div>
                             )}
-                            {msg.content && <p className="text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
+                            {msg.content && <p className="text-[11px] md:text-lg font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
                           </div>
                         ) : (
-                          <p className="text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
+                          <p className="text-[11px] md:text-lg font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
                         )}
 
                         {msg.type === "user" && (
