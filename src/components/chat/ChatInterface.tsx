@@ -995,7 +995,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       : messages.length >= MESSAGE_LIMIT ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                     }
-                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs md:text-base text-gray-900"
+                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-base text-gray-900"
                     disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                   />
                   <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/png, image/jpeg, image/gif, application/pdf" />
