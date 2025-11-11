@@ -20,8 +20,11 @@ export default {
 		extend: {
 			fontFamily: {
 				poppins: ['Poppins', 'sans-serif'],
+				'open-sans': ['"Open Sans"', 'sans-serif'],
 				sans: [
 					'Poppins',
+					'"Open Sans"',
+					'sans-serif',
 					'-apple-system',
 					'BlinkMacSystemFont',
 					'"Segoe UI"',
@@ -29,7 +32,6 @@ export default {
 					'"Helvetica Neue"',
 					'Arial',
 					'"Noto Sans"',
-					'sans-serif',
 					'"Apple Color Emoji"',
 					'"Segoe UI Emoji"',
 					'"Segoe UI Symbol"',
