@@ -119,6 +119,13 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  /* Smooth scrolling behavior para elementos com custom-scrollbar */
+  .custom-scrollbar {
+    scroll-behavior: smooth;
+    /* Adiciona aceleração de hardware para melhor performance */
+    -webkit-overflow-scrolling: touch;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 3px;
     height: 3px;
@@ -133,6 +140,8 @@ All colors MUST be HSL.
     border-radius: 10px;
     border: 0px solid transparent;
     background-clip: content-box;
+    /* Transição suave na cor do scrollbar */
+    transition: background-color 0.3s ease;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -159,8 +168,18 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  /* Smooth scroll para toda a aplicação */
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Smooth scroll para todos os elementos com overflow */
+  * {
+    scroll-behavior: smooth;
   }
 }
 
