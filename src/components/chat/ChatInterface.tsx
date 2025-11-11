@@ -995,7 +995,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       : messages.length >= MESSAGE_LIMIT ? "Limite de mensagens atingido."
                       : "Pergunte alguma coisa"
                     }
-                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm md:text-base text-gray-900"
+                    className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs md:text-base text-gray-900"
                     disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                   />
                   <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/png, image/jpeg, image/gif, application/pdf" />
@@ -1016,14 +1016,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" className="h-10 w-10 sm:h-8 sm:w-8 p-0 hover:bg-muted rounded-full" onClick={handlePaperclipClick} disabled={isLoading || messages.length >= MESSAGE_LIMIT}>
-                    <Paperclip className="w-4 h-4 text-muted-foreground" />
+                  <Button variant="ghost" size="sm" className="h-8 w-8 md:h-10 md:w-10 p-0 hover:bg-muted rounded-full" onClick={handlePaperclipClick} disabled={isLoading || messages.length >= MESSAGE_LIMIT}>
+                    <Paperclip className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
                   </Button>
 
                   <Tooltip delayDuration={100}>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)} className={`h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-full hover:bg-muted ${isAdvancedCreativity ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
-                        <Wand2 className="w-4 h-4" />
+                      <Button variant="ghost" size="sm" onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)} className={`h-8 w-8 md:h-10 md:w-10 p-0 rounded-full hover:bg-muted ${isAdvancedCreativity ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
+                        <Wand2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="bg-gradient-to-r from-[#8FC5ED] via-[#FFDBB5] to-[#FF9A8A] border-0 text-white font-medium shadow-lg">
@@ -1035,9 +1035,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     onClick={handleSendMessage}
                     disabled={(!message.trim() && !attachedFile) || isLoading || !sessionId || messages.length >= MESSAGE_LIMIT}
                     size="sm"
-                    className="h-10 w-10 sm:h-8 sm:w-8 p-0 bg-novo-chat hover:bg-novo-chat/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
+                    className="h-8 w-8 md:h-10 md:w-10 p-0 bg-novo-chat hover:bg-novo-chat/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
                   >
-                    {isLoading ? <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <Send className="w-4 h-4 text-primary-foreground" />}
+                    {isLoading ? <div className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <Send className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary-foreground" />}
                   </Button>
                 </div>
               </div>
