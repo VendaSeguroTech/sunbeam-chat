@@ -323,7 +323,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             className="w-full justify-start gap-2 px-3 h-9 bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground transition-all duration-200 shadow-sm hover:shadow-black hover:shadow-md rounded-full"
           >
             <Plus className="w-4 h-4 flex-shrink-0" />
-            <span className="animate-fade-in text-sm font-light">Novo Chat</span>
+            <span className="animate-fade-in text-xs md:text-sm font-light">Novo Chat</span>
           </Button>
         </div>
 
@@ -332,7 +332,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         {/* Chat History */}
         <div className="flex-1 px-3 md:px-4 overflow-y-auto custom-scrollbar">
           <>
-            <div className="text-sm text-gray-600 mb-4 animate-fade-in">
+            <div className="text-xs md:text-sm text-gray-600 mb-4 animate-fade-in">
               Histórico de conversas
             </div>
 
@@ -341,14 +341,14 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : !hasAnyHistory ? (
-              <div className="text-sm text-gray-400 italic animate-fade-in">
+              <div className="text-xs md:text-sm text-gray-400 italic animate-fade-in">
                 Nenhum histórico ainda
               </div>
             ) : (
               <div className="space-y-4 animate-fade-in">
                 {sessions.length > 0 && (
                   <div className="space-y-2">
-                    <div className="text-xs text-gray-500 hover:text-black font-normal">
+                    <div className="text-[10px] md:text-xs text-gray-500 font-sans hover:text-black font-normal">
                       Conversas Recentes
                     </div>
                     {sessions.map((session, index) => (
@@ -361,11 +361,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <MessageSquare className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                            <h3 className="text-xs font-medium truncate text-gray-700">
+                            <h3 className="text-[11px] md:text-[13px] font-normal  truncate text-gray-500">
                               {session.title}
                             </h3>
                           </div>
-                          <p className="text-xs text-gray-500 opacity-70">
+                          <p className="text-[10px] md:text-xs text-gray-400 font-sans opacity-70 font-light">
                             {formatDate(session.updated_at)} •{" "}
                             {session.message_count} mensagens
                           </p>
@@ -409,7 +409,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 {conversations.length > 0 && (
                   <div className="space-y-2">
                     {sessions.length > 0 && (
-                      <div className="text-xs text-gray-500 font-medium mt-4">
+                      <div className="text-[10px] md:text-xs text-gray-500 font-medium mt-4">
                         Conversas Antigas
                       </div>
                     )}
@@ -429,11 +429,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <MessageSquare className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                            <h3 className="text-xs font-medium truncate text-gray-900">
+                            <h3 className="text-[10px] md:text-xs font-medium truncate text-gray-900">
                               {conversation.title}
                             </h3>
                           </div>
-                          <p className="text-xs text-gray-500 opacity-70">
+                          <p className="text-[10px] md:text-xs text-gray-500 opacity-70">
                             {formatDate(conversation.updated_at)}
                           </p>
                         </div>
