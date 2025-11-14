@@ -74,6 +74,9 @@ interface User {
   last_seen: string | null;
   tokens: number;
   unlimited_tokens: boolean;
+  total_api_tokens?: number;
+  avg_tokens_per_message?: number;
+  message_count?: number;
 }
 
 const ImprovedAdminPanel: React.FC = () => {
@@ -109,14 +112,44 @@ const ImprovedAdminPanel: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Buscar dados dos usuários
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setUsers(data || []);
-      setTotalUsers(data?.length || 0);
+      if (profilesError) throw profilesError;
+
+      // Buscar estatísticas de tokens da API para cada usuário
+      const usersWithStats = await Promise.all(
+        (profilesData || []).map(async (user) => {
+          // Query para buscar estatísticas de tokens da tabela n8n_chat_histories
+          const { data: tokenStats, error: tokenError } = await supabase
+            .from('n8n_chat_histories')
+            .select('api_tokens_used')
+            .eq('user_id', user.id)
+            .not('api_tokens_used', 'is', null);
+
+          if (tokenError) {
+            console.error(`Erro ao buscar tokens do usuário ${user.id}:`, tokenError);
+          }
+
+          // Calcular estatísticas
+          const totalApiTokens = tokenStats?.reduce((sum, record) => sum + (record.api_tokens_used || 0), 0) || 0;
+          const messageCount = tokenStats?.length || 0;
+          const avgTokensPerMessage = messageCount > 0 ? Math.round(totalApiTokens / messageCount) : 0;
+
+          return {
+            ...user,
+            total_api_tokens: totalApiTokens,
+            avg_tokens_per_message: avgTokensPerMessage,
+            message_count: messageCount
+          };
+        })
+      );
+
+      setUsers(usersWithStats);
+      setTotalUsers(usersWithStats.length);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
       toast.error('Não foi possível carregar os usuários');
@@ -467,6 +500,9 @@ const ImprovedAdminPanel: React.FC = () => {
                       <TableHead className="min-w-[180px]">Usuário</TableHead>
                       <TableHead className="min-w-[100px]">Role</TableHead>
                       <TableHead className="min-w-[80px]">Tokens</TableHead>
+                      <TableHead className="min-w-[100px]">Mensagens</TableHead>
+                      <TableHead className="min-w-[120px]">Tokens API Usados</TableHead>
+                      <TableHead className="min-w-[110px]">Média Tokens/Msg</TableHead>
                       <TableHead className="min-w-[90px]">Status</TableHead>
                       <TableHead className="min-w-[100px]">Último Acesso</TableHead>
                       <TableHead className="text-right min-w-[80px]">Ações</TableHead>
@@ -502,6 +538,23 @@ const ImprovedAdminPanel: React.FC = () => {
                         {(user.role === 'admin' || user.unlimited_tokens) ? '∞' : (user.tokens || 0)}
                       </span>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-gray-700">
+                      {user.message_count || 0}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium text-blue-600">
+                        {user.total_api_tokens?.toLocaleString() || 0}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-purple-600">
+                      {user.avg_tokens_per_message || 0}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {isUserOnline(user.id) ? (
