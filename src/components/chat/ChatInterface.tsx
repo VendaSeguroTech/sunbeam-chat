@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins, Wand2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { useModels } from "@/hooks/useModels";
 import { supabase } from "@/supabase/client";
 import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
 import expertaAvatarLogo from "@/assets/experta-avatar-logo.png";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface ChatInterfaceProps {
   selectedConversation?: ConversationHistory | null;
@@ -160,7 +161,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (tokens > 3) hasShownLowTokensWarning.current = false;
   }, [tokens, hasUnlimitedTokens, toast]);
 
-  const convertN8nMessagesToLocal = (n8nMessages: N8nChatMessage[]): Message[] => {
+  const convertN8nMessagesToLocal = useCallback((n8nMessages: N8nChatMessage[]): Message[] => {
     const localMessages: Message[] = [];
     n8nMessages.forEach((record, index) => {
       const message = record.message;
@@ -242,7 +243,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     });
     return localMessages;
-  };
+  }, []);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -327,7 +328,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [messages, isLoading, currentConversation, saveConversation, updateConversation, isNewChat, onNewChatStarted, selectedSessionId, isInitialized]);
 
-  const extractQuestionSuggestions = (raw: unknown): string[] | null => {
+  const extractQuestionSuggestions = useCallback((raw: unknown): string[] | null => {
     try {
       const payloads = Array.isArray(raw) ? raw : [raw];
       for (const item of payloads) {
@@ -353,9 +354,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     } catch {}
     return null;
-  };
+  }, []);
 
-  const extractResponseText = (data: WebhookResponse): string => {
+  const extractResponseText = useCallback((data: WebhookResponse): string => {
     if (data.output && typeof data.output === 'string') return data.output;
     if (data.response && typeof data.response === 'string') return data.response;
     if (data.message && typeof data.message === 'string') return data.message;
@@ -370,7 +371,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       if (typeof dataObj.text === 'string') return dataObj.text;
     }
     return JSON.stringify(data, null, 2);
-  };
+  }, []);
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -414,7 +415,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  const handleFeedback = async (ratedMessage: Message, userQuestion: Message | undefined, rating: 'positive' | 'negative') => {
+  const handleFeedback = useCallback(async (ratedMessage: Message, userQuestion: Message | undefined, rating: 'positive' | 'negative') => {
     if (!ratedMessage || ratedMessage.feedback) return;
     const payload = {
       question: userQuestion ? userQuestion.content : 'Contexto da pergunta não encontrado.',
@@ -436,18 +437,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } catch {
       toast({ title: "Erro", description: "Não foi possível enviar seu feedback. Tente novamente.", variant: "destructive" });
     }
-  };
+  }, [sessionId, currentUserId, WEBHOOK_URL, toast]);
 
-  const handleCopy = async (content: string) => {
+  const handleCopy = useCallback(async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
       toast({ title: "Copiado!", description: "Conteúdo copiado para a área de transferência." });
     } catch {
       toast({ title: "Erro", description: "Não foi possível copiar o conteúdo.", variant: "destructive" });
     }
-  };
+  }, [toast]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (questionSuggestions.length) setQuestionSuggestions([]);
     setMessage(value);
@@ -461,9 +462,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } else {
       setShowSuggestions(false);
     }
-  };
+  }, [questionSuggestions.length, commands]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (showSuggestions) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -484,14 +485,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       e.preventDefault();
       handleSendMessage(e);
     }
-  };
+  }, [showSuggestions, filteredCommands.length, selectedSuggestionIndex]);
 
-  const selectSuggestion = (command: string) => {
+  const selectSuggestion = useCallback((command: string) => {
     const words = message.split(' ');
     words[words.length - 1] = command;
     setMessage(words.join(' '));
     setShowSuggestions(false);
-  };
+  }, [message]);
 
   const handlePaperclipClick = () => {
     if (messages.length >= MESSAGE_LIMIT) {
@@ -513,7 +514,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setAttachedFile(file);
   };
 
-  const handleSendMessage = async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
+  const handleSendMessage = useCallback(async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
     if (event) event.preventDefault();
     if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) return;
 
@@ -669,10 +670,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [message, attachedFile, isLoading, sessionId, currentUserId, canSendMessage, messages.length, MESSAGE_LIMIT, toast, decrementToken, hasUnlimitedTokens, WEBHOOK_URL, selectedModel, isAdvancedCreativity, extractQuestionSuggestions, extractResponseText, isNewChat, onNewChatStarted]);
 
   // Enviar sugestão
-  const handleSendSuggestion = async (q: string): Promise<void> => {
+  const handleSendSuggestion = useCallback(async (q: string): Promise<void> => {
     if (isLoading || !sessionId || !currentUserId) return;
     if (!canSendMessage) {
       toast({ title: "Tokens insuficientes", description: "Você não possui tokens disponíveis. Entre em contato com um administrador para recarregar.", variant: "destructive" });
@@ -750,7 +751,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, sessionId, currentUserId, canSendMessage, toast, decrementToken, hasUnlimitedTokens, WEBHOOK_URL, selectedModel, isAdvancedCreativity, extractQuestionSuggestions, extractResponseText, isNewChat, onNewChatStarted]);
 
   const renderMarkdown = (text: string) => {
     const lines = text.split('\n');
@@ -955,10 +956,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 </div>
                               </div>
                             )}
-                            {msg.content && <p className="text-[13px] md:text-[15px] font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
+                            {msg.content && <div className="text-[13px] md:text-[15px] font-medium leading-relaxed whitespace-pre-wrap pt-2"><MarkdownRenderer text={msg.content} /></div>}
                           </div>
                         ) : (
-                          <p className="text-[13px] md:text-[15px] font-normal leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
+                          <div className="text-[13px] md:text-[15px] font-normal leading-relaxed whitespace-pre-wrap"><MarkdownRenderer text={msg.content} /></div>
                         )}
 
                         {msg.type === "user" && (

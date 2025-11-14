@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatSidebar from "./ChatSidebar";
@@ -32,9 +32,62 @@ const ChatLayout: React.FC = () => {
   const [showBorderRace, setShowBorderRace] = useState<boolean>(false); // Estado para animação de primeira visita
   const [showTermsPopup, setShowTermsPopup] = useState<boolean>(false); // Estado para popup de termos
   const [userId, setUserId] = useState<string | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Rastrear posição do mouse para efeito no background (otimizado com CSS variables)
+  useEffect(() => {
+    let rafId: number;
+    let currentSide: 'left' | 'right' | null = null;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+
+      rafId = requestAnimationFrame(() => {
+        if (!overlayRef.current) return;
+
+        const x = e.clientX;
+        const y = e.clientY;
+        const halfWidth = window.innerWidth / 2;
+        const isLeftSide = x < halfWidth;
+        const newSide = isLeftSide ? 'left' : 'right';
+
+        const styles = overlayRef.current.style;
+
+        // Sempre atualiza posição do mouse
+        styles.setProperty('--mouse-x', `${x}px`);
+        styles.setProperty('--mouse-y', `${y}px`);
+
+        // Só atualiza cores quando muda de lado (otimização)
+        if (currentSide !== newSide) {
+          currentSide = newSide;
+          if (isLeftSide) {
+            styles.setProperty('--glow-color-1', 'rgba(74, 144, 226, 0.38)');
+            styles.setProperty('--glow-color-2', 'rgba(74, 144, 226, 0.28)');
+          } else {
+            styles.setProperty('--glow-color-1', 'rgba(245, 166, 35, 0.38)');
+            styles.setProperty('--glow-color-2', 'rgba(245, 166, 35, 0.28)');
+          }
+        }
+
+        if (!overlayRef.current.classList.contains('active')) {
+          overlayRef.current.classList.add('active');
+        }
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
 
   // Logout automático após 3 horas de inatividade
-  const handleIdleLogout = async () => {
+  const handleIdleLogout = useCallback(async () => {
     try {
       await supabase.auth.signOut();
 
@@ -49,7 +102,7 @@ const ChatLayout: React.FC = () => {
     } catch (error) {
       console.error("Erro ao fazer logout por inatividade:", error);
     }
-  };
+  }, [toast]);
 
   // Hook de inatividade - 3 horas (10800000 ms)
   useIdleTimer({
@@ -115,11 +168,11 @@ const ChatLayout: React.FC = () => {
     }
   }, [isMobile]);
 
-  const toggleSidebar = (): void => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const toggleSidebar = useCallback((): void => {
+    setSidebarOpen(prev => !prev);
+  }, []);
 
-  const handleConversationSelect = (conversation: ConversationHistory | null) => {
+  const handleConversationSelect = useCallback((conversation: ConversationHistory | null) => {
     setSelectedConversation(conversation);
     setSelectedSessionId(null); // Limpar sessão do n8n quando selecionar conversa antiga
 
@@ -127,9 +180,9 @@ const ChatLayout: React.FC = () => {
     if (conversation === null) {
       setChatKey(prev => prev + 1);
     }
-  };
+  }, []);
 
-  const handleSessionSelect = (sessionId: string | null) => {
+  const handleSessionSelect = useCallback((sessionId: string | null) => {
     setSelectedSessionId(sessionId);
     setSelectedConversation(null); // Limpar conversa antiga quando selecionar sessão do n8n
 
@@ -137,18 +190,18 @@ const ChatLayout: React.FC = () => {
     if (sessionId === null) {
       setChatKey(prev => prev + 1);
     }
-  };
+  }, []);
 
-  const handleNewChatStarted = () => {
+  const handleNewChatStarted = useCallback(() => {
     // Callback quando uma nova conversa é realmente criada (após primeira mensagem)
     console.log('Nova conversa foi salva no banco de dados');
-  };
+  }, []);
 
-  const handleModelChange = (value: string) => {
+  const handleModelChange = useCallback((value: string) => {
     setSelectedModel(value);
-  };
+  }, []);
 
-  const handleAcceptTerms = async () => {
+  const handleAcceptTerms = useCallback(async () => {
     if (!userId) return;
 
     try {
@@ -178,45 +231,43 @@ const ChatLayout: React.FC = () => {
     } catch (error) {
       console.error('Erro ao aceitar termos:', error);
     }
-  };
+  }, [userId, toast]);
 
   return (
     <div
       className="relative flex h-[100svh] w-full overflow-hidden"
       style={{
-        backgroundImage: `linear-gradient(
-          135deg,
-          #003A85 0%,
-          #0053C7 18%,
-          #4DA9FF 35%,
-          #F4E7D4 55%,
-          #F9C38A 72%,
-          #FF8A23 88%,
-          #FF6A00 100%
-        )`,
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat'
+        backgroundImage: `
+          radial-gradient(72% 150% at 50% 100%, #ffffff, rgba(255, 255, 255, 0)),
+          linear-gradient(rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 9.5%, #ffffff 94%),
+          linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)),
+          linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
+          linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #ffffff 100%),
+          linear-gradient(to right, #4A90E2 0%, #F5A623 100%)
+        `,
+        backgroundColor: '#ffffff'
       }}
     >
-      {/* Aurora: círculos de luz animados */}
+      {/* Overlay interativo que segue o cursor */}
       <div
-        className="aurora-effect"
+        ref={overlayRef}
+        className="cursor-glow-overlay"
         style={{
-          content: '""',
-          position: 'absolute',
-          inset: '-30%',
-          pointerEvents: 'none',
-          zIndex: 1,
-          backgroundImage: `
-            radial-gradient(circle at 15% 25%, rgba(255,255,255,0.45), transparent 60%),
-            radial-gradient(circle at 85% 20%, rgba(77,169,255,0.45), transparent 65%),
-            radial-gradient(circle at 25% 85%, rgba(255,138,35,0.45), transparent 65%),
-            radial-gradient(circle at 80% 80%, rgba(0,83,199,0.50), transparent 60%)
+          ['--mouse-x' as string]: '0px',
+          ['--mouse-y' as string]: '0px',
+          ['--glow-color-1' as string]: 'rgba(74, 144, 226, 0.38)',
+          ['--glow-color-2' as string]: 'rgba(74, 144, 226, 0.28)',
+          background: `
+            radial-gradient(720px circle at var(--mouse-x) var(--mouse-y),
+              var(--glow-color-1),
+              transparent 58%),
+            radial-gradient(380px circle at var(--mouse-x) var(--mouse-y),
+              var(--glow-color-2),
+              transparent 68%)
           `,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: '55% 55%, 65% 65%, 60% 60%, 70% 70%',
           mixBlendMode: 'soft-light',
-          opacity: 0.95,
+          filter: 'blur(42px)',
         }}
       />
       {/* Sidebar: vira drawer no mobile */}
