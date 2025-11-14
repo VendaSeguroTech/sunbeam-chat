@@ -74,8 +74,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { models } = useModels();
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
 
-  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -464,56 +464,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [questionSuggestions.length, commands]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (showSuggestions) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedSuggestionIndex((prev) => (prev + 1) % filteredCommands.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedSuggestionIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (filteredCommands.length > 0) {
-          selectSuggestion(filteredCommands[selectedSuggestionIndex]);
-          return;
-        }
-      } else if (e.key === 'Escape') {
-        setShowSuggestions(false);
-      }
-    } else if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
-    }
-  }, [showSuggestions, filteredCommands.length, selectedSuggestionIndex]);
-
-  const selectSuggestion = useCallback((command: string) => {
-    const words = message.split(' ');
-    words[words.length - 1] = command;
-    setMessage(words.join(' '));
-    setShowSuggestions(false);
-  }, [message]);
-
-  const handlePaperclipClick = () => {
-    if (messages.length >= MESSAGE_LIMIT) {
-      toast({ title: "Limite de mensagens atingido", description: "Você não pode enviar arquivos quando o limite de mensagens é atingido.", variant: "destructive" });
-      return;
-    }
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ title: "Erro", description: "O arquivo é muito grande (máx 10MB).", variant: "destructive" });
-      return;
-    }
-    setAttachedFile(file);
-  };
-
   const handleSendMessage = useCallback(async (event?: React.FormEvent | React.KeyboardEvent): Promise<void> => {
     if (event) event.preventDefault();
     if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) return;
@@ -563,9 +513,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('type', fileToSend.type);
         formData.append('message', userMessageContent || `Arquivo enviado: ${fileToSend.name}`);
         formData.append('model', selectedModel || 'basic');
-        formData.append('fileName', fileToSend.name); // Nome do arquivo
-        formData.append('fileType', fileToSend.type); // Tipo MIME
-        formData.append('hasFile', 'true'); // Marcador de arquivo anexado
+        formData.append('fileName', fileToSend.name);
+        formData.append('fileType', fileToSend.type);
+        formData.append('hasFile', 'true');
         formData.append('advancedCreativity', isAdvancedCreativity
           ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
           : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.'
@@ -671,6 +621,57 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       setIsLoading(false);
     }
   }, [message, attachedFile, isLoading, sessionId, currentUserId, canSendMessage, messages.length, MESSAGE_LIMIT, toast, decrementToken, hasUnlimitedTokens, WEBHOOK_URL, selectedModel, isAdvancedCreativity, extractQuestionSuggestions, extractResponseText, isNewChat, onNewChatStarted]);
+
+  const selectSuggestion = useCallback((command: string) => {
+    const words = message.split(' ');
+    words[words.length - 1] = command;
+    setMessage(words.join(' '));
+    setShowSuggestions(false);
+  }, [message]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showSuggestions) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) => (prev + 1) % filteredCommands.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredCommands.length > 0) {
+          selectSuggestion(filteredCommands[selectedSuggestionIndex]);
+          return;
+        }
+      } else if (e.key === 'Escape') {
+        setShowSuggestions(false);
+      }
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  }, [showSuggestions, filteredCommands, selectedSuggestionIndex, selectSuggestion, handleSendMessage]);
+
+  const handlePaperclipClick = () => {
+    if (messages.length >= MESSAGE_LIMIT) {
+      toast({ title: "Limite de mensagens atingido", description: "Você não pode enviar arquivos quando o limite de mensagens é atingido.", variant: "destructive" });
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "Erro", description: "O arquivo é muito grande (máx 10MB).", variant: "destructive" });
+      return;
+    }
+    setAttachedFile(file);
+  };
+
 
   // Enviar sugestão
   const handleSendSuggestion = useCallback(async (q: string): Promise<void> => {

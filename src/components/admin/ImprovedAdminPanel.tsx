@@ -126,16 +126,16 @@ const ImprovedAdminPanel: React.FC = () => {
           // Query para buscar estatísticas de tokens da tabela n8n_chat_histories
           const { data: tokenStats, error: tokenError } = await supabase
             .from('n8n_chat_histories')
-            .select('api_tokens_used')
+            .select('tokens_api')
             .eq('user_id', user.id)
-            .not('api_tokens_used', 'is', null);
+            .not('tokens_api', 'is', null);
 
           if (tokenError) {
             console.error(`Erro ao buscar tokens do usuário ${user.id}:`, tokenError);
           }
 
           // Calcular estatísticas
-          const totalApiTokens = tokenStats?.reduce((sum, record) => sum + (record.api_tokens_used || 0), 0) || 0;
+          const totalApiTokens = tokenStats?.reduce((sum, record) => sum + (record.tokens_api || 0), 0) || 0;
           const messageCount = tokenStats?.length || 0;
           const avgTokensPerMessage = messageCount > 0 ? Math.round(totalApiTokens / messageCount) : 0;
 
