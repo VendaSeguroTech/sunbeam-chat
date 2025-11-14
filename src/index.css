@@ -352,4 +352,21 @@ All colors MUST be HSL.
     animation: slide-in-left 0.4s ease-out forwards;
     opacity: 0;
   }
+
+  /* Animação Aurora Boreal */
+  @keyframes auroraBoreal {
+    0% {
+      transform: translate3d(-8%, -6%, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(6%, 4%, 0) scale(1.12);
+    }
+    100% {
+      transform: translate3d(-4%, 8%, 0) scale(1.05);
+    }
+  }
+
+  .aurora-effect {
+    animation: auroraBoreal 14s ease-in-out infinite alternate;
+  }
 }
