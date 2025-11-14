@@ -33,7 +33,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
   if (loading) {
     return (
       <Select disabled>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] focus:ring-0 focus:ring-offset-0">
           <SelectValue placeholder="Carregando..." />
         </SelectTrigger>
       </Select>
@@ -42,7 +42,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
 
   return (
     <Select onValueChange={onValueChange} value={value}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[180px] focus:ring-0 focus:ring-offset-0">
         <SelectValue placeholder="Selecione o modelo" />
       </SelectTrigger>
       <SelectContent className="shadow-lg z-[10000]" position="popper" sideOffset={5}>
@@ -50,12 +50,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
           <SelectItem
             key={model.id}
             value={model.name}
-            className="text-gray-900 font-semibold cursor-pointer"
+            className="text-gray-900 font-light cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <span>{model.display_name}</span>
               {isAdmin && !model.is_public && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 font-light ">
                   private
                 </Badge>
               )}

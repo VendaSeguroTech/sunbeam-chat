@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 import { useConversationHistory, ConversationHistory } from "@/hooks/useConversationHistory";
 import { useN8nChatHistory } from "@/hooks/useN8nChatHistory";
 import { useTokens } from "@/hooks/useTokens";
+import { useModels } from "@/hooks/useModels";
 import { supabase } from "@/supabase/client";
 import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
 import expertaAvatarLogo from "@/assets/experta-avatar-logo.png";
@@ -69,10 +70,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { toast } = useToast();
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
+  const { models } = useModels();
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
 
-  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -750,39 +752,139 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const renderMarkdown = (text: string) => {
+    const lines = text.split('\n');
+    const elements: React.ReactNode[] = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i].trim();
+
+      // Títulos (## Título)
+      if (line.startsWith('## ')) {
+        elements.push(
+          <h2 key={i} className="text-lg font-bold mt-4 mb-2 text-gray-900">
+            {renderInlineMarkdown(line.slice(3))}
+          </h2>
+        );
+        i++;
+        continue;
+      }
+
+      // Títulos (# Título)
+      if (line.startsWith('# ')) {
+        elements.push(
+          <h1 key={i} className="text-xl font-bold mt-4 mb-2 text-gray-900">
+            {renderInlineMarkdown(line.slice(2))}
+          </h1>
+        );
+        i++;
+        continue;
+      }
+
+      // Listas (- item ou * item)
+      if (line.match(/^[-*]\s/)) {
+        const listItems: React.ReactNode[] = [];
+        while (i < lines.length && lines[i].trim().match(/^[-*]\s/)) {
+          const itemText = lines[i].trim().slice(2);
+          listItems.push(
+            <li key={i} className="ml-4 mb-1">
+              {renderInlineMarkdown(itemText)}
+            </li>
+          );
+          i++;
+        }
+        elements.push(
+          <ul key={`list-${i}`} className="list-disc list-inside my-2 space-y-1">
+            {listItems}
+          </ul>
+        );
+        continue;
+      }
+
+      // Listas numeradas (1. item)
+      if (line.match(/^\d+\.\s/)) {
+        const listItems: React.ReactNode[] = [];
+        while (i < lines.length && lines[i].trim().match(/^\d+\.\s/)) {
+          const itemText = lines[i].trim().replace(/^\d+\.\s/, '');
+          listItems.push(
+            <li key={i} className="ml-4 mb-1">
+              {renderInlineMarkdown(itemText)}
+            </li>
+          );
+          i++;
+        }
+        elements.push(
+          <ol key={`list-${i}`} className="list-decimal list-inside my-2 space-y-1">
+            {listItems}
+          </ol>
+        );
+        continue;
+      }
+
+      // Linha vazia
+      if (line === '') {
+        elements.push(<br key={i} />);
+        i++;
+        continue;
+      }
+
+      // Parágrafo normal
+      elements.push(
+        <p key={i} className="my-1">
+          {renderInlineMarkdown(line)}
+        </p>
+      );
+      i++;
+    }
+
+    return <div className="markdown-content">{elements}</div>;
+  };
+
+  const renderInlineMarkdown = (text: string): React.ReactNode => {
+    // Negrito (**texto**)
+    let result: React.ReactNode[] = [];
+    let lastIndex = 0;
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let match;
+
+    while ((match = boldRegex.exec(text)) !== null) {
+      // Adiciona o texto antes do match
+      if (match.index > lastIndex) {
+        result.push(text.substring(lastIndex, match.index));
+      }
+      // Adiciona o negrito
+      result.push(<strong key={match.index} className="font-bold">{match[1]}</strong>);
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Adiciona o texto restante
+    if (lastIndex < text.length) {
+      result.push(text.substring(lastIndex));
+    }
+
+    // Se não houver nenhum match, retorna o texto original
+    return result.length > 0 ? result : text;
+  };
+
   const renderWithEmphasis = (text: string) => {
-    const parts = text.split(/(\**.*?\**|\*.*?\*)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>;
-      if (part.startsWith('*') && part.endsWith('*')) return <em key={index}>{part.slice(1, -1)}</em>;
-      return part;
-    });
+    return renderMarkdown(text);
   };
 
   const renderAssistantMessage = (text: string) => {
-    // Separa a primeira linha do resto do texto
-    const firstLineBreak = text.indexOf('\n');
-
-    if (firstLineBreak === -1) {
-      // Se não há quebra de linha, toda mensagem é a primeira linha
-      return <strong className="font-semibold">{renderWithEmphasis(text)}</strong>;
-    }
-
-    const firstLine = text.substring(0, firstLineBreak).trim();
-    const restOfText = text.substring(firstLineBreak + 1).trim();
-
-    return (
-      <>
-        {firstLine && <strong className="font-semibold block mb-1">{renderWithEmphasis(firstLine)}</strong>}
-        {restOfText && <span>{renderWithEmphasis(restOfText)}</span>}
-      </>
-    );
+    return renderMarkdown(text);
   };
 
-  const formatModelName = (model?: string): string => {
-    if (!model) return '';
-    const modelNames: Record<string, string> = { 'global': 'Global', 'd&o': 'D&O', 'rc-profissional': 'RC Profissional', 'rc-geral': 'RC Geral' };
-    return modelNames[model] || model;
+  const formatModelName = (modelName?: string): string => {
+    if (!modelName) return '';
+
+    // Buscar o display_name do modelo no banco de dados
+    const model = models.find(m => m.name === modelName);
+    return model?.display_name || modelName;
+  };
+
+  const getFirstName = (fullName: string): string => {
+    return fullName.split(' ')[0];
   };
 
   return (
@@ -827,7 +929,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         <div className="text-[10px] text-muted-foreground mb-0.5 px-2 opacity-60">Modelo: {formatModelName(msg.model)}</div>
                       )}
 
-                      <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
+                      <div className={`max-w-[85vw] sm:max-w-xl md:max-w-3xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                         msg.type === "user"
                           ? "bg-[#F5D5A8] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
                           : "bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-sm"
@@ -853,10 +955,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 </div>
                               </div>
                             )}
-                            {msg.content && <p className="text-[11px] md:text-lg font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
+                            {msg.content && <p className="text-[13px] md:text-[15px] font-medium leading-relaxed whitespace-pre-wrap pt-2">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>}
                           </div>
                         ) : (
-                          <p className="text-[11px] md:text-sm font-medium leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
+                          <p className="text-[13px] md:text-[15px] font-normal leading-relaxed whitespace-pre-wrap">{msg.type === "assistant" ? renderAssistantMessage(msg.content) : renderWithEmphasis(msg.content)}</p>
                         )}
 
                         {msg.type === "user" && (
@@ -932,7 +1034,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <div className="flex-1 flex items-center justify-center pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
             <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground ">
-                {userName ? <>Olá <span className="animated-gradient-text font-semibold ">{userName}</span></> : <>Olá, sou a <span className="animated-gradient-text font-semibold ">Experta.</span></>}
+                {userName ? <>Olá <span className="animated-gradient-text font-semibold ">{getFirstName(userName)}</span></> : <>Olá, sou a <span className="animated-gradient-text font-semibold ">Experta.</span></>}
               </h1>
               <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
               {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-30">ID da sessão: {sessionId.slice(-8)}</p>}

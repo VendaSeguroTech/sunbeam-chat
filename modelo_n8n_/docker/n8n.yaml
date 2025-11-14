@@ -1,0 +1,156 @@
+# c:\Users\ANDREL~1\AppData\Local\Temp\BvSshSftp-1Q2P08UC\1DTV9R3Q\Q8V0YTEH\n8n.yaml
+version: '3.3'
+
+services:
+  n8n-postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_PASSWORD=AKPhLbVScuwVOcXS
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=n8n_comunidadezdg
+      - PGDATA=/var/lib/postgresql/datan8n
+    networks:
+      - comunidadezdg
+    ports:
+      - 5434:5432
+    volumes:
+      - n8n_postgres_data:/var/lib/postgresql/datan8n
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  n8n-redis:
+    image: redis:latest
+    command: redis-server --appendonly yes --port 6380
+    ports:
+      - 6380:6380
+    volumes:
+      - n8n_redis_data:/data
+    networks:
+      - comunidadezdg
+    restart: unless-stopped  # Adicionado
+
+  n8n_editor:
+    image: n8nio/n8n:1.118.2
+    command: start
+    networks:
+      - comunidadezdg
+      - supabase-1759154705_default # <--- ADICIONADO
+    ports:
+      - 5678:5678
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=n8n_comunidadezdg
+      - DB_POSTGRESDB_HOST=n8n-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=AKPhLbVScuwVOcXS
+      - N8N_ENCRYPTION_KEY=r3djGX2vPoeL9zKL
+      - N8N_HOST=n8n.vendaseguro.tech
+      - N8N_EDITOR_BASE_URL=https://n8n.vendaseguro.tech/
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://webhook.vendaseguro.tech/
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=n8n-redis
+      - QUEUE_BULL_REDIS_PORT=6380
+      - QUEUE_BULL_REDIS_DB=2
+      - NODE_FUNCTION_ALLOW_EXTERNAL=moment,lodash,moment-with-locales
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=336
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_DB_POSTGRESDB_SSL=false
+    depends_on:
+      - n8n-postgres
+      - n8n-redis
+    restart: unless-stopped  # Adicionado
+
+  n8n_webhook:
+    image: n8nio/n8n:1.118.2
+    command: webhook
+    networks:
+      - comunidadezdg
+      - supabase-1759154705_default # <--- ADICIONADO
+    ports:
+      - 5679:5678
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=n8n_comunidadezdg
+      - DB_POSTGRESDB_HOST=n8n-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=AKPhLbVScuwVOcXS
+      - N8N_ENCRYPTION_KEY=r3djGX2vPoeL9zKL
+      - N8N_HOST=n8n.vendaseguro.tech
+      - N8N_EDITOR_BASE_URL=https://n8n.vendaseguro.tech/
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://webhook.vendaseguro.tech/
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=n8n-redis
+      - QUEUE_BULL_REDIS_PORT=6380
+      - QUEUE_BULL_REDIS_DB=2
+      - NODE_FUNCTION_ALLOW_EXTERNAL=moment,lodash,moment-with-locales
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=336
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_DB_POSTGRESDB_SSL=false
+    depends_on:
+      - n8n-postgres
+      - n8n-redis
+    restart: unless-stopped  # Adicionado
+
+  n8n_worker:
+    image: n8nio/n8n:1.118.2
+    command: worker --concurrency=10
+    networks:
+      - comunidadezdg
+      - supabase-1759154705_default # <--- ADICIONADO
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=n8n_comunidadezdg
+      - DB_POSTGRESDB_HOST=n8n-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=AKPhLbVScuwVOcXS
+      - N8N_ENCRYPTION_KEY=r3djGX2vPoeL9zKL
+      - N8N_HOST=n8n.vendaseguro.tech
+      - N8N_EDITOR_BASE_URL=https://n8n.vendaseguro.tech/
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://webhook.vendaseguro.tech/
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=n8n-redis
+      - QUEUE_BULL_REDIS_PORT=6380
+      - QUEUE_BULL_REDIS_DB=2
+      - NODE_FUNCTION_ALLOW_EXTERNAL=moment,lodash,moment-with-locales
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=336
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_DB_POSTGRESDB_SSL=false
+    depends_on:
+      - n8n-postgres
+      - n8n-redis
+    restart: unless-stopped  # Adicionado
+
+volumes:
+  n8n_postgres_data:
+  n8n_redis_data:
+
+networks:
+  comunidadezdg:
+    driver: bridge
+  supabase-1759154705_default: # <--- ADICIONADO
+    external: true             # <--- ADICIONADO

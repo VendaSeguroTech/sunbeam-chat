@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
@@ -15,14 +16,7 @@ const ProtectedRouteSSO: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, isAuthenticated } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-chat-background">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-novo-chat border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg text-foreground">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Verificando autenticação..." />;
   }
 
   if (!isAuthenticated || !user) {

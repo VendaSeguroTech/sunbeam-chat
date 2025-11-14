@@ -11,6 +11,7 @@ import MaintenancePage from "@/pages/maintenance";
 import RouteGuard from "@/components/auth/RouteGuard";
 import ProtectedRouteSSO from "@/components/auth/ProtectedRoute SSO";
 import { useAuth } from "./hooks/useAuth";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 // Componente para decidir a rota inicial
 const Root: React.FC = () => {
@@ -27,14 +28,7 @@ const Root: React.FC = () => {
 
   // Aguardar verificação de autenticação
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-chat-background">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-novo-chat border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg text-foreground">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Verificando autenticação..." />;
   }
 
   // Se não está autenticado, redirecionar para o Hub
@@ -53,7 +47,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div>Verificando autenticação...</div>; // Ou um spinner
+    return <LoadingSpinner message="Verificando autenticação..." />;
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;

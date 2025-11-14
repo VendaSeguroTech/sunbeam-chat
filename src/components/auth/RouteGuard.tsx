@@ -1,6 +1,7 @@
 import { useLocation, Navigate, Outlet } from "react-router-dom";
 import { useMaintenance } from "@/contexts/MaintenanceContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const RouteGuard = () => {
   const { isMaintenanceMode, isLoading: isMaintenanceLoading } = useMaintenance();
@@ -8,11 +9,7 @@ const RouteGuard = () => {
   const location = useLocation();
 
   if (isMaintenanceLoading || isRoleLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        Loading...
-      </div>
-    );
+    return <LoadingSpinner message="Carregando..." />;
   }
 
   if (isMaintenanceMode) {

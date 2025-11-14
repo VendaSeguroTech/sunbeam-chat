@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import ModelSelector from "./ModelSelector"; // Import the new component
 import RacingBorder from "./RacingBorder";
-import PopupModoExperta from "./PopupModoExperta";
+import TermsPopup from "./TermsPopup";
 
 const ChatLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -28,9 +28,10 @@ const ChatLayout: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationHistory | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(0); // Key para forçar re-render do chat
-  const [selectedModel, setSelectedModel] = useState<string>("pro"); // Novo estado para o modelo selecionado
+  const [selectedModel, setSelectedModel] = useState<string>("basic"); // Novo estado para o modelo selecionado
   const [showBorderRace, setShowBorderRace] = useState<boolean>(false); // Estado para animação de primeira visita
-  const [showPopup, setShowPopup] = useState<boolean>(false); // Estado para popup Modo Experta
+  const [showTermsPopup, setShowTermsPopup] = useState<boolean>(false); // Estado para popup de termos
+  const [userId, setUserId] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Rastrear posição do mouse para efeito no background (otimizado com CSS variables)
@@ -71,7 +72,7 @@ const ChatLayout: React.FC = () => {
     };
   }, []);
 
-  // Logout automático após 30 minutos de inatividade
+  // Logout automático após 3 horas de inatividade
   const handleIdleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -82,23 +83,56 @@ const ChatLayout: React.FC = () => {
         variant: "destructive",
       });
 
-      navigate("/login");
+      // Redirecionar para o hub
+      window.location.href = "https://hub.vendaseguro.com.br/";
     } catch (error) {
       console.error("Erro ao fazer logout por inatividade:", error);
     }
   };
 
-  // Hook de inatividade - 30 minutos (1800000 ms)
+  // Hook de inatividade - 3 horas (10800000 ms)
   useIdleTimer({
-    timeout: 30 * 60 * 1000, // 30 minutos
+    timeout: 3 * 60 * 60 * 1000, // 3 horas
     onIdle: handleIdleLogout,
   });
 
-  // Detectar primeira visita e ativar animação de borda + popup
+  // Verificar se usuário aceitou os termos e carregar dados do perfil
+  useEffect(() => {
+    const checkTermsAcceptance = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          setUserId(user.id);
+
+          // Buscar dados do perfil
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('terms_accepted')
+            .eq('id', user.id)
+            .single();
+
+          if (error) {
+            console.error('Erro ao buscar perfil:', error);
+            return;
+          }
+
+          // Se não aceitou os termos, mostrar popup
+          if (!profile?.terms_accepted) {
+            setShowTermsPopup(true);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar aceitação de termos:', error);
+      }
+    };
+
+    checkTermsAcceptance();
+  }, []);
+
+  // Detectar primeira visita e ativar animação de borda
   useEffect(() => {
     const hasVisited = localStorage.getItem('hasVisitedChat');
-    const hasSeenPopup = localStorage.getItem('hasSeenModoExpertaPopup');
-    const timers: NodeJS.Timeout[] = [];
 
     if (!hasVisited) {
       setShowBorderRace(true);
@@ -108,21 +142,9 @@ const ChatLayout: React.FC = () => {
       const timer = setTimeout(() => {
         setShowBorderRace(false);
       }, 5000);
-      timers.push(timer);
-    }
 
-    // Mostrar popup apenas uma vez
-    if (!hasSeenPopup) {
-      // Delay de 1s para dar tempo da página carregar
-      const popupTimer = setTimeout(() => {
-        setShowPopup(true);
-      }, 1000);
-      timers.push(popupTimer);
+      return () => clearTimeout(timer);
     }
-
-    return () => {
-      timers.forEach(timer => clearTimeout(timer));
-    };
   }, []);
 
   // Fechar sidebar automaticamente quando mudar para mobile
@@ -165,9 +187,36 @@ const ChatLayout: React.FC = () => {
     setSelectedModel(value);
   };
 
-  const handleClosePopup = () => {
-    setShowPopup(false);
-    localStorage.setItem('hasSeenModoExpertaPopup', 'true');
+  const handleAcceptTerms = async () => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          terms_accepted: true,
+          terms_accepted_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Erro ao atualizar aceitação de termos:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível registrar a aceitação dos termos. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setShowTermsPopup(false);
+      toast({
+        title: "Termos aceitos",
+        description: "Obrigado por aceitar nossos termos de uso!",
+      });
+    } catch (error) {
+      console.error('Erro ao aceitar termos:', error);
+    }
   };
 
   return (
@@ -242,7 +291,7 @@ const ChatLayout: React.FC = () => {
           variant="default"
           size="icon"
           className="
-            md:hidden fixed top-4 left-4 z-50
+            md:hidden fixed top-8 left-7 z-50
             h-10 w-10 rounded-full shadow-lg
             bg-novo-chat hover:bg-novo-chat/90 text-primary-foreground
           "
@@ -267,7 +316,8 @@ const ChatLayout: React.FC = () => {
           {/* Traços adicionais da borda animada */}
           <RacingBorder isActive={showBorderRace} />
 
-          <div className="flex items-center justify-start p-4 md:p-6 border-b border-gray-100">
+          {/* Header com ModelSelector - desktop: esquerda, mobile: direita */}
+          <div className="flex items-center justify-end md:justify-start p-4 md:p-6 border-b border-gray-100">
             <ModelSelector onValueChange={handleModelChange} value={selectedModel} />
           </div>
           <ChatInterface
@@ -291,8 +341,8 @@ const ChatLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* Popup Modo Experta - aparece apenas uma vez */}
-      <PopupModoExperta isOpen={showPopup} onClose={handleClosePopup} />
+      {/* Popup de Termos de Uso */}
+      <TermsPopup isOpen={showTermsPopup} onAccept={handleAcceptTerms} />
 
     </div>
   );
