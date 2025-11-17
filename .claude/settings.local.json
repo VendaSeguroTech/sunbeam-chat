@@ -7,7 +7,8 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nfeat: adicionar carrossel de slides no popup Modo Experta\n\n- Adiciona rotação automática entre slides a cada 3 segundos\n- Setas de navegação esquerda/direita com ícones Lucide\n- Indicadores visuais (bolinhas) para navegação direta\n- Transição suave com fade entre slides (500ms)\n- Segunda imagem do popup (popup-2.png)\n\nFuncionalidades:\n- Navegação manual via setas\n- Navegação via indicadores\n- Auto-play a cada 3s\n- Efeitos hover nas setas e indicadores\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []

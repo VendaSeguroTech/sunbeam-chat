@@ -19,7 +19,23 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
   const [isReportBugOpen, setIsReportBugOpen] = useState(false);
-  const { tokens, hasUnlimitedTokens, isLoading: tokensLoading } = useTokens();
+  const { tokens, hasUnlimitedTokens, isLoading: tokensLoading, timeUntilReset } = useTokens();
+
+  // Formatar tempo até reset
+  const formatTimeUntilReset = (seconds: number | null): string => {
+    if (seconds === null || seconds === 0) return "";
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    } else if (minutes > 0) {
+      return `${minutes}min`;
+    } else {
+      return "menos de 1min";
+    }
+  };
   const { userRole } = useUserRole();
 
   useEffect(() => {
@@ -100,8 +116,8 @@ const UserSettingsForm: React.FC<UserSettingsFormProps> = ({ onSave }) => {
               ? 'Você tem tokens ilimitados como administrador.'
               : 'Você possui tokens ilimitados.'
             : tokens > 0
-            ? `Você tem ${tokens} ${tokens === 1 ? 'token disponível' : 'tokens disponíveis'}. Cada pergunta consome 1 token.`
-            : 'Você não tem mais tokens disponíveis. Entre em contato com um administrador para recarregar.'}
+            ? `Você tem ${tokens} ${tokens === 1 ? 'token disponível' : 'tokens disponíveis'}. Cada pergunta consome 1 token.${timeUntilReset ? ` Reset em ${formatTimeUntilReset(timeUntilReset)}.` : ''}`
+            : `Você não tem mais tokens disponíveis.${timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : ' Entre em contato com um administrador para recarregar.'}`}
         </p>
       </div>
 

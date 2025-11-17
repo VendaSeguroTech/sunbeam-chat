@@ -72,7 +72,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
   const { fetchSessionMessages } = useN8nChatHistory();
   const { models } = useModels();
-  const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken } = useTokens();
+  const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken, timeUntilReset, nextResetTime } = useTokens();
 
   //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
   const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
@@ -84,6 +84,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const generateSessionId = (): string => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  // Formatar tempo até reset (ex: "2h 15min" ou "45min" ou "5min")
+  const formatTimeUntilReset = (seconds: number | null): string => {
+    if (seconds === null || seconds === 0) return "";
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    } else if (minutes > 0) {
+      return `${minutes}min`;
+    } else {
+      return "menos de 1min";
+    }
   };
 
   // Usuário atual e nome
@@ -151,15 +167,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (!hasUnlimitedTokens && tokens === 3 && !hasShownLowTokensWarning.current) {
       hasShownLowTokensWarning.current = true;
+      const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : '';
       toast({
         title: "⚠️ Poucos tokens restantes!",
-        description: `Você tem apenas ${tokens} tokens disponíveis. Entre em contato com um administrador para recarregar.`, 
+        description: `Você tem apenas ${tokens} tokens disponíveis.${resetInfo}`,
         variant: "default",
         duration: 6000,
       });
     }
     if (tokens > 3) hasShownLowTokensWarning.current = false;
-  }, [tokens, hasUnlimitedTokens, toast]);
+  }, [tokens, hasUnlimitedTokens, toast, timeUntilReset]);
 
   const convertN8nMessagesToLocal = useCallback((n8nMessages: N8nChatMessage[]): Message[] => {
     const localMessages: Message[] = [];
@@ -469,7 +486,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) return;
 
     if (!canSendMessage) {
-      toast({ title: "Tokens insuficientes", description: "Você não possui tokens disponíveis. Entre em contato com um administrador para recarregar.", variant: "destructive" });
+      const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : ' Entre em contato com um administrador para recarregar.';
+      toast({ title: "Tokens insuficientes", description: `Você não possui tokens disponíveis.${resetInfo}`, variant: "destructive" });
       return;
     }
 
@@ -677,7 +695,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendSuggestion = useCallback(async (q: string): Promise<void> => {
     if (isLoading || !sessionId || !currentUserId) return;
     if (!canSendMessage) {
-      toast({ title: "Tokens insuficientes", description: "Você não possui tokens disponíveis. Entre em contato com um administrador para recarregar.", variant: "destructive" });
+      const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : ' Entre em contato com um administrador para recarregar.';
+      toast({ title: "Tokens insuficientes", description: `Você não possui tokens disponíveis.${resetInfo}`, variant: "destructive" });
       return;
     }
     if (messages.length >= MESSAGE_LIMIT) {
@@ -1095,9 +1114,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     placeholder={
-                      !canSendMessage ? "Sem tokens disponíveis. Contate um administrador."
-                      : messages.length >= MESSAGE_LIMIT ? "Limite de mensagens atingido."
-                      : "Pergunte alguma coisa"
+                      !canSendMessage
+                        ? (timeUntilReset ? `Sem tokens. Reset em ${formatTimeUntilReset(timeUntilReset)}` : "Sem tokens disponíveis. Contate um administrador.")
+                        : messages.length >= MESSAGE_LIMIT ? "Limite de mensagens atingido."
+                        : "Pergunte alguma coisa"
                     }
                     className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-base text-gray-900"
                     disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
