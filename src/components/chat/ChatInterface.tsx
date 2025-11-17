@@ -66,7 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Frases dinâmicas de loading
   const [loadingBlurb, setLoadingBlurb] = useState<string>("");
   const hasShownThabataOnceRef = useRef<boolean>(false);
-  const hasShownLowTokensWarning = useRef<boolean>(false);
+  const lastTokenWarningShown = useRef<number>(0); // Rastreia o último aviso mostrado
 
   const { toast } = useToast();
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
@@ -74,8 +74,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { models } = useModels();
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken, timeUntilReset, nextResetTime } = useTokens();
 
-  //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -163,19 +163,40 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, [isLoading]);
 
-  // Aviso de tokens baixos
+  // Avisos progressivos de tokens baixos (5, 4, 3, 2, 1)
   useEffect(() => {
-    if (!hasUnlimitedTokens && tokens === 3 && !hasShownLowTokensWarning.current) {
-      hasShownLowTokensWarning.current = true;
+    // Apenas mostrar aviso se:
+    // 1. Não tem tokens ilimitados
+    // 2. Tokens entre 1 e 5
+    // 3. Ainda não mostrou aviso para esse número de tokens
+    if (!hasUnlimitedTokens && tokens >= 1 && tokens <= 5 && lastTokenWarningShown.current !== tokens) {
+      lastTokenWarningShown.current = tokens;
       const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : '';
+
+      // Definir título e emoji baseado na quantidade
+      let title = "⚠️ Você está quase sem tokens!";
+      let variant: "default" | "destructive" = "default";
+
+      if (tokens === 1) {
+        title = "🚨 ÚLTIMO TOKEN!";
+        variant = "destructive";
+      } else if (tokens === 2) {
+        title = "⚠️ Apenas 2 tokens restantes!";
+        variant = "destructive";
+      }
+
       toast({
-        title: "⚠️ Poucos tokens restantes!",
-        description: `Você tem apenas ${tokens} tokens disponíveis.${resetInfo}`,
-        variant: "default",
+        title,
+        description: `Você tem apenas ${tokens} ${tokens === 1 ? 'token disponível' : 'tokens disponíveis'}.${resetInfo}`,
+        variant,
         duration: 6000,
       });
     }
-    if (tokens > 3) hasShownLowTokensWarning.current = false;
+
+    // Resetar o rastreador quando tokens aumentam (após reset)
+    if (tokens > 5) {
+      lastTokenWarningShown.current = 0;
+    }
   }, [tokens, hasUnlimitedTokens, toast, timeUntilReset]);
 
   const convertN8nMessagesToLocal = useCallback((n8nMessages: N8nChatMessage[]): Message[] => {
