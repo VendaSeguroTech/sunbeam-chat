@@ -67,6 +67,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [loadingBlurb, setLoadingBlurb] = useState<string>("");
   const hasShownThabataOnceRef = useRef<boolean>(false);
   const lastTokenWarningShown = useRef<number>(0); // Rastreia o último aviso mostrado
+  const hasCheckedInitialTokens = useRef<boolean>(false); // Flag para verificar tokens iniciais
 
   const { toast } = useToast();
   const { saveConversation, updateConversation, currentConversation } = useConversationHistory();
@@ -165,12 +166,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Avisos progressivos de tokens baixos (5, 4, 3, 2, 1)
   useEffect(() => {
-    // Apenas mostrar aviso se:
-    // 1. Não tem tokens ilimitados
-    // 2. Tokens entre 1 e 5
-    // 3. Ainda não mostrou aviso para esse número de tokens
-    if (!hasUnlimitedTokens && tokens >= 1 && tokens <= 5 && lastTokenWarningShown.current !== tokens) {
+    // Verificar na primeira carga E quando tokens mudam
+    const shouldShowWarning = !hasUnlimitedTokens &&
+                               tokens >= 1 &&
+                               tokens <= 5 &&
+                               (!hasCheckedInitialTokens.current || lastTokenWarningShown.current !== tokens);
+
+    if (shouldShowWarning) {
+      // Marcar que já verificamos os tokens iniciais
+      hasCheckedInitialTokens.current = true;
       lastTokenWarningShown.current = tokens;
+
       const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : '';
 
       // Definir título e emoji baseado na quantidade
@@ -196,6 +202,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     // Resetar o rastreador quando tokens aumentam (após reset)
     if (tokens > 5) {
       lastTokenWarningShown.current = 0;
+      hasCheckedInitialTokens.current = false; // Permitir novo check após reset
     }
   }, [tokens, hasUnlimitedTokens, toast, timeUntilReset]);
 
