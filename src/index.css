@@ -215,20 +215,24 @@ All colors MUST be HSL.
   .animated-gradient-bg {
     background: linear-gradient(
       90deg,
-      #0a3d73 0%,
-      #0d4a85 10%,
-      #115797 20%,
-      #1464a9 30%,
-      #1771bb 40%,
-      #4981b8 50%,
-      #7b91b5 60%,
-      #ada1b2 70%,
-      #d89571 80%,
-      #f58f4f 90%,
-      #f98b32 100%
+      #0a3d73,
+      #1464a9,
+      #4981b8,
+      #7b91b5,
+      #ada1b2,
+      #d89571,
+      #f58f4f,
+      #f98b32,
+      #f58f4f,
+      #d89571,
+      #ada1b2,
+      #7b91b5,
+      #4981b8,
+      #1464a9,
+      #0a3d73
     );
-    background-size: 200% 100%;
-    animation: animate-gradient-bg 3s ease-in-out infinite alternate;
+    background-size: 300% 100%;
+    animation: animate-gradient-bg 6s linear infinite;
   }
 
   @keyframes animate-gradient-bg {
