@@ -187,16 +187,16 @@ All colors MUST be HSL.
   .animated-gradient-text {
     background-image: linear-gradient(
       90deg,
-      #000000 0%,
-      #1a0f00 10%,
-      #331f00 20%,
-      #4d2f00 30%,
-      #663f00 40%,
-      #804f00 50%,
-      #995f00 60%,
-      #b36f00 70%,
-      #cc7f19 80%,
-      #e6871f 90%,
+      #0a3d73 0%,
+      #0d4a85 10%,
+      #115797 20%,
+      #1464a9 30%,
+      #1771bb 40%,
+      #4981b8 50%,
+      #7b91b5 60%,
+      #ada1b2 70%,
+      #d89571 80%,
+      #f58f4f 90%,
       #f98b32 100%
     );
     background-size: 200% 100%;
