@@ -258,7 +258,7 @@ All colors MUST be HSL.
   }
 
   .turnoff-icon-blue {
-    filter: brightness(0) saturate(100%) invert(18%) sepia(85%) saturate(1526%) hue-rotate(192deg) brightness(93%) contrast(98%);
+    filter: brightness(0) saturate(100%) invert(17%) sepia(42%) saturate(1789%) hue-rotate(186deg) brightness(96%) contrast(97%);
     transition: filter 0.2s ease;
   }
 
