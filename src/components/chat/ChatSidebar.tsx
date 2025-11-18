@@ -287,8 +287,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
+                    width="32"
+                    height="32"
                     viewBox="0 0 1000 1000"
                     className="transition-colors duration-500 ease-in-out"
                   >
@@ -466,7 +466,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         <div className="border-t border-gray-200 px-3 py-3 md:p-4">
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-400">
-              Experta v1.0.8 (beta)
+              Experta v0.0.8 (beta)
             </div>
             <div className="flex items-center gap-1">
               <Tooltip>
