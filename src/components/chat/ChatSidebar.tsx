@@ -11,8 +11,7 @@ import {
   Pencil,
 } from "lucide-react";
 import expertaLogo from "@/assets/experta-logo.png";
-import flechaEsqIcon from "@/assets/icones-hub-flechaesq.png";
-import turnoffIcon from "@/assets/turnoff.png";
+import turnoffIcon from "@/assets/logout-icon (1).svg";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -275,20 +274,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </div>
           <div className="flex items-center gap-1">
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleLogout}
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 md:h-8 md:w-8 p-0 hover:bg-transparent"
-                >
-                  <img
-                    src={flechaEsqIcon}
-                    alt="Voltar para Login"
-                    className="h-6 w-6 object-contain"
-                  />
-                </Button>
-              </TooltipTrigger>
               <TooltipContent>
                 <p>Voltar para Login</p>
               </TooltipContent>
@@ -304,7 +289,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <img
                     src={turnoffIcon}
                     alt="Ir para Hub"
-                    className="h-6 w-6 object-contain"
+                    className="h-6 w-6 object-contain turnoff-icon-blue"
                   />
                 </Button>
               </TooltipTrigger>

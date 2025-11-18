@@ -257,6 +257,15 @@ All colors MUST be HSL.
     animation: animate-border-gradient 4s linear infinite alternate;
   }
 
+  .turnoff-icon-blue {
+    filter: brightness(0) saturate(100%) invert(18%) sepia(85%) saturate(1526%) hue-rotate(192deg) brightness(93%) contrast(98%);
+    transition: filter 0.2s ease;
+  }
+
+  .turnoff-icon-blue:hover {
+    filter: brightness(0) saturate(100%) invert(56%) sepia(73%) saturate(2514%) hue-rotate(352deg) brightness(101%) contrast(96%);
+  }
+
   @keyframes animate-border-gradient {
     from {
       background-position: 0% 50%;
