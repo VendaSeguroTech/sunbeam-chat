@@ -7,28 +7,43 @@ interface MarkdownRendererProps {
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ text }) => {
   const renderInlineMarkdown = useMemo(() => {
     return (content: string): React.ReactNode => {
-      // Negrito (**texto**)
+      // Processar negrito (**texto**) e itálico (_texto_)
       const result: React.ReactNode[] = [];
-      let lastIndex = 0;
-      const boldRegex = /\*\*(.*?)\*\*/g;
-      let match;
+      let currentText = content;
+      let keyIndex = 0;
 
-      while ((match = boldRegex.exec(content)) !== null) {
-        // Adiciona o texto antes do match
-        if (match.index > lastIndex) {
-          result.push(content.substring(lastIndex, match.index));
+      // Regex combinado para capturar negrito (**texto**) e itálico (_texto_)
+      // Ordem: negrito primeiro, depois itálico
+      const markdownRegex = /(\*\*.*?\*\*|_.*?_)/g;
+      const parts = currentText.split(markdownRegex);
+
+      parts.forEach((part, index) => {
+        if (!part) return;
+
+        // Verificar se é negrito
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const text = part.slice(2, -2);
+          result.push(
+            <strong key={`bold-${keyIndex++}`} className="font-bold">
+              {text}
+            </strong>
+          );
         }
-        // Adiciona o negrito
-        result.push(<strong key={match.index} className="font-bold">{match[1]}</strong>);
-        lastIndex = match.index + match[0].length;
-      }
+        // Verificar se é itálico
+        else if (part.startsWith('_') && part.endsWith('_')) {
+          const text = part.slice(1, -1);
+          result.push(
+            <em key={`italic-${keyIndex++}`} className="italic">
+              {text}
+            </em>
+          );
+        }
+        // Texto normal
+        else {
+          result.push(part);
+        }
+      });
 
-      // Adiciona o texto restante
-      if (lastIndex < content.length) {
-        result.push(content.substring(lastIndex));
-      }
-
-      // Se não houver nenhum match, retorna o texto original
       return result.length > 0 ? result : content;
     };
   }, []);
