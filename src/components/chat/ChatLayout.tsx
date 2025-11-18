@@ -237,16 +237,7 @@ const ChatLayout: React.FC = () => {
     <div
       className="relative flex h-[100svh] w-full overflow-hidden"
       style={{
-        backgroundImage: `
-          radial-gradient(72% 150% at 50% 100%, #ffffff, rgba(255, 255, 255, 0)),
-          linear-gradient(rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 9.5%, #ffffff 94%),
-          linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)),
-          linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
-          linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
-          linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #ffffff 100%),
-          linear-gradient(to right, #4A90E2 0%, #F5A623 100%)
-        `,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#f5f5f7'
       }}
     >
       {/* Overlay interativo que segue o cursor */}

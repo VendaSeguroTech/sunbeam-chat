@@ -187,23 +187,24 @@ All colors MUST be HSL.
   .animated-gradient-text {
     background-image: linear-gradient(
       90deg,
-      #8FC5ED 0%,
-      #FFDBB5 10%,
-      #FFC39A 25%,
-      #FFAA7F 40%,
-      #FF9A8A 50%,
-      #FF8A95 60%,
-      #D989AF 70%,
-      #B68AC8 80%,
-      #A2A7DB 90%,
-      #8FC5ED 100%
+      #000000 0%,
+      #1a0f00 10%,
+      #331f00 20%,
+      #4d2f00 30%,
+      #663f00 40%,
+      #804f00 50%,
+      #995f00 60%,
+      #b36f00 70%,
+      #cc7f19 80%,
+      #e6871f 90%,
+      #f98b32 100%
     );
     background-size: 200% 100%;
     background-repeat: no-repeat;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: animate-gradient 4s linear infinite alternate;
+    animation: animate-gradient 4s ease-in-out infinite alternate;
   }
 
   @keyframes animate-gradient {

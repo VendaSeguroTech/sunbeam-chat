@@ -995,7 +995,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                       <div className={`max-w-[85vw] sm:max-w-xl md:max-w-3xl break-words break-anywhere transition-transform duration-200 active:scale-[0.97] ${
                         msg.type === "user"
-                          ? "bg-[#F5D5A8] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
+                          ? "bg-[#f5f5f7] text-gray-800 ml-8 sm:ml-12 rounded-2xl p-3 sm:p-4 shadow-sm"
                           : "bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-sm"
                       }`}>
                         {msg.file ? (
