@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/supabase/client";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
-import expertaLogo from "@/assets/experta-avatar-logo.png";
+import expertaLogo from "@/assets/experta-avatar.avif";
 import { useNavigate } from "react-router-dom";
 import { useMaintenance } from "@/contexts/MaintenanceContext";
 
