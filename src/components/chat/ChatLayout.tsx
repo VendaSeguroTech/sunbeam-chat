@@ -313,10 +313,6 @@ const ChatLayout: React.FC = () => {
         {/* Container com gradiente - APENAS header e messages */}
         <div
           className={`flex-1 flex flex-col bg-white/95 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm ${showBorderRace ? 'racing-border-snake' : ''}`}
-          style={{
-            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-          }}
         >
           {/* Traços adicionais da borda animada */}
           <RacingBorder isActive={showBorderRace} />

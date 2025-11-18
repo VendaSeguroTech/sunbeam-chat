@@ -16,7 +16,7 @@ import { useTokens } from "@/hooks/useTokens";
 import { useModels } from "@/hooks/useModels";
 import { supabase } from "@/supabase/client";
 import { N8nChatMessage, Message, MessageContent } from "@/types/chat";
-import expertaAvatarLogo from "@/assets/experta-avatar.avif";
+import expertaAvatarLogo from "@/assets/experta-avatar.png";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 interface ChatInterfaceProps {
@@ -961,10 +961,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length > 0 ? (
           <div
             className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
-            style={{
-              maskImage: 'linear-gradient(to bottom, black 99%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 99%, transparent 100%)'
-            }}
           >
             <div className="max-w-4xl w-full mx-auto space-y-1 sm:space-y-2 md:space-y-3 px-0">
               {(isNewChat && messages.length > 0) || selectedSessionId ? (
