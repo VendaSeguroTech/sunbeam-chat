@@ -320,7 +320,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           <Button
             onClick={handleNewConversation}
             variant="outline"
-            className="w-full justify-start gap-2 px-3 h-9 bg-transparent border-2 border-[#f98b32] text-black hover:bg-[#f98b32] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md rounded-full"
+            className="w-full justify-start gap-2 px-3 h-9 bg-transparent border-2 border-[#0a3d73] text-black hover:bg-[#0a3d73] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md rounded-full"
           >
             <Plus className="w-4 h-4 flex-shrink-0" />
             <span className="animate-fade-in text-xs md:text-sm font-light">Novo Chat</span>
