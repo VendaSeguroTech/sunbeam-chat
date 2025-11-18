@@ -215,7 +215,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       let fileInfo: { url: string; type: string; name: string } | undefined = undefined;
 
       // Primeiro: verificar se o arquivo está nas colunas do banco (file_url, file_name, file_type)
-      if (record.file_name || record.file_type || record.file_url) {
+      // Apenas exibir como anexo se for PDF (não exibir para file_type: "text")
+      if (record.file_type === 'application/pdf' && (record.file_name || record.file_url)) {
         fileInfo = {
           url: record.file_url || '#',
           type: record.file_type || 'application/pdf',
@@ -231,13 +232,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const suggestions = extractQuestionSuggestions(messageObj);
 
         // Segundo: detectar informações de arquivo dentro do objeto message (fallback)
+        // Apenas exibir como anexo se for PDF (não exibir para file_type: "text")
         if (!fileInfo) {
           const hasFile = messageObj.hasFile === 'true' || messageObj.hasFile === true ||
                           messageObj.file || messageObj.fileName || messageObj.filename || messageObj.attachment;
-          if (hasFile) {
+          const fileType = (messageObj.fileType as string) || (messageObj.mimeType as string) || (messageObj.type as string) || 'application/pdf';
+
+          if (hasFile && fileType === 'application/pdf') {
             fileInfo = {
               url: '#', // Não temos URL do arquivo no histórico
-              type: (messageObj.fileType as string) || (messageObj.mimeType as string) || (messageObj.type as string) || 'application/pdf',
+              type: fileType,
               name: (messageObj.fileName as string) || (messageObj.filename as string) || (messageObj.name as string) || 'Arquivo anexado'
             };
           }
