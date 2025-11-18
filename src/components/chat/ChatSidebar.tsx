@@ -283,14 +283,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   onClick={handleRedirectToHub}
                   variant="ghost"
                   size="icon"
-                  className="h-12 w-12 md:h-11 md:w-11 p-0 hover:bg-transparent group"
+                  className="h-9 w-9 md:h-8 md:w-8 p-0 hover:bg-transparent group"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="40"
-                    height="40"
+                    className="h-8 w-8 transition-colors duration-500 ease-in-out"
                     viewBox="0 0 1000 1000"
-                    className="transition-colors duration-500 ease-in-out"
                   >
                     <path
                       fill="#0a3d73"
