@@ -287,8 +287,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
+                    width="40"
+                    height="40"
                     viewBox="0 0 1000 1000"
                     className="transition-colors duration-500 ease-in-out"
                   >
