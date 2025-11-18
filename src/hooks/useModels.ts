@@ -26,11 +26,19 @@ export const useModels = () => {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('allowed_model_ids')
           .eq('id', user.id)
           .single();
+
+        if (profileError) {
+          console.error('❌ Error fetching allowed_model_ids:', profileError);
+        }
+
+        console.log('👤 User ID:', user.id);
+        console.log('📋 Profile Data:', profileData);
+        console.log('🎯 Allowed Model IDs:', profileData?.allowed_model_ids);
 
         setAllowedModelIds(profileData?.allowed_model_ids || []);
       }
@@ -142,14 +150,24 @@ export const useModels = () => {
   // Filtrar modelos baseado em permissões
   const availableModels = models.filter(model => {
     // Admin vê todos os modelos
-    if (isAdmin) return true;
+    if (isAdmin) {
+      console.log(`✅ Admin - Model ${model.name} (${model.id}): ALLOWED (admin)`);
+      return true;
+    }
 
     // Modelos públicos são visíveis para todos
-    if (model.is_public) return true;
+    if (model.is_public) {
+      console.log(`✅ Model ${model.name} (${model.id}): ALLOWED (public)`);
+      return true;
+    }
 
     // Modelos privados: só se estiver na lista de permitidos
-    return allowedModelIds.includes(model.id);
+    const isAllowed = allowedModelIds.includes(model.id);
+    console.log(`${isAllowed ? '✅' : '❌'} Model ${model.name} (${model.id}): ${isAllowed ? 'ALLOWED' : 'BLOCKED'} (private, in allowed_model_ids: ${isAllowed})`);
+    return isAllowed;
   });
+
+  console.log('🎬 Final Available Models:', availableModels.map(m => m.name));
 
   return {
     models: availableModels,
