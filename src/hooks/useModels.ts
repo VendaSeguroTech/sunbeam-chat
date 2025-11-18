@@ -15,14 +15,27 @@ export interface Model {
 export const useModels = () => {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
+  const [allowedModelIds, setAllowedModelIds] = useState<string[]>([]);
   const { isAdmin } = useUserRole();
 
   const fetchModels = async () => {
     try {
       setLoading(true);
 
-      // RLS vai filtrar automaticamente baseado na role
-      // Admins veem todos, usuários comuns só veem públicos
+      // Buscar allowed_model_ids do usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('allowed_model_ids')
+          .eq('id', user.id)
+          .single();
+
+        setAllowedModelIds(profileData?.allowed_model_ids || []);
+      }
+
+      // Buscar todos os modelos
       const { data, error } = await supabase
         .from('models')
         .select('*')
@@ -126,12 +139,23 @@ export const useModels = () => {
     }
   };
 
-  // Retorna apenas os modelos que o usuário pode ver (baseado na RLS)
-  const availableModels = models;
+  // Filtrar modelos baseado em permissões
+  const availableModels = models.filter(model => {
+    // Admin vê todos os modelos
+    if (isAdmin) return true;
+
+    // Modelos públicos são visíveis para todos
+    if (model.is_public) return true;
+
+    // Modelos privados: só se estiver na lista de permitidos
+    return allowedModelIds.includes(model.id);
+  });
 
   return {
     models: availableModels,
+    allModels: models, // Todos os modelos (para uso no admin)
     loading,
+    allowedModelIds,
     toggleModelVisibility,
     addModel,
     deleteModel,

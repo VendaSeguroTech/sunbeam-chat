@@ -62,9 +62,11 @@ import {
   Search,
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ManageUserModelsDialog from './ManageUserModelsDialog';
 
 interface User {
   id: string;
@@ -74,6 +76,7 @@ interface User {
   last_seen: string | null;
   tokens: number;
   unlimited_tokens: boolean;
+  allowed_model_ids: string[]; // IDs dos modelos permitidos
   total_api_tokens?: number;
   avg_tokens_per_message?: number;
   message_count?: number;
@@ -97,6 +100,10 @@ const ImprovedAdminPanel: React.FC = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+
+  // Manage Models Dialog
+  const [showManageModelsDialog, setShowManageModelsDialog] = useState(false);
+  const [selectedUserForModels, setSelectedUserForModels] = useState<User | null>(null);
 
   // Delete User Dialog
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
@@ -283,6 +290,11 @@ const ImprovedAdminPanel: React.FC = () => {
       console.error('Erro ao alterar tokens ilimitados:', error);
       toast.error('Erro ao alterar a configuração de tokens ilimitados.');
     }
+  };
+
+  const handleManageModels = (user: User) => {
+    setSelectedUserForModels(user);
+    setShowManageModelsDialog(true);
   };
 
   const handleDeleteUser = async () => {
@@ -608,6 +620,12 @@ const ImprovedAdminPanel: React.FC = () => {
                               <Coins className="h-4 w-4 mr-2" />
                               Gerenciar Tokens
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleManageModels(user)}
+                            >
+                              <Settings className="h-4 w-4 mr-2" />
+                              Gerenciar Modelos
+                            </DropdownMenuItem>
                           </>
                         )}
                         <DropdownMenuSeparator />
@@ -779,6 +797,19 @@ const ImprovedAdminPanel: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Manage User Models Dialog */}
+      {selectedUserForModels && (
+        <ManageUserModelsDialog
+          open={showManageModelsDialog}
+          onOpenChange={setShowManageModelsDialog}
+          userId={selectedUserForModels.id}
+          userEmail={selectedUserForModels.email}
+          userName={selectedUserForModels.name}
+          currentAllowedModelIds={selectedUserForModels.allowed_model_ids || []}
+          onSuccess={fetchUsers}
+        />
+      )}
 
       {/* Delete User Confirmation */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

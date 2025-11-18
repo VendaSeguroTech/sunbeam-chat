@@ -524,6 +524,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
+    // Validar se usuário tem permissão para usar o modelo selecionado
+    const selectedModelObj = models.find(m => m.name === selectedModel);
+    if (!selectedModelObj) {
+      toast({
+        title: "Modelo não disponível",
+        description: "Você não tem permissão para usar este modelo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const userMessageContent = message.trim();
     const fileToSend = attachedFile;
 

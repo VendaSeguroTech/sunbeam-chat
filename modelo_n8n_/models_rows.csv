@@ -1,0 +1,5 @@
+name,display_name,description,id,is_public,created_at,updated_at
+basic,Basic,Modelo Básico,565fb864-2d62-453d-a1e4-57cb27207218,true,2025-11-10 18:53:09.848191+00,2025-11-10 18:53:09.848191+00
+inter,Pro-v2,Modelo Pro versão 2,89366c51-59d7-496a-8bde-418d5590b69d,false,2025-11-10 18:53:09.848191+00,2025-11-10 18:53:25.647643+00
+pro,Pro-v1,Modelo Pro versão 1,5782bc96-4119-41a4-b5e3-0cfce30b6f9c,false,2025-11-10 18:53:09.848191+00,2025-11-10 19:27:54.094996+00
+GPT-5,GPT-5,Modelo GPT-5 openai,3aebd02e-99b2-4993-8581-01d58f19309c,false,2025-11-12 14:15:53.468884+00,2025-11-12 14:15:53.468884+00
