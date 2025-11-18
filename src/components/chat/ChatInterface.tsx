@@ -1097,8 +1097,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ) : (
           <div className="flex-1 flex items-center justify-center pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]">
             <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground ">
-                {userName ? <>Olá <span className="animated-gradient-text font-semibold ">{getFirstName(userName)}</span></> : <>Olá, sou a <span className="animated-gradient-text font-semibold ">Experta.</span></>}
+              <h1 className="text-2xl sm:text-3xl font-medium text-foreground ">
+                {userName ? <>Olá <span className="animated-gradient-text font-medium ">{getFirstName(userName)}</span></> : <>Olá, sou a <span className="animated-gradient-text font-medium ">Experta.</span></>}
               </h1>
               <p className="text-base font-light sm:text-lg text-muted-foreground">Como posso ajudá-lo hoje?</p>
               {sessionId && <p className="text-xs text-muted-foreground mt-4 opacity-30">ID da sessão: {sessionId.slice(-8)}</p>}
@@ -1193,7 +1193,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         <Wand2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-gradient-to-r from-[#8FC5ED] via-[#FFDBB5] to-[#FF9A8A] border-0 text-white font-medium shadow-lg">
+                    <TooltipContent className="animated-gradient-bg border-0 text-white font-medium shadow-lg">
                       <p>Modo Experta</p>
                     </TooltipContent>
                   </Tooltip>

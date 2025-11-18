@@ -212,6 +212,30 @@ All colors MUST be HSL.
     100% { background-position: 100% 50%; }
   }
 
+  .animated-gradient-bg {
+    background: linear-gradient(
+      90deg,
+      #0a3d73 0%,
+      #0d4a85 10%,
+      #115797 20%,
+      #1464a9 30%,
+      #1771bb 40%,
+      #4981b8 50%,
+      #7b91b5 60%,
+      #ada1b2 70%,
+      #d89571 80%,
+      #f58f4f 90%,
+      #f98b32 100%
+    );
+    background-size: 200% 100%;
+    animation: animate-gradient-bg 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes animate-gradient-bg {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
   .pro-gradient-text {
     background-image: linear-gradient(
       90deg,
