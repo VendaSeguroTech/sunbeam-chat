@@ -14,9 +14,24 @@ interface UseTokensReturn {
 }
 
 export const useTokens = (): UseTokensReturn => {
-  const [tokens, setTokens] = useState<number>(0);
-  const [unlimitedOverride, setUnlimitedOverride] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // OTIMIZAÇÃO: Inicializar com cache do localStorage (estado otimista)
+  const [tokens, setTokens] = useState<number>(() => {
+    try {
+      const cached = localStorage.getItem('experta_tokens');
+      return cached ? parseInt(cached, 10) : 20; // Assumir 20 tokens inicialmente
+    } catch {
+      return 20;
+    }
+  });
+  const [unlimitedOverride, setUnlimitedOverride] = useState<boolean>(() => {
+    try {
+      const cached = localStorage.getItem('experta_unlimited_tokens');
+      return cached === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false); // OTIMIZAÇÃO: Começar como false
   const [lastResetTime, setLastResetTime] = useState<Date | null>(null);
   const [timeUntilReset, setTimeUntilReset] = useState<number | null>(null);
   const { userRole } = useUserRole();
@@ -81,11 +96,25 @@ export const useTokens = (): UseTokensReturn => {
           console.log('Tokens resetados automaticamente para', initialTokens);
         }
       } else {
-        setTokens(data?.tokens ?? 0);
+        const currentTokens = data?.tokens ?? 0;
+        setTokens(currentTokens);
         setLastResetTime(lastReset);
+        // OTIMIZAÇÃO: Cachear tokens no localStorage
+        try {
+          localStorage.setItem('experta_tokens', currentTokens.toString());
+        } catch (e) {
+          console.warn('Erro ao cachear tokens:', e);
+        }
       }
 
-      setUnlimitedOverride(data?.unlimited_tokens ?? false);
+      const unlimited = data?.unlimited_tokens ?? false;
+      setUnlimitedOverride(unlimited);
+      // OTIMIZAÇÃO: Cachear status de tokens ilimitados
+      try {
+        localStorage.setItem('experta_unlimited_tokens', unlimited.toString());
+      } catch (e) {
+        console.warn('Erro ao cachear unlimited_tokens:', e);
+      }
     } catch (error) {
       console.error('Erro ao buscar tokens:', error);
     } finally {

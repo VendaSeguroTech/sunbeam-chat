@@ -13,44 +13,70 @@ export interface Model {
 }
 
 export const useModels = () => {
-  const [models, setModels] = useState<Model[]>([]);
+  // OTIMIZAÇÃO: Inicializar com cache do localStorage
+  const [models, setModels] = useState<Model[]>(() => {
+    try {
+      const cached = localStorage.getItem('experta_models');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(true);
-  const [allowedModelIds, setAllowedModelIds] = useState<string[]>([]);
+  const [allowedModelIds, setAllowedModelIds] = useState<string[]>(() => {
+    try {
+      const cached = localStorage.getItem('experta_allowed_models');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const { isAdmin } = useUserRole();
 
   const fetchModels = async () => {
     try {
       setLoading(true);
 
-      // Buscar allowed_model_ids do usuário atual
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('allowed_model_ids')
-          .eq('id', user.id)
-          .single();
+      // OTIMIZAÇÃO: Executar queries em PARALELO ao invés de sequencial
+      const [profileResult, modelsResult] = await Promise.all([
+        user
+          ? supabase
+              .from('profiles')
+              .select('allowed_model_ids')
+              .eq('id', user.id)
+              .single()
+          : Promise.resolve({ data: null, error: null }),
 
-        if (profileError) {
-          console.error('❌ Error fetching allowed_model_ids:', profileError);
+        supabase
+          .from('models')
+          .select('*')
+          .order('display_name', { ascending: true })
+      ]);
+
+      // Processar allowed_model_ids
+      if (user && !profileResult.error && profileResult.data) {
+        const allowed = profileResult.data.allowed_model_ids || [];
+        setAllowedModelIds(allowed);
+        // OTIMIZAÇÃO: Cachear no localStorage
+        try {
+          localStorage.setItem('experta_allowed_models', JSON.stringify(allowed));
+        } catch (e) {
+          console.warn('Erro ao cachear allowed_models:', e);
         }
-
-        setAllowedModelIds(profileData?.allowed_model_ids || []);
       }
 
-      // Buscar todos os modelos
-      const { data, error } = await supabase
-        .from('models')
-        .select('*')
-        .order('display_name', { ascending: true });
-
-      if (error) {
-        console.error('❌ Error fetching models:', error);
-        return;
+      // Processar modelos
+      if (!modelsResult.error && modelsResult.data) {
+        setModels(modelsResult.data);
+        // OTIMIZAÇÃO: Cachear no localStorage
+        try {
+          localStorage.setItem('experta_models', JSON.stringify(modelsResult.data));
+        } catch (e) {
+          console.warn('Erro ao cachear models:', e);
+        }
       }
-
-      setModels(data || []);
     } catch (error) {
       console.error('Erro ao buscar modelos:', error);
     } finally {
