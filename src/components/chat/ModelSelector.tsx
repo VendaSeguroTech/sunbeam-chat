@@ -30,7 +30,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
     }
   }, [models, loading, value, onValueChange]);
 
-  if (loading) {
+  // OTIMIZAÇÃO: Nunca bloquear o selector se já temos modelos (mesmo durante revalidação)
+  const hasModels = models.length > 0;
+  const shouldDisable = loading && !hasModels;
+
+  if (shouldDisable) {
     return (
       <Select disabled>
         <SelectTrigger className="w-[180px] focus:ring-0 focus:ring-offset-0">

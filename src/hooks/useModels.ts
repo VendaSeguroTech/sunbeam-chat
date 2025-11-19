@@ -22,7 +22,15 @@ export const useModels = () => {
       return [];
     }
   });
-  const [loading, setLoading] = useState(true);
+  // OTIMIZAÇÃO: Começar como false se já tiver cache
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('experta_models');
+      return !cached; // Se tem cache, não está loading
+    } catch {
+      return true;
+    }
+  });
   const [allowedModelIds, setAllowedModelIds] = useState<string[]>(() => {
     try {
       const cached = localStorage.getItem('experta_allowed_models');
