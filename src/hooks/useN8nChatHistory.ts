@@ -62,7 +62,33 @@ export const useN8nChatHistory = () => {
         return;
       }
 
-      // OTIMIZAÇÃO: Executar queries em paralelo ao invés de sequencial
+      // FASE 2 - OTIMIZAÇÃO: Tentar usar função RPC otimizada primeiro
+      try {
+        const { data: optimizedData, error: rpcError } = await supabase
+          .rpc('get_user_sessions_optimized', { p_user_id: user.id });
+
+        // Se RPC funcionar, usar dados otimizados (muito mais rápido!)
+        if (!rpcError && optimizedData) {
+          const sessionsArray: ChatSession[] = optimizedData.map((session: any) => ({
+            session_id: session.session_id,
+            title: session.title || 'Nova Conversa',
+            last_message: session.last_message_content || '',
+            created_at: session.created_at,
+            updated_at: session.updated_at,
+            message_count: Number(session.message_count) || 0,
+          }));
+
+          setSessions(sessionsArray);
+          setIsLoading(false);
+          return; // ✅ Retorna aqui - RPC funcionou!
+        }
+      } catch (rpcError) {
+        console.warn('⚠️ RPC otimizada não disponível, usando fallback:', rpcError);
+        // Continua para o método tradicional (fallback)
+      }
+
+      // FALLBACK: Método tradicional (mantém toda lógica existente)
+      // OTIMIZAÇÃO FASE 1: Executar queries em paralelo ao invés de sequencial
       const [messagesResult, titlesResult] = await Promise.all([
         supabase
           .from("n8n_chat_histories")
