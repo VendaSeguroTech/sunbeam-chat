@@ -49,7 +49,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [sessionId, setSessionId] = useState<string>("");
   const [isNewChat, setIsNewChat] = useState<boolean>(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
+  // OTIMIZAÇÃO: Inicializar com cache do localStorage
+  const [userName, setUserName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('experta_userName') || '';
+    } catch {
+      return '';
+    }
+  });
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [isAdvancedCreativity, setIsAdvancedCreativity] = useState<boolean>(false);
@@ -109,14 +116,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+
+        // OTIMIZAÇÃO: Verificar cache primeiro antes de fazer query
+        const cachedName = localStorage.getItem('experta_userName');
+        if (cachedName) {
+          setUserName(cachedName);
+          // Não retorna aqui - continua para atualizar cache em background
+        }
+
+        // Buscar do banco (atualiza cache se mudou)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('name')
           .eq('id', user.id)
           .single();
 
-        if (!profileError && profileData) {
-          setUserName(profileData.name || '');
+        if (!profileError && profileData?.name) {
+          const newName = profileData.name;
+          setUserName(newName);
+          // Atualizar cache
+          try {
+            localStorage.setItem('experta_userName', newName);
+          } catch (e) {
+            console.warn('Erro ao salvar nome no cache:', e);
+          }
         }
       }
     };

@@ -180,7 +180,13 @@ export const useConversationHistory = () => {
   };
 
   useEffect(() => {
-    loadConversations();
+    // OTIMIZAÇÃO: Lazy loading - delay de 150ms para não bloquear renderização inicial
+    const timer = setTimeout(() => {
+      loadConversations();
+    }, 150);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

@@ -62,19 +62,24 @@ export const useN8nChatHistory = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("n8n_chat_histories")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("id", { ascending: true });
+      // OTIMIZAÇÃO: Executar queries em paralelo ao invés de sequencial
+      const [messagesResult, titlesResult] = await Promise.all([
+        supabase
+          .from("n8n_chat_histories")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("id", { ascending: true }),
+
+        supabase
+          .from("chat_sessions")
+          .select("session_id, title")
+          .eq("user_id", user.id)
+      ]);
+
+      const { data, error } = messagesResult;
+      const { data: titlesData, error: titlesError } = titlesResult;
 
       if (error) throw error;
-
-      const { data: titlesData, error: titlesError } = await supabase
-        .from("chat_sessions")
-        .select("session_id, title")
-        .eq("user_id", user.id);
-
       if (titlesError) throw titlesError;
 
       const customTitles = new Map<string, string>();
@@ -306,7 +311,12 @@ export const useN8nChatHistory = () => {
   };
 
   useEffect(() => {
-    fetchUserSessions();
+    // OTIMIZAÇÃO: Lazy loading - delay de 150ms para não bloquear renderização inicial
+    const timer = setTimeout(() => {
+      fetchUserSessions();
+    }, 150);
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
