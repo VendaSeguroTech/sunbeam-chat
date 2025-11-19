@@ -180,12 +180,13 @@ export const useConversationHistory = () => {
   };
 
   useEffect(() => {
-    // OTIMIZAÇÃO: Lazy loading - delay de 150ms para não bloquear renderização inicial
-    const timer = setTimeout(() => {
-      loadConversations();
-    }, 150);
+    // DESABILITADO: Tabela conversation_history não existe neste projeto
+    // Sistema usa apenas n8n_chat_histories
+    // const timer = setTimeout(() => {
+    //   loadConversations();
+    // }, 150);
+    // return () => clearTimeout(timer);
 
-    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
