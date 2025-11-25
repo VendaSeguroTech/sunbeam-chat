@@ -4,7 +4,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 
 const RouteGuard = () => {
   const { isMaintenanceMode, isLoading: isMaintenanceLoading } = useMaintenance();
-  const { isLoading: isRoleLoading } = useUserRole();
+  const { loading: isRoleLoading } = useUserRole();
   const location = useLocation();
 
   if (isMaintenanceLoading || isRoleLoading) {

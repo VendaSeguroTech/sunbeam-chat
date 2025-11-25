@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const MaintenancePage = () => {
   const navigate = useNavigate();
   const { isMaintenanceMode, isLoading: isMaintenanceLoading } = useMaintenance();
-  const { isAdmin, isLoading: isRoleLoading } = useUserRole();
+  const { isAdmin, loading: isRoleLoading } = useUserRole();
 
   useEffect(() => {
     // When loading is finished and maintenance mode is turned off, redirect the user.
