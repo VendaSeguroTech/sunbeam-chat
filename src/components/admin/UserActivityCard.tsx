@@ -35,7 +35,7 @@ const UserActivityCard: React.FC = () => {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, name, last_seen')
-        .order('last_seen', { ascending: false, nullsLast: true });
+        .order('last_seen', { ascending: false, nullsFirst: false });
 
       if (profilesError) throw profilesError;
 

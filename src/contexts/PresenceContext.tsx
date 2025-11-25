@@ -58,7 +58,7 @@ export const PresenceProvider: React.FC<{ children: ReactNode }> = ({ children }
           if (presenceState) {
             const users = Object.values(presenceState)
               .map((presence) => presence[0])
-              .filter((p): p is Presence => !!p);
+              .filter((p) => p && p.user_id && p.email) as Presence[];
             setOnlineUsers(users);
           }
         } catch (err) {
