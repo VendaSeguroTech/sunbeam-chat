@@ -37,7 +37,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
   if (shouldDisable) {
     return (
       <Select disabled>
-        <SelectTrigger className="w-[180px] focus:ring-0 focus:ring-offset-0">
+        <SelectTrigger
+          className="w-[180px] focus:ring-0 focus:ring-offset-0"
+          style={{
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.08)'
+          }}
+        >
           <SelectValue placeholder="Carregando..." />
         </SelectTrigger>
       </Select>
@@ -46,10 +51,15 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onValueChange, value }) =
 
   return (
     <Select onValueChange={onValueChange} value={value}>
-      <SelectTrigger className="w-[180px] focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger
+        className="w-[180px] focus:ring-0 focus:ring-offset-0"
+        style={{
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.08)'
+        }}
+      >
         <SelectValue placeholder="Selecione o modelo" />
       </SelectTrigger>
-      <SelectContent className="shadow-lg z-[10000]" position="popper" sideOffset={5}>
+      <SelectContent className="shadow-lg z-[9999]" position="popper" sideOffset={5}>
         {models.map((model) => (
           <SelectItem
             key={model.id}

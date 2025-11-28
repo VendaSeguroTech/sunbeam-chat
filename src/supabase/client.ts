@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://supabase.vendaseguro.tech'; 
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU5MTE0ODAwLCJleHAiOjE5MTY4ODEyMDB9.qwETpJf9wXfGmh3E0SfLdg6xXnTK3cgWp_tkfnR5hKQ';
+// SEGURANÇA: Credenciais do Supabase movidas para variáveis de ambiente (.env)
+// Isso permite trocar facilmente entre ambientes (dev, prod) sem alterar código
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Variáveis de ambiente do Supabase não configuradas. Verifique o arquivo .env');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

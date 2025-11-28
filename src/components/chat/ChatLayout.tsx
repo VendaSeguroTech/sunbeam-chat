@@ -314,15 +314,15 @@ const ChatLayout: React.FC = () => {
         <div
           className={`flex-1 flex flex-col bg-white/95 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm ${showBorderRace ? 'racing-border-snake' : ''}`}
           style={{
-            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
           }}
         >
           {/* Traços adicionais da borda animada */}
           <RacingBorder isActive={showBorderRace} />
 
-          {/* Header com ModelSelector - desktop: esquerda, mobile: direita */}
-          <div className="flex items-center justify-end md:justify-start p-4 md:p-6 border-b border-gray-100">
+          {/* Header com ModelSelector - FIXO no topo, sempre visível */}
+          <div className="sticky top-0 z-50 flex items-center justify-end md:justify-start p-4 md:p-6  border-gray-100 bg-transparent ">
             <ModelSelector onValueChange={handleModelChange} value={selectedModel} />
           </div>
           <ChatInterface

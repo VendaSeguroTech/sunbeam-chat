@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins, Wand2, Copy } from "lucide-react";
+import { Paperclip, Send, Sparkles, Search, User, File as FileIcon, X, ThumbsUp, ThumbsDown, Coins, /* Wand2, */ Copy } from "lucide-react"; // Wand2 comentado - usado no Modo Experta
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +59,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   });
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
-  const [isAdvancedCreativity, setIsAdvancedCreativity] = useState<boolean>(false);
+  // MODO EXPERTA - Estado da criatividade avançada (comentado para desabilitar funcionalidade)
+  // const [isAdvancedCreativity, setIsAdvancedCreativity] = useState<boolean>(false);
+  const isAdvancedCreativity = false; // Hardcoded como false - remover esta linha e descomentar acima para reativar
 
   // Autocomplete de comandos
   const [commands, setCommands] = useState<string[]>([]);
@@ -82,10 +84,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { models } = useModels();
   const { tokens, hasUnlimitedTokens, canSendMessage, decrementToken, timeUntilReset, nextResetTime } = useTokens();
 
-  //const WEBHOOK_URL = "https://webhook.vendaseguro.tech/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  //const WEBHOOK_URL = "https://n8n.vendaseguro.tech/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  //const WEBHOOK_URL = "https://n8n.srv1137252.hstgr.cloud/webhook/0fc3496c-5dfa-4772-8661-da71da6353c7";
-  /*TESTE*/ const WEBHOOK_URL = "https://n8n.srv1137252.hstgr.cloud/webhook-test/0fc3496c-5dfa-4772-8661-da71da6353c7";
+  // SEGURANÇA: Webhook URL movida para variável de ambiente (.env)
+  // Para trocar o webhook, edite o arquivo .env na raiz do projeto
+  const WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -602,6 +603,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         formData.append('fileName', fileToSend.name);
         formData.append('fileType', fileToSend.type);
         formData.append('hasFile', 'true');
+        // MODO EXPERTA - Parâmetro de criatividade avançada enviado ao webhook
         formData.append('advancedCreativity', isAdvancedCreativity
           ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
           : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.'
@@ -648,6 +650,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           userId: currentUserId,
           type: 'text',
           model: selectedModel,
+          // MODO EXPERTA - Parâmetro de criatividade avançada enviado ao webhook
           advancedCreativity: isAdvancedCreativity
             ? 'Resposta completa e bem estruturada. Tamanho da resposta pode ser grande. Liste todos os detalhes, exemplos e explicações relevantes de forma aprofundada.'
             : 'Resposta objetiva e direta, bem enxuta e resumida para um leigo. Não gere respostas grandes, resuma o máximo que der. Se solicitado, retorne a resposta levemente formatada com Bullets, listas ou tópicos. Seja conciso e direto ao ponto.',
@@ -1208,7 +1211,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <Paperclip className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
                   </Button>
 
-                  <Tooltip delayDuration={100}>
+                  {/* <Tooltip delayDuration={100}>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="sm" onClick={() => setIsAdvancedCreativity(!isAdvancedCreativity)} className={`h-8 w-8 md:h-10 md:w-10 p-0 rounded-full hover:bg-muted ${isAdvancedCreativity ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                         <Wand2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -1217,7 +1220,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <TooltipContent className="animated-gradient-bg border-0 text-white font-medium shadow-lg">
                       <p>Modo Experta</p>
                     </TooltipContent>
-                  </Tooltip>
+                  </Tooltip> */}
 
                   <Button
                     onClick={handleSendMessage}
