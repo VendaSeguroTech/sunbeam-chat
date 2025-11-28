@@ -90,6 +90,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledUp = useRef<boolean>(false);
+  const isTyping = useRef<boolean>(false);
 
   const MESSAGE_LIMIT = 40;
 
@@ -382,8 +385,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, []);
 
+  // Detectar quando usuário rola manualmente para cima
   useEffect(() => {
-    if (messagesEndRef.current) {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50; // Threshold de 50px
+
+      // Se usuário está perto do fundo, permitir auto-scroll
+      if (isAtBottom) {
+        userScrolledUp.current = false;
+      } else if (isTyping.current) {
+        // Se IA está digitando e usuário não está no fundo, marcar como scrolled up
+        userScrolledUp.current = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Auto-scroll inteligente: só rola se usuário não scrollou manualmente para cima
+  useEffect(() => {
+    // Se usuário scrollou para cima E a IA está digitando, não fazer auto-scroll
+    if (userScrolledUp.current && isLoading) {
+      return;
+    }
+
+    // Quando a IA termina de responder, sempre voltar para o final
+    if (!isLoading && messagesEndRef.current) {
+      userScrolledUp.current = false;
+      isTyping.current = false;
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    // Durante digitação, só fazer scroll se usuário não scrollou para cima
+    if (isLoading && !userScrolledUp.current && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
@@ -544,8 +584,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if ((!message.trim() && !attachedFile) || isLoading || !sessionId || !currentUserId) return;
 
     if (!canSendMessage) {
-      const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : ' Entre em contato com um administrador para recarregar.';
-      toast({ title: "Tokens insuficientes", description: `Você não possui tokens disponíveis.${resetInfo}`, variant: "destructive" });
+      const resetInfo = timeUntilReset ? ` Seus tokens serão resetados em ${formatTimeUntilReset(timeUntilReset)}.` : ' Aguarde até que seus tokens estejam ativos novamente.';
+      toast({ title: "Tokens insuficientes", description: `Você não possui tokens disponíveis no momento.${resetInfo}`, variant: "destructive" });
       return;
     }
 
@@ -580,6 +620,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessage("");
     setAttachedFile(null);
     setIsLoading(true);
+    isTyping.current = true;
 
     const tokenDecremented = await decrementToken();
     if (!tokenDecremented && !hasUnlimitedTokens) {
@@ -753,11 +794,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileInputRef.current) fileInputRef.current.value = "";
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_FILE_SIZE) {
-      toast({ title: "Erro", description: "O arquivo é muito grande (máx 10MB).", variant: "destructive" });
+
+    // Validar tipo de arquivo (apenas PDF)
+    if (file.type !== 'application/pdf') {
+      toast({ title: "Erro", description: "Apenas arquivos PDF são permitidos.", variant: "destructive" });
       return;
     }
+
+    // Validar tamanho (máx 500KB)
+    const MAX_FILE_SIZE = 500 * 1024; // 500KB
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "Erro", description: "O arquivo é muito grande (máx 500KB).", variant: "destructive" });
+      return;
+    }
+
     setAttachedFile(file);
   };
 
@@ -779,6 +829,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const userMessage: Message = { id: Date.now().toString(), content: q.trim(), type: 'user', timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    isTyping.current = true;
 
     const tokenDecremented = await decrementToken();
     if (!tokenDecremented && !hasUnlimitedTokens) {
@@ -988,6 +1039,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="flex-1 flex flex-col h-[100svh] relative">
         {messages.length > 0 ? (
           <div
+            ref={scrollContainerRef}
             className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 pb-[calc(120px+max(env(safe-area-inset-bottom),12px))]"
           >
             <div className="max-w-4xl w-full mx-auto space-y-1 sm:space-y-2 md:space-y-3 px-0">
@@ -1174,7 +1226,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               )}
 
               {/* Caixa de input */}
-              <div className={`flex items-center gap-2 bg-white border border-gray-200 p-1.5 sm:p-2 shadow-lg ${attachedFile ? "rounded-b-2xl" : "rounded-full"}`}>
+              <div className={`flex items-center gap-2 bg-white border border-gray-200 p-1.5 sm:p-2 shadow-lg ${attachedFile ? "rounded-b-2xl" : "rounded-full"} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
                 <div className="relative w-full">
                   <Input
                     value={message}
@@ -1189,7 +1241,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     className="flex-1 border-0 bg-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 text-base text-gray-900"
                     disabled={isLoading || messages.length >= MESSAGE_LIMIT || !canSendMessage}
                   />
-                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/png, image/jpeg, image/gif, application/pdf" />
+                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="application/pdf" />
 
                   {showSuggestions && (
                     <ul className="absolute bottom-full mb-1 left-0 w-full max-h-48 sm:max-h-56 overflow-auto bg-white border border-gray-300 rounded shadow z-10 text-sm">
